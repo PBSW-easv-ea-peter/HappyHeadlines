@@ -1,0 +1,532 @@
+{
+  "configuration" : { },
+  "description" : "Positive news platform",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-09-04T09:38:07Z",
+  "model" : {
+    "people" : [ {
+      "description" : "Writes and publishes articles.",
+      "id" : "1",
+      "name" : "Publisher",
+      "properties" : {
+        "structurizr.dsl.identifier" : "publisher"
+      },
+      "relationships" : [ {
+        "description" : "Creates drafts and publishes articles",
+        "destinationId" : "4",
+        "id" : "20",
+        "sourceId" : "1",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Creates drafts and publishes articles",
+        "destinationId" : "3",
+        "id" : "21",
+        "linkedRelationshipId" : "20",
+        "sourceId" : "1"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Reads articles, comments, and subscribes to newsletters.",
+      "id" : "2",
+      "name" : "Reader",
+      "properties" : {
+        "structurizr.dsl.identifier" : "reader"
+      },
+      "relationships" : [ {
+        "description" : "Reads articles",
+        "destinationId" : "5",
+        "id" : "31",
+        "sourceId" : "2",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Reads articles",
+        "destinationId" : "3",
+        "id" : "32",
+        "linkedRelationshipId" : "31",
+        "sourceId" : "2"
+      }, {
+        "description" : "Posts comments",
+        "destinationId" : "5",
+        "id" : "34",
+        "sourceId" : "2",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Subscribes to newsletter",
+        "destinationId" : "5",
+        "id" : "38",
+        "sourceId" : "2",
+        "tags" : "Relationship"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "description" : "Editorial application used by publishers.",
+        "documentation" : { },
+        "id" : "4",
+        "name" : "Webapp",
+        "properties" : {
+          "structurizr.dsl.identifier" : "webapp"
+        },
+        "relationships" : [ {
+          "description" : "Save and retrieve drafts",
+          "destinationId" : "6",
+          "id" : "22",
+          "sourceId" : "4",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Publishes article",
+          "destinationId" : "7",
+          "id" : "24",
+          "sourceId" : "4",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Web Application"
+      }, {
+        "description" : "Public website for readers.",
+        "documentation" : { },
+        "id" : "5",
+        "name" : "Website",
+        "properties" : {
+          "structurizr.dsl.identifier" : "website"
+        },
+        "relationships" : [ {
+          "description" : "Requests articles",
+          "destinationId" : "9",
+          "id" : "33",
+          "sourceId" : "5",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Creates and retrieves comments",
+          "destinationId" : "10",
+          "id" : "35",
+          "sourceId" : "5",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Registers subscriber",
+          "destinationId" : "11",
+          "id" : "39",
+          "sourceId" : "5",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Web Application"
+      }, {
+        "description" : "Manages article drafts.",
+        "documentation" : { },
+        "id" : "6",
+        "name" : "DraftService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "draftService"
+        },
+        "relationships" : [ {
+          "description" : "Reads and writes drafts",
+          "destinationId" : "13",
+          "id" : "23",
+          "sourceId" : "6",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Publishes approved articles.",
+        "documentation" : { },
+        "id" : "7",
+        "name" : "PublisherService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "publisherService"
+        },
+        "relationships" : [ {
+          "description" : "Checks article content",
+          "destinationId" : "8",
+          "id" : "25",
+          "sourceId" : "7",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Publishes approved article",
+          "destinationId" : "18",
+          "id" : "27",
+          "sourceId" : "7",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Filters inappropriate language.",
+        "documentation" : { },
+        "id" : "8",
+        "name" : "ProfanityService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "profanityService"
+        },
+        "relationships" : [ {
+          "description" : "Reads prohibited words",
+          "destinationId" : "16",
+          "id" : "26",
+          "sourceId" : "8",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Provides published articles.",
+        "documentation" : { },
+        "id" : "9",
+        "name" : "ArticleService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "articleService"
+        },
+        "relationships" : [ {
+          "description" : "Subscribes to published articles",
+          "destinationId" : "18",
+          "id" : "29",
+          "sourceId" : "9",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Reads articles",
+          "destinationId" : "14",
+          "id" : "30",
+          "sourceId" : "9",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Manages comments.",
+        "documentation" : { },
+        "id" : "10",
+        "name" : "CommentService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "commentService"
+        },
+        "relationships" : [ {
+          "description" : "Checks comment content",
+          "destinationId" : "8",
+          "id" : "36",
+          "sourceId" : "10",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Reads and writes comments",
+          "destinationId" : "15",
+          "id" : "37",
+          "sourceId" : "10",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Manages newsletter subscriptions.",
+        "documentation" : { },
+        "id" : "11",
+        "name" : "SubscriberService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "subscriberService"
+        },
+        "relationships" : [ {
+          "description" : "Reads and writes subscriber data",
+          "destinationId" : "17",
+          "id" : "40",
+          "sourceId" : "11",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Queues new subscribers",
+          "destinationId" : "19",
+          "id" : "41",
+          "sourceId" : "11",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Sends newsletters.",
+        "documentation" : { },
+        "id" : "12",
+        "name" : "NewsletterService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "newsletterService"
+        },
+        "relationships" : [ {
+          "description" : "Retrieves articles",
+          "destinationId" : "9",
+          "id" : "42",
+          "sourceId" : "12",
+          "tags" : "Relationship"
+        }, {
+          "description" : "Retrieves subscribers",
+          "destinationId" : "11",
+          "id" : "43",
+          "sourceId" : "12",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Service"
+      }, {
+        "description" : "Stores article drafts.",
+        "documentation" : { },
+        "id" : "13",
+        "name" : "DraftDatabase",
+        "properties" : {
+          "structurizr.dsl.identifier" : "draftDb"
+        },
+        "tags" : "Element,Container",
+        "technology" : "Database"
+      }, {
+        "description" : "Stores published articles.",
+        "documentation" : { },
+        "id" : "14",
+        "name" : "ArticleDatabase",
+        "properties" : {
+          "structurizr.dsl.identifier" : "articleDb"
+        },
+        "tags" : "Element,Container",
+        "technology" : "Database"
+      }, {
+        "description" : "Stores comments.",
+        "documentation" : { },
+        "id" : "15",
+        "name" : "CommentDatabase",
+        "properties" : {
+          "structurizr.dsl.identifier" : "commentDb"
+        },
+        "tags" : "Element,Container",
+        "technology" : "Database"
+      }, {
+        "description" : "Stores prohibited words.",
+        "documentation" : { },
+        "id" : "16",
+        "name" : "ProfanityDatabase",
+        "properties" : {
+          "structurizr.dsl.identifier" : "profanityDb"
+        },
+        "tags" : "Element,Container",
+        "technology" : "Database"
+      }, {
+        "description" : "Stores subscriber information.",
+        "documentation" : { },
+        "id" : "17",
+        "name" : "SubscriberDatabase",
+        "properties" : {
+          "structurizr.dsl.identifier" : "subscriberDb"
+        },
+        "tags" : "Element,Container",
+        "technology" : "Database"
+      }, {
+        "description" : "Queue for newly published articles.",
+        "documentation" : { },
+        "id" : "18",
+        "name" : "ArticleQueue",
+        "properties" : {
+          "structurizr.dsl.identifier" : "articleQueue"
+        },
+        "relationships" : [ {
+          "description" : "Stores published article",
+          "destinationId" : "14",
+          "id" : "28",
+          "sourceId" : "18",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Queue"
+      }, {
+        "description" : "Queue for new newsletter subscriptions.",
+        "documentation" : { },
+        "id" : "19",
+        "name" : "SubscriberQueue",
+        "properties" : {
+          "structurizr.dsl.identifier" : "subscriberQueue"
+        },
+        "tags" : "Element,Container",
+        "technology" : "Queue"
+      } ],
+      "description" : "Positive news platform.",
+      "documentation" : { },
+      "id" : "3",
+      "name" : "Happy Headlines",
+      "properties" : {
+        "structurizr.dsl.identifier" : "happyHeadlines"
+      },
+      "tags" : "Element,Software System"
+    } ]
+  },
+  "name" : "Happy Headlines",
+  "properties" : {
+    "structurizr.inspection.error" : "27",
+    "structurizr.dsl" : "d29ya3NwYWNlICJIYXBweSBIZWFkbGluZXMiICJQb3NpdGl2ZSBuZXdzIHBsYXRmb3JtIiB7CgogICAgbW9kZWwgewoKICAgICAgICAvLyBQZW9wbGUKICAgICAgICBwdWJsaXNoZXIgPSBwZXJzb24gIlB1Ymxpc2hlciIgIldyaXRlcyBhbmQgcHVibGlzaGVzIGFydGljbGVzLiIKICAgICAgICByZWFkZXIgPSBwZXJzb24gIlJlYWRlciIgIlJlYWRzIGFydGljbGVzLCBjb21tZW50cywgYW5kIHN1YnNjcmliZXMgdG8gbmV3c2xldHRlcnMuIgoKCiAgICAgICAgLy8gU29mdHdhcmUgc3lzdGVtCiAgICAgICAgaGFwcHlIZWFkbGluZXMgPSBzb2Z0d2FyZVN5c3RlbSAiSGFwcHkgSGVhZGxpbmVzIiAiUG9zaXRpdmUgbmV3cyBwbGF0Zm9ybS4iIHsKCiAgICAgICAgICAgIC8vIEFwcGxpY2F0aW9ucwogICAgICAgICAgICB3ZWJhcHAgPSBjb250YWluZXIgIldlYmFwcCIgIkVkaXRvcmlhbCBhcHBsaWNhdGlvbiB1c2VkIGJ5IHB1Ymxpc2hlcnMuIiAiV2ViIEFwcGxpY2F0aW9uIgogICAgICAgICAgICB3ZWJzaXRlID0gY29udGFpbmVyICJXZWJzaXRlIiAiUHVibGljIHdlYnNpdGUgZm9yIHJlYWRlcnMuIiAiV2ViIEFwcGxpY2F0aW9uIgoKICAgICAgICAgICAgLy8gU2VydmljZXMKICAgICAgICAgICAgZHJhZnRTZXJ2aWNlID0gY29udGFpbmVyICJEcmFmdFNlcnZpY2UiICJNYW5hZ2VzIGFydGljbGUgZHJhZnRzLiIgIlNlcnZpY2UiCiAgICAgICAgICAgIHB1Ymxpc2hlclNlcnZpY2UgPSBjb250YWluZXIgIlB1Ymxpc2hlclNlcnZpY2UiICJQdWJsaXNoZXMgYXBwcm92ZWQgYXJ0aWNsZXMuIiAiU2VydmljZSIKICAgICAgICAgICAgcHJvZmFuaXR5U2VydmljZSA9IGNvbnRhaW5lciAiUHJvZmFuaXR5U2VydmljZSIgIkZpbHRlcnMgaW5hcHByb3ByaWF0ZSBsYW5ndWFnZS4iICJTZXJ2aWNlIgogICAgICAgICAgICBhcnRpY2xlU2VydmljZSA9IGNvbnRhaW5lciAiQXJ0aWNsZVNlcnZpY2UiICJQcm92aWRlcyBwdWJsaXNoZWQgYXJ0aWNsZXMuIiAiU2VydmljZSIKICAgICAgICAgICAgY29tbWVudFNlcnZpY2UgPSBjb250YWluZXIgIkNvbW1lbnRTZXJ2aWNlIiAiTWFuYWdlcyBjb21tZW50cy4iICJTZXJ2aWNlIgogICAgICAgICAgICBzdWJzY3JpYmVyU2VydmljZSA9IGNvbnRhaW5lciAiU3Vic2NyaWJlclNlcnZpY2UiICJNYW5hZ2VzIG5ld3NsZXR0ZXIgc3Vic2NyaXB0aW9ucy4iICJTZXJ2aWNlIgogICAgICAgICAgICBuZXdzbGV0dGVyU2VydmljZSA9IGNvbnRhaW5lciAiTmV3c2xldHRlclNlcnZpY2UiICJTZW5kcyBuZXdzbGV0dGVycy4iICJTZXJ2aWNlIgoKICAgICAgICAgICAgLy8gRGF0YWJhc2VzCiAgICAgICAgICAgIGRyYWZ0RGIgPSBjb250YWluZXIgIkRyYWZ0RGF0YWJhc2UiICJTdG9yZXMgYXJ0aWNsZSBkcmFmdHMuIiAiRGF0YWJhc2UiCiAgICAgICAgICAgIGFydGljbGVEYiA9IGNvbnRhaW5lciAiQXJ0aWNsZURhdGFiYXNlIiAiU3RvcmVzIHB1Ymxpc2hlZCBhcnRpY2xlcy4iICJEYXRhYmFzZSIKICAgICAgICAgICAgY29tbWVudERiID0gY29udGFpbmVyICJDb21tZW50RGF0YWJhc2UiICJTdG9yZXMgY29tbWVudHMuIiAiRGF0YWJhc2UiCiAgICAgICAgICAgIHByb2Zhbml0eURiID0gY29udGFpbmVyICJQcm9mYW5pdHlEYXRhYmFzZSIgIlN0b3JlcyBwcm9oaWJpdGVkIHdvcmRzLiIgIkRhdGFiYXNlIgogICAgICAgICAgICBzdWJzY3JpYmVyRGIgPSBjb250YWluZXIgIlN1YnNjcmliZXJEYXRhYmFzZSIgIlN0b3JlcyBzdWJzY3JpYmVyIGluZm9ybWF0aW9uLiIgIkRhdGFiYXNlIgoKICAgICAgICAgICAgLy8gUXVldWVzCiAgICAgICAgICAgIGFydGljbGVRdWV1ZSA9IGNvbnRhaW5lciAiQXJ0aWNsZVF1ZXVlIiAiUXVldWUgZm9yIG5ld2x5IHB1Ymxpc2hlZCBhcnRpY2xlcy4iICJRdWV1ZSIKICAgICAgICAgICAgc3Vic2NyaWJlclF1ZXVlID0gY29udGFpbmVyICJTdWJzY3JpYmVyUXVldWUiICJRdWV1ZSBmb3IgbmV3IG5ld3NsZXR0ZXIgc3Vic2NyaXB0aW9ucy4iICJRdWV1ZSIKICAgICAgICB9CgoKICAgICAgICAvLyBQdWJsaXNoZXIgd29ya2Zsb3cKICAgICAgICBwdWJsaXNoZXIgLT4gd2ViYXBwICJDcmVhdGVzIGRyYWZ0cyBhbmQgcHVibGlzaGVzIGFydGljbGVzIgoKICAgICAgICB3ZWJhcHAgLT4gZHJhZnRTZXJ2aWNlICJTYXZlIGFuZCByZXRyaWV2ZSBkcmFmdHMiCiAgICAgICAgZHJhZnRTZXJ2aWNlIC0+IGRyYWZ0RGIgIlJlYWRzIGFuZCB3cml0ZXMgZHJhZnRzIgoKICAgICAgICB3ZWJhcHAgLT4gcHVibGlzaGVyU2VydmljZSAiUHVibGlzaGVzIGFydGljbGUiCgogICAgICAgIHB1Ymxpc2hlclNlcnZpY2UgLT4gcHJvZmFuaXR5U2VydmljZSAiQ2hlY2tzIGFydGljbGUgY29udGVudCIKICAgICAgICBwcm9mYW5pdHlTZXJ2aWNlIC0+IHByb2Zhbml0eURiICJSZWFkcyBwcm9oaWJpdGVkIHdvcmRzIgoKICAgICAgICBwdWJsaXNoZXJTZXJ2aWNlIC0+IGFydGljbGVRdWV1ZSAiUHVibGlzaGVzIGFwcHJvdmVkIGFydGljbGUiCgogICAgICAgIGFydGljbGVRdWV1ZSAtPiBhcnRpY2xlRGIgIlN0b3JlcyBwdWJsaXNoZWQgYXJ0aWNsZSIKICAgICAgICBhcnRpY2xlU2VydmljZSAtPiBhcnRpY2xlUXVldWUgIlN1YnNjcmliZXMgdG8gcHVibGlzaGVkIGFydGljbGVzIgogICAgICAgIGFydGljbGVTZXJ2aWNlIC0+IGFydGljbGVEYiAiUmVhZHMgYXJ0aWNsZXMiCgoKICAgICAgICAvLyBSZWFkZXIgLSBhcnRpY2xlcwogICAgICAgIHJlYWRlciAtPiB3ZWJzaXRlICJSZWFkcyBhcnRpY2xlcyIKICAgICAgICB3ZWJzaXRlIC0+IGFydGljbGVTZXJ2aWNlICJSZXF1ZXN0cyBhcnRpY2xlcyIKCgogICAgICAgIC8vIFJlYWRlciAtIGNvbW1lbnRzCiAgICAgICAgcmVhZGVyIC0+IHdlYnNpdGUgIlBvc3RzIGNvbW1lbnRzIgogICAgICAgIHdlYnNpdGUgLT4gY29tbWVudFNlcnZpY2UgIkNyZWF0ZXMgYW5kIHJldHJpZXZlcyBjb21tZW50cyIKCiAgICAgICAgY29tbWVudFNlcnZpY2UgLT4gcHJvZmFuaXR5U2VydmljZSAiQ2hlY2tzIGNvbW1lbnQgY29udGVudCIKICAgICAgICBjb21tZW50U2VydmljZSAtPiBjb21tZW50RGIgIlJlYWRzIGFuZCB3cml0ZXMgY29tbWVudHMiCgoKICAgICAgICAvLyBSZWFkZXIgLSBuZXdzbGV0dGVyIHN1YnNjcmlwdGlvbgogICAgICAgIHJlYWRlciAtPiB3ZWJzaXRlICJTdWJzY3JpYmVzIHRvIG5ld3NsZXR0ZXIiCiAgICAgICAgd2Vic2l0ZSAtPiBzdWJzY3JpYmVyU2VydmljZSAiUmVnaXN0ZXJzIHN1YnNjcmliZXIiCgogICAgICAgIHN1YnNjcmliZXJTZXJ2aWNlIC0+IHN1YnNjcmliZXJEYiAiUmVhZHMgYW5kIHdyaXRlcyBzdWJzY3JpYmVyIGRhdGEiCiAgICAgICAgc3Vic2NyaWJlclNlcnZpY2UgLT4gc3Vic2NyaWJlclF1ZXVlICJRdWV1ZXMgbmV3IHN1YnNjcmliZXJzIgoKCiAgICAgICAgLy8gTmV3c2xldHRlcgogICAgICAgIG5ld3NsZXR0ZXJTZXJ2aWNlIC0+IGFydGljbGVTZXJ2aWNlICJSZXRyaWV2ZXMgYXJ0aWNsZXMiCiAgICAgICAgbmV3c2xldHRlclNlcnZpY2UgLT4gc3Vic2NyaWJlclNlcnZpY2UgIlJldHJpZXZlcyBzdWJzY3JpYmVycyIKICAgIH0KCgogICAgdmlld3MgewoKICAgICAgICAvLyBDNCBMZXZlbCAxIC0gU3lzdGVtIENvbnRleHQKICAgICAgICBzeXN0ZW1Db250ZXh0IGhhcHB5SGVhZGxpbmVzICJTeXN0ZW1Db250ZXh0IiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvbGF5b3V0IGxyCiAgICAgICAgfQoKCiAgICAgICAgLy8gQzQgTGV2ZWwgMiAtIENvbnRhaW5lciBkaWFncmFtCiAgICAgICAgY29udGFpbmVyIGhhcHB5SGVhZGxpbmVzICJDb250YWluZXJzIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvbGF5b3V0IGxyCiAgICAgICAgfQoKCiAgICAgICAgdGhlbWUgZGVmYXVsdAogICAgfQp9",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "configuration" : {
+      "styles" : { },
+      "terminology" : { },
+      "themes" : [ "https://static.structurizr.com/themes/default/theme.json" ]
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "Containers",
+      "name" : "Container View: Happy Headlines",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "20"
+      }, {
+        "id" : "22"
+      }, {
+        "id" : "23"
+      }, {
+        "id" : "24"
+      }, {
+        "id" : "25"
+      }, {
+        "id" : "26"
+      }, {
+        "id" : "27"
+      }, {
+        "id" : "28"
+      }, {
+        "id" : "29"
+      }, {
+        "id" : "30"
+      }, {
+        "id" : "31"
+      }, {
+        "id" : "33"
+      }, {
+        "id" : "34"
+      }, {
+        "id" : "35"
+      }, {
+        "id" : "36"
+      }, {
+        "id" : "37"
+      }, {
+        "id" : "38"
+      }, {
+        "id" : "39"
+      }, {
+        "id" : "40"
+      }, {
+        "id" : "41"
+      }, {
+        "id" : "42"
+      }, {
+        "id" : "43"
+      } ],
+      "softwareSystemId" : "3"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "SystemContext",
+      "name" : "System Context View: Happy Headlines",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "21"
+      }, {
+        "id" : "32"
+      } ],
+      "softwareSystemId" : "3"
+    } ]
+  }
+}

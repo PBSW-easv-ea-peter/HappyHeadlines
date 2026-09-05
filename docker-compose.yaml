@@ -1,0 +1,90 @@
+services:
+  articledb-eu:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-na:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-sa:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-au:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-as:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-an:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-af:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articledb-global:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: articles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+
+  articleservice:
+    build:
+      context: ./HappyHeadlines/ArticleService/
+    image: happyheadlines/articleservice
+    ports:
+      - "8080:8080"
+    deploy:
+      replicas: 3
+    depends_on:
+      - articledb-eu
+      - articledb-na
+      - articledb-sa
+      - articledb-au
+      - articledb-as
+      - articledb-an
+      - articledb-af
+      - articledb-global

@@ -18,14 +18,15 @@ workspace "Happy Headlines" "Positive news platform" {
             draftService = container "DraftService" "Manages article drafts." "Service"
             publisherService = container "PublisherService" "Publishes approved articles." "Service"
             profanityService = container "ProfanityService" "Filters inappropriate language." "Service"
-            articleService = container "ArticleService" "Provides published articles." "Service"
+            articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas)" "Service"
+            articleServiceLB = container "ArticleService Load Balancer" "Distributes requests across ArticleService replicas." "Load Balancer"
             commentService = container "CommentService" "Manages comments." "Service"
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
             newsletterService = container "NewsletterService" "Sends newsletters." "Service"
 
             // Databases
             draftDb = container "DraftDatabase" "Stores article drafts." "Database"
-            articleDb = container "ArticleDatabase" "Stores published articles." "Database"
+            articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "Database"
             commentDb = container "CommentDatabase" "Stores comments." "Database"
             profanityDb = container "ProfanityDatabase" "Stores prohibited words." "Database"
             subscriberDb = container "SubscriberDatabase" "Stores subscriber information." "Database"
@@ -56,8 +57,9 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // Reader - articles
         reader -> website "Reads articles"
-        website -> articleService "Requests articles"
-
+        // website -> articleService "Requests articles"
+        website -> articleServiceLB "Requests articles"
+        articleServiceLB -> articleService "Routes requests to"
 
         // Reader - comments
         reader -> website "Posts comments"
@@ -76,8 +78,62 @@ workspace "Happy Headlines" "Positive news platform" {
 
 
         // Newsletter
-        newsletterService -> articleService "Retrieves articles"
+        // newsletterService -> articleService "Retrieves articles"
+        newsletterService -> articleServiceLB "Retrieves articles"
         newsletterService -> subscriberService "Retrieves subscribers"
+
+
+        deploymentEnvironment "Production" {
+
+            deploymentNode "Load Balancer" "Docker container" {
+                loadBalancer = containerInstance articleServiceLB
+            }
+
+            deploymentNode "Website" "Docker container" {
+                websiteInstance = containerInstance website
+            }
+            deploymentNode "NewsletterService" "Docker container" {
+                newsletterServiceInstance = containerInstance newsletterService
+            }
+            deploymentNode "ArticleQueue" "Docker container" {
+                articleQueueInstance = containerInstance articleQueue
+            }
+
+            deploymentNode "ArticleService Instance 1" "Docker container" {
+                articleServiceInstance1 = containerInstance articleService
+            }
+            deploymentNode "ArticleService Instance 2" "Docker container" {
+                articleServiceInstance2 = containerInstance articleService
+            }
+            deploymentNode "ArticleService Instance 3" "Docker container" {
+                articleServiceInstance3 = containerInstance articleService
+            }
+
+            deploymentNode "Africa" "SQL Server" {
+                africaDb = containerInstance articleDb
+            }
+            deploymentNode "Asia" "SQL Server" {
+                asiaDb = containerInstance articleDb
+            }
+            deploymentNode "Europe" "SQL Server" {
+                europeDb = containerInstance articleDb
+            }
+            deploymentNode "North America" "SQL Server" {
+                northAmericaDb = containerInstance articleDb
+            }
+            deploymentNode "South America" "SQL Server" {
+                southAmericaDb = containerInstance articleDb
+            }
+            deploymentNode "Australia" "SQL Server" {
+                australiaDb = containerInstance articleDb
+            }
+            deploymentNode "Antarctica" "SQL Server" {
+                antarcticaDb = containerInstance articleDb
+            }
+            deploymentNode "Global" "SQL Server" {
+                globalDb = containerInstance articleDb
+            }
+        }
     }
 
 
@@ -96,6 +152,16 @@ workspace "Happy Headlines" "Positive news platform" {
             autolayout lr
         }
 
+        // C4 Level 5 - Deployment diagram
+        deployment happyHeadlines "Production" "ArticleServiceDeployment" {
+            include websiteInstance newsletterServiceInstance loadBalancer articleServiceInstance1 articleServiceInstance2 articleServiceInstance3
+            autolayout lr
+        }
+
+        deployment happyHeadlines "Production" "ArticleDatabaseDeployment" {
+            include articleServiceInstance1 articleQueueInstance africaDb asiaDb europeDb northAmericaDb southAmericaDb australiaDb antarcticaDb globalDb
+            autolayout lr
+        }
 
         theme default
     }

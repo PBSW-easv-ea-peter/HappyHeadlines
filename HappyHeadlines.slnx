@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="HappyHeadlines/ArticleService/ArticleService.csproj" />
+  <Project Path="HappyHeadlines/CommentService/CommentService.csproj" />
+  <Project Path="HappyHeadlines/ProfanityService/ProfanityService.csproj" />
 </Solution>

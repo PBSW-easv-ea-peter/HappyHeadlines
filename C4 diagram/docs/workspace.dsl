@@ -18,7 +18,19 @@ workspace "Happy Headlines" "Positive news platform" {
             draftService = container "DraftService" "Manages article drafts." "Service"
             publisherService = container "PublisherService" "Publishes approved articles." "Service"
             profanityService = container "ProfanityService" "Filters inappropriate language." "Service"
-            articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas)" "Service"
+            articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas)" "Service" {
+                articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
+                articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
+                articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
+                articleShardResolver = component "ArticleShardResolver" "Resolves a location code to the correct shard connection string." "Component"
+                articleQueueConsumer = component "ArticleQueueConsumer" "Will consume ArticleQueue for Create/Update once wired up. Currently idle." "Background Service"
+
+                articlesController -> articleReadRepository "Delegates GET requests to"
+                articlesController -> articleWriteRepository "Delegates Create/Update/Delete REST stand-ins to"
+                articleReadRepository -> articleShardResolver "Resolves shard via"
+                articleWriteRepository -> articleShardResolver "Resolves shard via"
+                articleQueueConsumer -> articleWriteRepository "Will persist consumed messages via (not yet wired)"
+            }
             articleServiceLB = container "ArticleService Load Balancer" "Distributes requests across ArticleService replicas." "Load Balancer"
             commentService = container "CommentService" "Manages comments." "Service"
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
@@ -51,15 +63,20 @@ workspace "Happy Headlines" "Positive news platform" {
         publisherService -> articleQueue "Publishes approved article"
 
         articleQueue -> articleDb "Stores published article"
-        articleService -> articleQueue "Subscribes to published articles"
-        articleService -> articleDb "Reads articles"
+
+        // ArticleService component-level relations (imply the ArticleService container-level
+        // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
+        articleServiceLB -> articlesController "Routes requests to"
+        articleReadRepository -> articleDb "Reads articles from"
+        articleWriteRepository -> articleDb "Writes articles to"
+        articleQueueConsumer -> articleQueue "Subscribes to (idle - not wired up yet)"
 
 
         // Reader - articles
         reader -> website "Reads articles"
         // website -> articleService "Requests articles"
         website -> articleServiceLB "Requests articles"
-        articleServiceLB -> articleService "Routes requests to"
+        // articleServiceLB -> articleService is implied by articleServiceLB -> articlesController above
 
         // Reader - comments
         reader -> website "Posts comments"
@@ -148,6 +165,12 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // C4 Level 2 - Container diagram
         container happyHeadlines "Containers" {
+            include *
+            autolayout lr
+        }
+
+        // C4 Level 3 - Component diagram
+        component articleService "ArticleServiceComponents" {
             include *
             autolayout lr
         }

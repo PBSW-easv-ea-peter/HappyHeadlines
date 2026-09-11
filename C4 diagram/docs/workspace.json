@@ -3,307 +3,34 @@
   "description" : "Positive news platform",
   "documentation" : { },
   "id" : 1,
-  "lastModifiedDate" : "2026-09-05T09:40:56Z",
+  "lastModifiedDate" : "2026-09-11T10:25:14Z",
   "model" : {
     "deploymentNodes" : [ {
       "containerInstances" : [ {
-        "containerId" : "10",
+        "containerId" : "20",
         "environment" : "Production",
-        "id" : "47",
+        "id" : "61",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "loadBalancer"
         },
         "relationships" : [ {
           "description" : "Routes requests to",
-          "destinationId" : "57",
-          "id" : "58",
-          "linkedRelationshipId" : "35",
-          "sourceId" : "47"
+          "destinationId" : "71",
+          "id" : "72",
+          "linkedRelationshipId" : "41",
+          "sourceId" : "61"
         }, {
           "description" : "Routes requests to",
-          "destinationId" : "61",
-          "id" : "62",
-          "linkedRelationshipId" : "35",
-          "sourceId" : "47"
-        }, {
-          "description" : "Routes requests to",
-          "destinationId" : "65",
-          "id" : "66",
-          "linkedRelationshipId" : "35",
-          "sourceId" : "47"
-        } ],
-        "tags" : "Container Instance"
-      } ],
-      "description" : "Docker container",
-      "environment" : "Production",
-      "id" : "46",
-      "instances" : "1",
-      "name" : "Load Balancer",
-      "properties" : {
-        "structurizr.dsl.identifier" : "4f4e49f8-697b-4640-837c-7d3449ce4fc5"
-      },
-      "tags" : "Element,Deployment Node"
-    }, {
-      "containerInstances" : [ {
-        "containerId" : "5",
-        "environment" : "Production",
-        "id" : "49",
-        "instanceId" : 1,
-        "properties" : {
-          "structurizr.dsl.identifier" : "websiteInstance"
-        },
-        "relationships" : [ {
-          "description" : "Requests articles",
-          "destinationId" : "47",
-          "id" : "50",
-          "linkedRelationshipId" : "34",
-          "sourceId" : "49"
-        } ],
-        "tags" : "Container Instance"
-      } ],
-      "description" : "Docker container",
-      "environment" : "Production",
-      "id" : "48",
-      "instances" : "1",
-      "name" : "Website",
-      "properties" : {
-        "structurizr.dsl.identifier" : "18a0e920-56ce-4a23-8619-46518e4a20c0"
-      },
-      "tags" : "Element,Deployment Node"
-    }, {
-      "containerInstances" : [ {
-        "containerId" : "13",
-        "environment" : "Production",
-        "id" : "52",
-        "instanceId" : 1,
-        "properties" : {
-          "structurizr.dsl.identifier" : "newsletterServiceInstance"
-        },
-        "relationships" : [ {
-          "description" : "Retrieves articles",
-          "destinationId" : "47",
-          "id" : "53",
-          "linkedRelationshipId" : "44",
-          "sourceId" : "52"
-        } ],
-        "tags" : "Container Instance"
-      } ],
-      "description" : "Docker container",
-      "environment" : "Production",
-      "id" : "51",
-      "instances" : "1",
-      "name" : "NewsletterService",
-      "properties" : {
-        "structurizr.dsl.identifier" : "e1eff0ce-a7d0-46d7-895c-37c9d536985a"
-      },
-      "tags" : "Element,Deployment Node"
-    }, {
-      "containerInstances" : [ {
-        "containerId" : "19",
-        "environment" : "Production",
-        "id" : "55",
-        "instanceId" : 1,
-        "properties" : {
-          "structurizr.dsl.identifier" : "articleQueueInstance"
-        },
-        "relationships" : [ {
-          "description" : "Stores published article",
-          "destinationId" : "69",
-          "id" : "70",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
           "destinationId" : "75",
           "id" : "76",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
-          "destinationId" : "81",
-          "id" : "82",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
-          "destinationId" : "87",
-          "id" : "88",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
-          "destinationId" : "93",
-          "id" : "94",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
-          "destinationId" : "99",
-          "id" : "100",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
-          "destinationId" : "105",
-          "id" : "106",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        }, {
-          "description" : "Stores published article",
-          "destinationId" : "111",
-          "id" : "112",
-          "linkedRelationshipId" : "29",
-          "sourceId" : "55"
-        } ],
-        "tags" : "Container Instance"
-      } ],
-      "description" : "Docker container",
-      "environment" : "Production",
-      "id" : "54",
-      "instances" : "1",
-      "name" : "ArticleQueue",
-      "properties" : {
-        "structurizr.dsl.identifier" : "c5504dca-9c74-420f-9db3-97a8cba443da"
-      },
-      "tags" : "Element,Deployment Node"
-    }, {
-      "containerInstances" : [ {
-        "containerId" : "9",
-        "environment" : "Production",
-        "id" : "57",
-        "instanceId" : 1,
-        "properties" : {
-          "structurizr.dsl.identifier" : "articleServiceInstance1"
-        },
-        "relationships" : [ {
-          "description" : "Subscribes to published articles",
-          "destinationId" : "55",
-          "id" : "59",
-          "linkedRelationshipId" : "30",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "69",
-          "id" : "71",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "75",
-          "id" : "77",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "81",
-          "id" : "83",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "87",
-          "id" : "89",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "93",
-          "id" : "95",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "99",
-          "id" : "101",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "105",
-          "id" : "107",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "111",
-          "id" : "113",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "57"
-        } ],
-        "tags" : "Container Instance"
-      } ],
-      "description" : "Docker container",
-      "environment" : "Production",
-      "id" : "56",
-      "instances" : "1",
-      "name" : "ArticleService Instance 1",
-      "properties" : {
-        "structurizr.dsl.identifier" : "d4923b7f-cf68-4bda-b5c0-2d4066bfeae4"
-      },
-      "tags" : "Element,Deployment Node"
-    }, {
-      "containerInstances" : [ {
-        "containerId" : "9",
-        "environment" : "Production",
-        "id" : "61",
-        "instanceId" : 1,
-        "properties" : {
-          "structurizr.dsl.identifier" : "articleServiceInstance2"
-        },
-        "relationships" : [ {
-          "description" : "Subscribes to published articles",
-          "destinationId" : "55",
-          "id" : "63",
-          "linkedRelationshipId" : "30",
+          "linkedRelationshipId" : "41",
           "sourceId" : "61"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "69",
-          "id" : "72",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "75",
-          "id" : "78",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "81",
-          "id" : "84",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "87",
-          "id" : "90",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "93",
-          "id" : "96",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "99",
-          "id" : "102",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "105",
-          "id" : "108",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "61"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "111",
-          "id" : "114",
-          "linkedRelationshipId" : "31",
+          "description" : "Routes requests to",
+          "destinationId" : "79",
+          "id" : "80",
+          "linkedRelationshipId" : "41",
           "sourceId" : "61"
         } ],
         "tags" : "Container Instance"
@@ -312,91 +39,364 @@
       "environment" : "Production",
       "id" : "60",
       "instances" : "1",
-      "name" : "ArticleService Instance 2",
+      "name" : "Load Balancer",
       "properties" : {
-        "structurizr.dsl.identifier" : "ac8a56d5-efed-4cd4-88ea-11ea5de1043d"
+        "structurizr.dsl.identifier" : "d12b9127-825f-4e93-8c83-770ccb3973fb"
+      },
+      "tags" : "Element,Deployment Node"
+    }, {
+      "containerInstances" : [ {
+        "containerId" : "5",
+        "environment" : "Production",
+        "id" : "63",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "websiteInstance"
+        },
+        "relationships" : [ {
+          "description" : "Requests articles",
+          "destinationId" : "61",
+          "id" : "64",
+          "linkedRelationshipId" : "49",
+          "sourceId" : "63"
+        } ],
+        "tags" : "Container Instance"
+      } ],
+      "description" : "Docker container",
+      "environment" : "Production",
+      "id" : "62",
+      "instances" : "1",
+      "name" : "Website",
+      "properties" : {
+        "structurizr.dsl.identifier" : "c8c7e962-57b2-4e6f-ab23-982d4b7d9312"
+      },
+      "tags" : "Element,Deployment Node"
+    }, {
+      "containerInstances" : [ {
+        "containerId" : "23",
+        "environment" : "Production",
+        "id" : "66",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "newsletterServiceInstance"
+        },
+        "relationships" : [ {
+          "description" : "Retrieves articles",
+          "destinationId" : "61",
+          "id" : "67",
+          "linkedRelationshipId" : "58",
+          "sourceId" : "66"
+        } ],
+        "tags" : "Container Instance"
+      } ],
+      "description" : "Docker container",
+      "environment" : "Production",
+      "id" : "65",
+      "instances" : "1",
+      "name" : "NewsletterService",
+      "properties" : {
+        "structurizr.dsl.identifier" : "fe90af6f-cb5b-4ece-8bbb-803ed31d5066"
+      },
+      "tags" : "Element,Deployment Node"
+    }, {
+      "containerInstances" : [ {
+        "containerId" : "29",
+        "environment" : "Production",
+        "id" : "69",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "articleQueueInstance"
+        },
+        "relationships" : [ {
+          "description" : "Stores published article",
+          "destinationId" : "83",
+          "id" : "84",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "89",
+          "id" : "90",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "95",
+          "id" : "96",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "101",
+          "id" : "102",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "107",
+          "id" : "108",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "113",
+          "id" : "114",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "119",
+          "id" : "120",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        }, {
+          "description" : "Stores published article",
+          "destinationId" : "125",
+          "id" : "126",
+          "linkedRelationshipId" : "39",
+          "sourceId" : "69"
+        } ],
+        "tags" : "Container Instance"
+      } ],
+      "description" : "Docker container",
+      "environment" : "Production",
+      "id" : "68",
+      "instances" : "1",
+      "name" : "ArticleQueue",
+      "properties" : {
+        "structurizr.dsl.identifier" : "fdef24e7-61d1-434b-8b70-ead42d5776d8"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
         "containerId" : "9",
         "environment" : "Production",
-        "id" : "65",
+        "id" : "71",
         "instanceId" : 1,
         "properties" : {
-          "structurizr.dsl.identifier" : "articleServiceInstance3"
+          "structurizr.dsl.identifier" : "articleServiceInstance1"
         },
         "relationships" : [ {
-          "description" : "Subscribes to published articles",
-          "destinationId" : "55",
-          "id" : "67",
-          "linkedRelationshipId" : "30",
-          "sourceId" : "65"
-        }, {
-          "description" : "Reads articles",
+          "description" : "Subscribes to (idle - not wired up yet)",
           "destinationId" : "69",
           "id" : "73",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "46",
+          "sourceId" : "71"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "75",
-          "id" : "79",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
-        }, {
-          "description" : "Reads articles",
-          "destinationId" : "81",
+          "description" : "Reads articles from",
+          "destinationId" : "83",
           "id" : "85",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "87",
+          "description" : "Reads articles from",
+          "destinationId" : "89",
           "id" : "91",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "93",
+          "description" : "Reads articles from",
+          "destinationId" : "95",
           "id" : "97",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "99",
+          "description" : "Reads articles from",
+          "destinationId" : "101",
           "id" : "103",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "105",
+          "description" : "Reads articles from",
+          "destinationId" : "107",
           "id" : "109",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "111",
+          "description" : "Reads articles from",
+          "destinationId" : "113",
           "id" : "115",
-          "linkedRelationshipId" : "31",
-          "sourceId" : "65"
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "119",
+          "id" : "121",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "125",
+          "id" : "127",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "71"
         } ],
         "tags" : "Container Instance"
       } ],
       "description" : "Docker container",
       "environment" : "Production",
-      "id" : "64",
+      "id" : "70",
       "instances" : "1",
-      "name" : "ArticleService Instance 3",
+      "name" : "ArticleService Instance 1",
       "properties" : {
-        "structurizr.dsl.identifier" : "7a279180-2084-489e-a655-53bb23f73767"
+        "structurizr.dsl.identifier" : "593cdc14-752a-4312-8d33-9cd5f2dc790d"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "9",
         "environment" : "Production",
-        "id" : "69",
+        "id" : "75",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "articleServiceInstance2"
+        },
+        "relationships" : [ {
+          "description" : "Subscribes to (idle - not wired up yet)",
+          "destinationId" : "69",
+          "id" : "77",
+          "linkedRelationshipId" : "46",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "83",
+          "id" : "86",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "89",
+          "id" : "92",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "95",
+          "id" : "98",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "101",
+          "id" : "104",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "107",
+          "id" : "110",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "113",
+          "id" : "116",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "119",
+          "id" : "122",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "125",
+          "id" : "128",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "75"
+        } ],
+        "tags" : "Container Instance"
+      } ],
+      "description" : "Docker container",
+      "environment" : "Production",
+      "id" : "74",
+      "instances" : "1",
+      "name" : "ArticleService Instance 2",
+      "properties" : {
+        "structurizr.dsl.identifier" : "76b5340e-3d50-4605-b5f0-8150010c1b65"
+      },
+      "tags" : "Element,Deployment Node"
+    }, {
+      "containerInstances" : [ {
+        "containerId" : "9",
+        "environment" : "Production",
+        "id" : "79",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "articleServiceInstance3"
+        },
+        "relationships" : [ {
+          "description" : "Subscribes to (idle - not wired up yet)",
+          "destinationId" : "69",
+          "id" : "81",
+          "linkedRelationshipId" : "46",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "83",
+          "id" : "87",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "89",
+          "id" : "93",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "95",
+          "id" : "99",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "101",
+          "id" : "105",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "107",
+          "id" : "111",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "113",
+          "id" : "117",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "119",
+          "id" : "123",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        }, {
+          "description" : "Reads articles from",
+          "destinationId" : "125",
+          "id" : "129",
+          "linkedRelationshipId" : "43",
+          "sourceId" : "79"
+        } ],
+        "tags" : "Container Instance"
+      } ],
+      "description" : "Docker container",
+      "environment" : "Production",
+      "id" : "78",
+      "instances" : "1",
+      "name" : "ArticleService Instance 3",
+      "properties" : {
+        "structurizr.dsl.identifier" : "fc6dc3c6-3b65-4f38-95dc-70bb3893bca9"
+      },
+      "tags" : "Element,Deployment Node"
+    }, {
+      "containerInstances" : [ {
+        "containerId" : "25",
+        "environment" : "Production",
+        "id" : "83",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "africaDb"
@@ -405,18 +405,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "68",
+      "id" : "82",
       "instances" : "1",
       "name" : "Africa",
       "properties" : {
-        "structurizr.dsl.identifier" : "f57691dc-9768-4e76-86cd-ada7a6816697"
+        "structurizr.dsl.identifier" : "50c896bb-1a83-493d-b926-c5d45ece89b4"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "75",
+        "id" : "89",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "asiaDb"
@@ -425,18 +425,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "74",
+      "id" : "88",
       "instances" : "1",
       "name" : "Asia",
       "properties" : {
-        "structurizr.dsl.identifier" : "6fe8f622-3ebd-44e2-af2e-96795bf4f9c4"
+        "structurizr.dsl.identifier" : "99f442a5-9ff2-4617-bfab-fe20909f79c5"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "81",
+        "id" : "95",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "europeDb"
@@ -445,18 +445,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "80",
+      "id" : "94",
       "instances" : "1",
       "name" : "Europe",
       "properties" : {
-        "structurizr.dsl.identifier" : "9713296c-a308-496b-b3dc-b5f57b7736ff"
+        "structurizr.dsl.identifier" : "789fc0a0-465e-4941-a172-a98836ee6c61"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "87",
+        "id" : "101",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "northAmericaDb"
@@ -465,18 +465,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "86",
+      "id" : "100",
       "instances" : "1",
       "name" : "North America",
       "properties" : {
-        "structurizr.dsl.identifier" : "076c3fe3-1df2-4384-9eb3-b5f36a8738b0"
+        "structurizr.dsl.identifier" : "f3851298-3a52-48dd-80f9-e3fee812d8e7"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "93",
+        "id" : "107",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "southAmericaDb"
@@ -485,18 +485,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "92",
+      "id" : "106",
       "instances" : "1",
       "name" : "South America",
       "properties" : {
-        "structurizr.dsl.identifier" : "77abf4b2-afdd-47ff-9fa4-43a2cf72a187"
+        "structurizr.dsl.identifier" : "97aa47d7-4e1d-4122-aedf-ddb17e0e954b"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "99",
+        "id" : "113",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "australiaDb"
@@ -505,18 +505,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "98",
+      "id" : "112",
       "instances" : "1",
       "name" : "Australia",
       "properties" : {
-        "structurizr.dsl.identifier" : "cff83355-643c-4451-b333-e5f036d01247"
+        "structurizr.dsl.identifier" : "6af7ab17-8b94-45be-8c72-bf17c4199350"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "105",
+        "id" : "119",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "antarcticaDb"
@@ -525,18 +525,18 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "104",
+      "id" : "118",
       "instances" : "1",
       "name" : "Antarctica",
       "properties" : {
-        "structurizr.dsl.identifier" : "275ede78-bb8d-438a-9277-7362946ef2fe"
+        "structurizr.dsl.identifier" : "57cb238b-9912-4ade-99ae-398ce841bdfd"
       },
       "tags" : "Element,Deployment Node"
     }, {
       "containerInstances" : [ {
-        "containerId" : "15",
+        "containerId" : "25",
         "environment" : "Production",
-        "id" : "111",
+        "id" : "125",
         "instanceId" : 1,
         "properties" : {
           "structurizr.dsl.identifier" : "globalDb"
@@ -545,11 +545,11 @@
       } ],
       "description" : "SQL Server",
       "environment" : "Production",
-      "id" : "110",
+      "id" : "124",
       "instances" : "1",
       "name" : "Global",
       "properties" : {
-        "structurizr.dsl.identifier" : "90e6b1a9-a327-470d-b99b-e507f6ac2070"
+        "structurizr.dsl.identifier" : "40347dc4-e38c-456c-a95f-100cac0d8a26"
       },
       "tags" : "Element,Deployment Node"
     } ],
@@ -563,14 +563,14 @@
       "relationships" : [ {
         "description" : "Creates drafts and publishes articles",
         "destinationId" : "4",
-        "id" : "21",
+        "id" : "31",
         "sourceId" : "1",
         "tags" : "Relationship"
       }, {
         "description" : "Creates drafts and publishes articles",
         "destinationId" : "3",
-        "id" : "22",
-        "linkedRelationshipId" : "21",
+        "id" : "32",
+        "linkedRelationshipId" : "31",
         "sourceId" : "1"
       } ],
       "tags" : "Element,Person"
@@ -584,25 +584,25 @@
       "relationships" : [ {
         "description" : "Reads articles",
         "destinationId" : "5",
-        "id" : "32",
+        "id" : "47",
         "sourceId" : "2",
         "tags" : "Relationship"
       }, {
         "description" : "Reads articles",
         "destinationId" : "3",
-        "id" : "33",
-        "linkedRelationshipId" : "32",
+        "id" : "48",
+        "linkedRelationshipId" : "47",
         "sourceId" : "2"
       }, {
         "description" : "Posts comments",
         "destinationId" : "5",
-        "id" : "36",
+        "id" : "50",
         "sourceId" : "2",
         "tags" : "Relationship"
       }, {
         "description" : "Subscribes to newsletter",
         "destinationId" : "5",
-        "id" : "40",
+        "id" : "54",
         "sourceId" : "2",
         "tags" : "Relationship"
       } ],
@@ -620,13 +620,13 @@
         "relationships" : [ {
           "description" : "Save and retrieve drafts",
           "destinationId" : "6",
-          "id" : "23",
+          "id" : "33",
           "sourceId" : "4",
           "tags" : "Relationship"
         }, {
           "description" : "Publishes article",
           "destinationId" : "7",
-          "id" : "25",
+          "id" : "35",
           "sourceId" : "4",
           "tags" : "Relationship"
         } ],
@@ -642,20 +642,20 @@
         },
         "relationships" : [ {
           "description" : "Requests articles",
-          "destinationId" : "10",
-          "id" : "34",
+          "destinationId" : "20",
+          "id" : "49",
           "sourceId" : "5",
           "tags" : "Relationship"
         }, {
           "description" : "Creates and retrieves comments",
-          "destinationId" : "11",
-          "id" : "37",
+          "destinationId" : "21",
+          "id" : "51",
           "sourceId" : "5",
           "tags" : "Relationship"
         }, {
           "description" : "Registers subscriber",
-          "destinationId" : "12",
-          "id" : "41",
+          "destinationId" : "22",
+          "id" : "55",
           "sourceId" : "5",
           "tags" : "Relationship"
         } ],
@@ -671,8 +671,8 @@
         },
         "relationships" : [ {
           "description" : "Reads and writes drafts",
-          "destinationId" : "14",
-          "id" : "24",
+          "destinationId" : "24",
+          "id" : "34",
           "sourceId" : "6",
           "tags" : "Relationship"
         } ],
@@ -689,13 +689,13 @@
         "relationships" : [ {
           "description" : "Checks article content",
           "destinationId" : "8",
-          "id" : "26",
+          "id" : "36",
           "sourceId" : "7",
           "tags" : "Relationship"
         }, {
           "description" : "Publishes approved article",
-          "destinationId" : "19",
-          "id" : "28",
+          "destinationId" : "29",
+          "id" : "38",
           "sourceId" : "7",
           "tags" : "Relationship"
         } ],
@@ -711,14 +711,117 @@
         },
         "relationships" : [ {
           "description" : "Reads prohibited words",
-          "destinationId" : "17",
-          "id" : "27",
+          "destinationId" : "27",
+          "id" : "37",
           "sourceId" : "8",
           "tags" : "Relationship"
         } ],
         "tags" : "Element,Container",
         "technology" : "Service"
       }, {
+        "components" : [ {
+          "description" : "Exposes REST CRUD endpoints for articles, scoped by location.",
+          "documentation" : { },
+          "id" : "10",
+          "name" : "ArticlesController",
+          "properties" : {
+            "structurizr.dsl.identifier" : "articlesController"
+          },
+          "relationships" : [ {
+            "description" : "Delegates GET requests to",
+            "destinationId" : "11",
+            "id" : "15",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Delegates Create/Update/Delete REST stand-ins to",
+            "destinationId" : "12",
+            "id" : "16",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "ASP.NET Core Controller"
+        }, {
+          "description" : "Reads articles from the resolved shard.",
+          "documentation" : { },
+          "id" : "11",
+          "name" : "ArticleReadRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "articleReadRepository"
+          },
+          "relationships" : [ {
+            "description" : "Resolves shard via",
+            "destinationId" : "13",
+            "id" : "17",
+            "sourceId" : "11",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Reads articles from",
+            "destinationId" : "25",
+            "id" : "42",
+            "sourceId" : "11",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Repository"
+        }, {
+          "description" : "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update).",
+          "documentation" : { },
+          "id" : "12",
+          "name" : "ArticleWriteRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "articleWriteRepository"
+          },
+          "relationships" : [ {
+            "description" : "Resolves shard via",
+            "destinationId" : "13",
+            "id" : "18",
+            "sourceId" : "12",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Writes articles to",
+            "destinationId" : "25",
+            "id" : "44",
+            "sourceId" : "12",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Repository"
+        }, {
+          "description" : "Resolves a location code to the correct shard connection string.",
+          "documentation" : { },
+          "id" : "13",
+          "name" : "ArticleShardResolver",
+          "properties" : {
+            "structurizr.dsl.identifier" : "articleShardResolver"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Component"
+        }, {
+          "description" : "Will consume ArticleQueue for Create/Update once wired up. Currently idle.",
+          "documentation" : { },
+          "id" : "14",
+          "name" : "ArticleQueueConsumer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "articleQueueConsumer"
+          },
+          "relationships" : [ {
+            "description" : "Will persist consumed messages via (not yet wired)",
+            "destinationId" : "12",
+            "id" : "19",
+            "sourceId" : "14",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Subscribes to (idle - not wired up yet)",
+            "destinationId" : "29",
+            "id" : "45",
+            "sourceId" : "14",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Background Service"
+        } ],
         "description" : "Provides published articles. (x-axis split: 3 load-balanced replicas)",
         "documentation" : { },
         "id" : "9",
@@ -727,41 +830,47 @@
           "structurizr.dsl.identifier" : "articleService"
         },
         "relationships" : [ {
-          "description" : "Subscribes to published articles",
-          "destinationId" : "19",
-          "id" : "30",
-          "sourceId" : "9",
-          "tags" : "Relationship"
+          "description" : "Reads articles from",
+          "destinationId" : "25",
+          "id" : "43",
+          "linkedRelationshipId" : "42",
+          "sourceId" : "9"
         }, {
-          "description" : "Reads articles",
-          "destinationId" : "15",
-          "id" : "31",
-          "sourceId" : "9",
-          "tags" : "Relationship"
+          "description" : "Subscribes to (idle - not wired up yet)",
+          "destinationId" : "29",
+          "id" : "46",
+          "linkedRelationshipId" : "45",
+          "sourceId" : "9"
         } ],
         "tags" : "Element,Container",
         "technology" : "Service"
       }, {
         "description" : "Distributes requests across ArticleService replicas.",
         "documentation" : { },
-        "id" : "10",
+        "id" : "20",
         "name" : "ArticleService Load Balancer",
         "properties" : {
           "structurizr.dsl.identifier" : "articleServiceLB"
         },
         "relationships" : [ {
           "description" : "Routes requests to",
-          "destinationId" : "9",
-          "id" : "35",
-          "sourceId" : "10",
+          "destinationId" : "10",
+          "id" : "40",
+          "sourceId" : "20",
           "tags" : "Relationship"
+        }, {
+          "description" : "Routes requests to",
+          "destinationId" : "9",
+          "id" : "41",
+          "linkedRelationshipId" : "40",
+          "sourceId" : "20"
         } ],
         "tags" : "Element,Container",
         "technology" : "Load Balancer"
       }, {
         "description" : "Manages comments.",
         "documentation" : { },
-        "id" : "11",
+        "id" : "21",
         "name" : "CommentService",
         "properties" : {
           "structurizr.dsl.identifier" : "commentService"
@@ -769,14 +878,14 @@
         "relationships" : [ {
           "description" : "Checks comment content",
           "destinationId" : "8",
-          "id" : "38",
-          "sourceId" : "11",
+          "id" : "52",
+          "sourceId" : "21",
           "tags" : "Relationship"
         }, {
           "description" : "Reads and writes comments",
-          "destinationId" : "16",
-          "id" : "39",
-          "sourceId" : "11",
+          "destinationId" : "26",
+          "id" : "53",
+          "sourceId" : "21",
           "tags" : "Relationship"
         } ],
         "tags" : "Element,Container",
@@ -784,22 +893,22 @@
       }, {
         "description" : "Manages newsletter subscriptions.",
         "documentation" : { },
-        "id" : "12",
+        "id" : "22",
         "name" : "SubscriberService",
         "properties" : {
           "structurizr.dsl.identifier" : "subscriberService"
         },
         "relationships" : [ {
           "description" : "Reads and writes subscriber data",
-          "destinationId" : "18",
-          "id" : "42",
-          "sourceId" : "12",
+          "destinationId" : "28",
+          "id" : "56",
+          "sourceId" : "22",
           "tags" : "Relationship"
         }, {
           "description" : "Queues new subscribers",
-          "destinationId" : "20",
-          "id" : "43",
-          "sourceId" : "12",
+          "destinationId" : "30",
+          "id" : "57",
+          "sourceId" : "22",
           "tags" : "Relationship"
         } ],
         "tags" : "Element,Container",
@@ -807,22 +916,22 @@
       }, {
         "description" : "Sends newsletters.",
         "documentation" : { },
-        "id" : "13",
+        "id" : "23",
         "name" : "NewsletterService",
         "properties" : {
           "structurizr.dsl.identifier" : "newsletterService"
         },
         "relationships" : [ {
           "description" : "Retrieves articles",
-          "destinationId" : "10",
-          "id" : "44",
-          "sourceId" : "13",
+          "destinationId" : "20",
+          "id" : "58",
+          "sourceId" : "23",
           "tags" : "Relationship"
         }, {
           "description" : "Retrieves subscribers",
-          "destinationId" : "12",
-          "id" : "45",
-          "sourceId" : "13",
+          "destinationId" : "22",
+          "id" : "59",
+          "sourceId" : "23",
           "tags" : "Relationship"
         } ],
         "tags" : "Element,Container",
@@ -830,7 +939,7 @@
       }, {
         "description" : "Stores article drafts.",
         "documentation" : { },
-        "id" : "14",
+        "id" : "24",
         "name" : "DraftDatabase",
         "properties" : {
           "structurizr.dsl.identifier" : "draftDb"
@@ -840,7 +949,7 @@
       }, {
         "description" : "Stores published articles. (z-axis split: sharded per continent, 8 instances)",
         "documentation" : { },
-        "id" : "15",
+        "id" : "25",
         "name" : "ArticleDatabase",
         "properties" : {
           "structurizr.dsl.identifier" : "articleDb"
@@ -850,7 +959,7 @@
       }, {
         "description" : "Stores comments.",
         "documentation" : { },
-        "id" : "16",
+        "id" : "26",
         "name" : "CommentDatabase",
         "properties" : {
           "structurizr.dsl.identifier" : "commentDb"
@@ -860,7 +969,7 @@
       }, {
         "description" : "Stores prohibited words.",
         "documentation" : { },
-        "id" : "17",
+        "id" : "27",
         "name" : "ProfanityDatabase",
         "properties" : {
           "structurizr.dsl.identifier" : "profanityDb"
@@ -870,7 +979,7 @@
       }, {
         "description" : "Stores subscriber information.",
         "documentation" : { },
-        "id" : "18",
+        "id" : "28",
         "name" : "SubscriberDatabase",
         "properties" : {
           "structurizr.dsl.identifier" : "subscriberDb"
@@ -880,16 +989,16 @@
       }, {
         "description" : "Queue for newly published articles.",
         "documentation" : { },
-        "id" : "19",
+        "id" : "29",
         "name" : "ArticleQueue",
         "properties" : {
           "structurizr.dsl.identifier" : "articleQueue"
         },
         "relationships" : [ {
           "description" : "Stores published article",
-          "destinationId" : "15",
-          "id" : "29",
-          "sourceId" : "19",
+          "destinationId" : "25",
+          "id" : "39",
+          "sourceId" : "29",
           "tags" : "Relationship"
         } ],
         "tags" : "Element,Container",
@@ -897,7 +1006,7 @@
       }, {
         "description" : "Queue for new newsletter subscriptions.",
         "documentation" : { },
-        "id" : "20",
+        "id" : "30",
         "name" : "SubscriberQueue",
         "properties" : {
           "structurizr.dsl.identifier" : "subscriberQueue"
@@ -917,13 +1026,81 @@
   },
   "name" : "Happy Headlines",
   "properties" : {
-    "structurizr.inspection.error" : "83",
-    "structurizr.dsl" : "d29ya3NwYWNlICJIYXBweSBIZWFkbGluZXMiICJQb3NpdGl2ZSBuZXdzIHBsYXRmb3JtIiB7CgogICAgbW9kZWwgewoKICAgICAgICAvLyBQZW9wbGUKICAgICAgICBwdWJsaXNoZXIgPSBwZXJzb24gIlB1Ymxpc2hlciIgIldyaXRlcyBhbmQgcHVibGlzaGVzIGFydGljbGVzLiIKICAgICAgICByZWFkZXIgPSBwZXJzb24gIlJlYWRlciIgIlJlYWRzIGFydGljbGVzLCBjb21tZW50cywgYW5kIHN1YnNjcmliZXMgdG8gbmV3c2xldHRlcnMuIgoKCiAgICAgICAgLy8gU29mdHdhcmUgc3lzdGVtCiAgICAgICAgaGFwcHlIZWFkbGluZXMgPSBzb2Z0d2FyZVN5c3RlbSAiSGFwcHkgSGVhZGxpbmVzIiAiUG9zaXRpdmUgbmV3cyBwbGF0Zm9ybS4iIHsKCiAgICAgICAgICAgIC8vIEFwcGxpY2F0aW9ucwogICAgICAgICAgICB3ZWJhcHAgPSBjb250YWluZXIgIldlYmFwcCIgIkVkaXRvcmlhbCBhcHBsaWNhdGlvbiB1c2VkIGJ5IHB1Ymxpc2hlcnMuIiAiV2ViIEFwcGxpY2F0aW9uIgogICAgICAgICAgICB3ZWJzaXRlID0gY29udGFpbmVyICJXZWJzaXRlIiAiUHVibGljIHdlYnNpdGUgZm9yIHJlYWRlcnMuIiAiV2ViIEFwcGxpY2F0aW9uIgoKICAgICAgICAgICAgLy8gU2VydmljZXMKICAgICAgICAgICAgZHJhZnRTZXJ2aWNlID0gY29udGFpbmVyICJEcmFmdFNlcnZpY2UiICJNYW5hZ2VzIGFydGljbGUgZHJhZnRzLiIgIlNlcnZpY2UiCiAgICAgICAgICAgIHB1Ymxpc2hlclNlcnZpY2UgPSBjb250YWluZXIgIlB1Ymxpc2hlclNlcnZpY2UiICJQdWJsaXNoZXMgYXBwcm92ZWQgYXJ0aWNsZXMuIiAiU2VydmljZSIKICAgICAgICAgICAgcHJvZmFuaXR5U2VydmljZSA9IGNvbnRhaW5lciAiUHJvZmFuaXR5U2VydmljZSIgIkZpbHRlcnMgaW5hcHByb3ByaWF0ZSBsYW5ndWFnZS4iICJTZXJ2aWNlIgogICAgICAgICAgICBhcnRpY2xlU2VydmljZSA9IGNvbnRhaW5lciAiQXJ0aWNsZVNlcnZpY2UiICJQcm92aWRlcyBwdWJsaXNoZWQgYXJ0aWNsZXMuICh4LWF4aXMgc3BsaXQ6IDMgbG9hZC1iYWxhbmNlZCByZXBsaWNhcykiICJTZXJ2aWNlIgogICAgICAgICAgICBhcnRpY2xlU2VydmljZUxCID0gY29udGFpbmVyICJBcnRpY2xlU2VydmljZSBMb2FkIEJhbGFuY2VyIiAiRGlzdHJpYnV0ZXMgcmVxdWVzdHMgYWNyb3NzIEFydGljbGVTZXJ2aWNlIHJlcGxpY2FzLiIgIkxvYWQgQmFsYW5jZXIiCiAgICAgICAgICAgIGNvbW1lbnRTZXJ2aWNlID0gY29udGFpbmVyICJDb21tZW50U2VydmljZSIgIk1hbmFnZXMgY29tbWVudHMuIiAiU2VydmljZSIKICAgICAgICAgICAgc3Vic2NyaWJlclNlcnZpY2UgPSBjb250YWluZXIgIlN1YnNjcmliZXJTZXJ2aWNlIiAiTWFuYWdlcyBuZXdzbGV0dGVyIHN1YnNjcmlwdGlvbnMuIiAiU2VydmljZSIKICAgICAgICAgICAgbmV3c2xldHRlclNlcnZpY2UgPSBjb250YWluZXIgIk5ld3NsZXR0ZXJTZXJ2aWNlIiAiU2VuZHMgbmV3c2xldHRlcnMuIiAiU2VydmljZSIKCiAgICAgICAgICAgIC8vIERhdGFiYXNlcwogICAgICAgICAgICBkcmFmdERiID0gY29udGFpbmVyICJEcmFmdERhdGFiYXNlIiAiU3RvcmVzIGFydGljbGUgZHJhZnRzLiIgIkRhdGFiYXNlIgogICAgICAgICAgICBhcnRpY2xlRGIgPSBjb250YWluZXIgIkFydGljbGVEYXRhYmFzZSIgIlN0b3JlcyBwdWJsaXNoZWQgYXJ0aWNsZXMuICh6LWF4aXMgc3BsaXQ6IHNoYXJkZWQgcGVyIGNvbnRpbmVudCwgOCBpbnN0YW5jZXMpIiAiRGF0YWJhc2UiCiAgICAgICAgICAgIGNvbW1lbnREYiA9IGNvbnRhaW5lciAiQ29tbWVudERhdGFiYXNlIiAiU3RvcmVzIGNvbW1lbnRzLiIgIkRhdGFiYXNlIgogICAgICAgICAgICBwcm9mYW5pdHlEYiA9IGNvbnRhaW5lciAiUHJvZmFuaXR5RGF0YWJhc2UiICJTdG9yZXMgcHJvaGliaXRlZCB3b3Jkcy4iICJEYXRhYmFzZSIKICAgICAgICAgICAgc3Vic2NyaWJlckRiID0gY29udGFpbmVyICJTdWJzY3JpYmVyRGF0YWJhc2UiICJTdG9yZXMgc3Vic2NyaWJlciBpbmZvcm1hdGlvbi4iICJEYXRhYmFzZSIKCiAgICAgICAgICAgIC8vIFF1ZXVlcwogICAgICAgICAgICBhcnRpY2xlUXVldWUgPSBjb250YWluZXIgIkFydGljbGVRdWV1ZSIgIlF1ZXVlIGZvciBuZXdseSBwdWJsaXNoZWQgYXJ0aWNsZXMuIiAiUXVldWUiCiAgICAgICAgICAgIHN1YnNjcmliZXJRdWV1ZSA9IGNvbnRhaW5lciAiU3Vic2NyaWJlclF1ZXVlIiAiUXVldWUgZm9yIG5ldyBuZXdzbGV0dGVyIHN1YnNjcmlwdGlvbnMuIiAiUXVldWUiCiAgICAgICAgfQoKCiAgICAgICAgLy8gUHVibGlzaGVyIHdvcmtmbG93CiAgICAgICAgcHVibGlzaGVyIC0+IHdlYmFwcCAiQ3JlYXRlcyBkcmFmdHMgYW5kIHB1Ymxpc2hlcyBhcnRpY2xlcyIKCiAgICAgICAgd2ViYXBwIC0+IGRyYWZ0U2VydmljZSAiU2F2ZSBhbmQgcmV0cmlldmUgZHJhZnRzIgogICAgICAgIGRyYWZ0U2VydmljZSAtPiBkcmFmdERiICJSZWFkcyBhbmQgd3JpdGVzIGRyYWZ0cyIKCiAgICAgICAgd2ViYXBwIC0+IHB1Ymxpc2hlclNlcnZpY2UgIlB1Ymxpc2hlcyBhcnRpY2xlIgoKICAgICAgICBwdWJsaXNoZXJTZXJ2aWNlIC0+IHByb2Zhbml0eVNlcnZpY2UgIkNoZWNrcyBhcnRpY2xlIGNvbnRlbnQiCiAgICAgICAgcHJvZmFuaXR5U2VydmljZSAtPiBwcm9mYW5pdHlEYiAiUmVhZHMgcHJvaGliaXRlZCB3b3JkcyIKCiAgICAgICAgcHVibGlzaGVyU2VydmljZSAtPiBhcnRpY2xlUXVldWUgIlB1Ymxpc2hlcyBhcHByb3ZlZCBhcnRpY2xlIgoKICAgICAgICBhcnRpY2xlUXVldWUgLT4gYXJ0aWNsZURiICJTdG9yZXMgcHVibGlzaGVkIGFydGljbGUiCiAgICAgICAgYXJ0aWNsZVNlcnZpY2UgLT4gYXJ0aWNsZVF1ZXVlICJTdWJzY3JpYmVzIHRvIHB1Ymxpc2hlZCBhcnRpY2xlcyIKICAgICAgICBhcnRpY2xlU2VydmljZSAtPiBhcnRpY2xlRGIgIlJlYWRzIGFydGljbGVzIgoKCiAgICAgICAgLy8gUmVhZGVyIC0gYXJ0aWNsZXMKICAgICAgICByZWFkZXIgLT4gd2Vic2l0ZSAiUmVhZHMgYXJ0aWNsZXMiCiAgICAgICAgLy8gd2Vic2l0ZSAtPiBhcnRpY2xlU2VydmljZSAiUmVxdWVzdHMgYXJ0aWNsZXMiCiAgICAgICAgd2Vic2l0ZSAtPiBhcnRpY2xlU2VydmljZUxCICJSZXF1ZXN0cyBhcnRpY2xlcyIKICAgICAgICBhcnRpY2xlU2VydmljZUxCIC0+IGFydGljbGVTZXJ2aWNlICJSb3V0ZXMgcmVxdWVzdHMgdG8iCgogICAgICAgIC8vIFJlYWRlciAtIGNvbW1lbnRzCiAgICAgICAgcmVhZGVyIC0+IHdlYnNpdGUgIlBvc3RzIGNvbW1lbnRzIgogICAgICAgIHdlYnNpdGUgLT4gY29tbWVudFNlcnZpY2UgIkNyZWF0ZXMgYW5kIHJldHJpZXZlcyBjb21tZW50cyIKCiAgICAgICAgY29tbWVudFNlcnZpY2UgLT4gcHJvZmFuaXR5U2VydmljZSAiQ2hlY2tzIGNvbW1lbnQgY29udGVudCIKICAgICAgICBjb21tZW50U2VydmljZSAtPiBjb21tZW50RGIgIlJlYWRzIGFuZCB3cml0ZXMgY29tbWVudHMiCgoKICAgICAgICAvLyBSZWFkZXIgLSBuZXdzbGV0dGVyIHN1YnNjcmlwdGlvbgogICAgICAgIHJlYWRlciAtPiB3ZWJzaXRlICJTdWJzY3JpYmVzIHRvIG5ld3NsZXR0ZXIiCiAgICAgICAgd2Vic2l0ZSAtPiBzdWJzY3JpYmVyU2VydmljZSAiUmVnaXN0ZXJzIHN1YnNjcmliZXIiCgogICAgICAgIHN1YnNjcmliZXJTZXJ2aWNlIC0+IHN1YnNjcmliZXJEYiAiUmVhZHMgYW5kIHdyaXRlcyBzdWJzY3JpYmVyIGRhdGEiCiAgICAgICAgc3Vic2NyaWJlclNlcnZpY2UgLT4gc3Vic2NyaWJlclF1ZXVlICJRdWV1ZXMgbmV3IHN1YnNjcmliZXJzIgoKCiAgICAgICAgLy8gTmV3c2xldHRlcgogICAgICAgIC8vIG5ld3NsZXR0ZXJTZXJ2aWNlIC0+IGFydGljbGVTZXJ2aWNlICJSZXRyaWV2ZXMgYXJ0aWNsZXMiCiAgICAgICAgbmV3c2xldHRlclNlcnZpY2UgLT4gYXJ0aWNsZVNlcnZpY2VMQiAiUmV0cmlldmVzIGFydGljbGVzIgogICAgICAgIG5ld3NsZXR0ZXJTZXJ2aWNlIC0+IHN1YnNjcmliZXJTZXJ2aWNlICJSZXRyaWV2ZXMgc3Vic2NyaWJlcnMiCgoKICAgICAgICBkZXBsb3ltZW50RW52aXJvbm1lbnQgIlByb2R1Y3Rpb24iIHsKCiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJMb2FkIEJhbGFuY2VyIiAiRG9ja2VyIGNvbnRhaW5lciIgewogICAgICAgICAgICAgICAgbG9hZEJhbGFuY2VyID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZVNlcnZpY2VMQgogICAgICAgICAgICB9CgogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiV2Vic2l0ZSIgIkRvY2tlciBjb250YWluZXIiIHsKICAgICAgICAgICAgICAgIHdlYnNpdGVJbnN0YW5jZSA9IGNvbnRhaW5lckluc3RhbmNlIHdlYnNpdGUKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiTmV3c2xldHRlclNlcnZpY2UiICJEb2NrZXIgY29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBuZXdzbGV0dGVyU2VydmljZUluc3RhbmNlID0gY29udGFpbmVySW5zdGFuY2UgbmV3c2xldHRlclNlcnZpY2UKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiQXJ0aWNsZVF1ZXVlIiAiRG9ja2VyIGNvbnRhaW5lciIgewogICAgICAgICAgICAgICAgYXJ0aWNsZVF1ZXVlSW5zdGFuY2UgPSBjb250YWluZXJJbnN0YW5jZSBhcnRpY2xlUXVldWUKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkFydGljbGVTZXJ2aWNlIEluc3RhbmNlIDEiICJEb2NrZXIgY29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBhcnRpY2xlU2VydmljZUluc3RhbmNlMSA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVTZXJ2aWNlCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkFydGljbGVTZXJ2aWNlIEluc3RhbmNlIDIiICJEb2NrZXIgY29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBhcnRpY2xlU2VydmljZUluc3RhbmNlMiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVTZXJ2aWNlCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkFydGljbGVTZXJ2aWNlIEluc3RhbmNlIDMiICJEb2NrZXIgY29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBhcnRpY2xlU2VydmljZUluc3RhbmNlMyA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVTZXJ2aWNlCiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJBZnJpY2EiICJTUUwgU2VydmVyIiB7CiAgICAgICAgICAgICAgICBhZnJpY2FEYiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVEYgogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJBc2lhIiAiU1FMIFNlcnZlciIgewogICAgICAgICAgICAgICAgYXNpYURiID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZURiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkV1cm9wZSIgIlNRTCBTZXJ2ZXIiIHsKICAgICAgICAgICAgICAgIGV1cm9wZURiID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZURiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIk5vcnRoIEFtZXJpY2EiICJTUUwgU2VydmVyIiB7CiAgICAgICAgICAgICAgICBub3J0aEFtZXJpY2FEYiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVEYgogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJTb3V0aCBBbWVyaWNhIiAiU1FMIFNlcnZlciIgewogICAgICAgICAgICAgICAgc291dGhBbWVyaWNhRGIgPSBjb250YWluZXJJbnN0YW5jZSBhcnRpY2xlRGIKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiQXVzdHJhbGlhIiAiU1FMIFNlcnZlciIgewogICAgICAgICAgICAgICAgYXVzdHJhbGlhRGIgPSBjb250YWluZXJJbnN0YW5jZSBhcnRpY2xlRGIKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiQW50YXJjdGljYSIgIlNRTCBTZXJ2ZXIiIHsKICAgICAgICAgICAgICAgIGFudGFyY3RpY2FEYiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVEYgogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJHbG9iYWwiICJTUUwgU2VydmVyIiB7CiAgICAgICAgICAgICAgICBnbG9iYWxEYiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVEYgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgfQoKCiAgICB2aWV3cyB7CgogICAgICAgIC8vIEM0IExldmVsIDEgLSBTeXN0ZW0gQ29udGV4dAogICAgICAgIHN5c3RlbUNvbnRleHQgaGFwcHlIZWFkbGluZXMgIlN5c3RlbUNvbnRleHQiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgoKICAgICAgICAvLyBDNCBMZXZlbCAyIC0gQ29udGFpbmVyIGRpYWdyYW0KICAgICAgICBjb250YWluZXIgaGFwcHlIZWFkbGluZXMgIkNvbnRhaW5lcnMiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIC8vIEM0IExldmVsIDUgLSBEZXBsb3ltZW50IGRpYWdyYW0KICAgICAgICBkZXBsb3ltZW50IGhhcHB5SGVhZGxpbmVzICJQcm9kdWN0aW9uIiAiQXJ0aWNsZVNlcnZpY2VEZXBsb3ltZW50IiB7CiAgICAgICAgICAgIGluY2x1ZGUgd2Vic2l0ZUluc3RhbmNlIG5ld3NsZXR0ZXJTZXJ2aWNlSW5zdGFuY2UgbG9hZEJhbGFuY2VyIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UxIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UyIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UzCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIGRlcGxveW1lbnQgaGFwcHlIZWFkbGluZXMgIlByb2R1Y3Rpb24iICJBcnRpY2xlRGF0YWJhc2VEZXBsb3ltZW50IiB7CiAgICAgICAgICAgIGluY2x1ZGUgYXJ0aWNsZVNlcnZpY2VJbnN0YW5jZTEgYXJ0aWNsZVF1ZXVlSW5zdGFuY2UgYWZyaWNhRGIgYXNpYURiIGV1cm9wZURiIG5vcnRoQW1lcmljYURiIHNvdXRoQW1lcmljYURiIGF1c3RyYWxpYURiIGFudGFyY3RpY2FEYiBnbG9iYWxEYgogICAgICAgICAgICBhdXRvbGF5b3V0IGxyCiAgICAgICAgfQoKICAgICAgICB0aGVtZSBkZWZhdWx0CiAgICB9Cn0=",
+    "structurizr.inspection.error" : "92",
+    "structurizr.dsl" : "d29ya3NwYWNlICJIYXBweSBIZWFkbGluZXMiICJQb3NpdGl2ZSBuZXdzIHBsYXRmb3JtIiB7CgogICAgbW9kZWwgewoKICAgICAgICAvLyBQZW9wbGUKICAgICAgICBwdWJsaXNoZXIgPSBwZXJzb24gIlB1Ymxpc2hlciIgIldyaXRlcyBhbmQgcHVibGlzaGVzIGFydGljbGVzLiIKICAgICAgICByZWFkZXIgPSBwZXJzb24gIlJlYWRlciIgIlJlYWRzIGFydGljbGVzLCBjb21tZW50cywgYW5kIHN1YnNjcmliZXMgdG8gbmV3c2xldHRlcnMuIgoKCiAgICAgICAgLy8gU29mdHdhcmUgc3lzdGVtCiAgICAgICAgaGFwcHlIZWFkbGluZXMgPSBzb2Z0d2FyZVN5c3RlbSAiSGFwcHkgSGVhZGxpbmVzIiAiUG9zaXRpdmUgbmV3cyBwbGF0Zm9ybS4iIHsKCiAgICAgICAgICAgIC8vIEFwcGxpY2F0aW9ucwogICAgICAgICAgICB3ZWJhcHAgPSBjb250YWluZXIgIldlYmFwcCIgIkVkaXRvcmlhbCBhcHBsaWNhdGlvbiB1c2VkIGJ5IHB1Ymxpc2hlcnMuIiAiV2ViIEFwcGxpY2F0aW9uIgogICAgICAgICAgICB3ZWJzaXRlID0gY29udGFpbmVyICJXZWJzaXRlIiAiUHVibGljIHdlYnNpdGUgZm9yIHJlYWRlcnMuIiAiV2ViIEFwcGxpY2F0aW9uIgoKICAgICAgICAgICAgLy8gU2VydmljZXMKICAgICAgICAgICAgZHJhZnRTZXJ2aWNlID0gY29udGFpbmVyICJEcmFmdFNlcnZpY2UiICJNYW5hZ2VzIGFydGljbGUgZHJhZnRzLiIgIlNlcnZpY2UiCiAgICAgICAgICAgIHB1Ymxpc2hlclNlcnZpY2UgPSBjb250YWluZXIgIlB1Ymxpc2hlclNlcnZpY2UiICJQdWJsaXNoZXMgYXBwcm92ZWQgYXJ0aWNsZXMuIiAiU2VydmljZSIKICAgICAgICAgICAgcHJvZmFuaXR5U2VydmljZSA9IGNvbnRhaW5lciAiUHJvZmFuaXR5U2VydmljZSIgIkZpbHRlcnMgaW5hcHByb3ByaWF0ZSBsYW5ndWFnZS4iICJTZXJ2aWNlIgogICAgICAgICAgICBhcnRpY2xlU2VydmljZSA9IGNvbnRhaW5lciAiQXJ0aWNsZVNlcnZpY2UiICJQcm92aWRlcyBwdWJsaXNoZWQgYXJ0aWNsZXMuICh4LWF4aXMgc3BsaXQ6IDMgbG9hZC1iYWxhbmNlZCByZXBsaWNhcykiICJTZXJ2aWNlIiB7CiAgICAgICAgICAgICAgICBhcnRpY2xlc0NvbnRyb2xsZXIgPSBjb21wb25lbnQgIkFydGljbGVzQ29udHJvbGxlciIgIkV4cG9zZXMgUkVTVCBDUlVEIGVuZHBvaW50cyBmb3IgYXJ0aWNsZXMsIHNjb3BlZCBieSBsb2NhdGlvbi4iICJBU1AuTkVUIENvcmUgQ29udHJvbGxlciIKICAgICAgICAgICAgICAgIGFydGljbGVSZWFkUmVwb3NpdG9yeSA9IGNvbXBvbmVudCAiQXJ0aWNsZVJlYWRSZXBvc2l0b3J5IiAiUmVhZHMgYXJ0aWNsZXMgZnJvbSB0aGUgcmVzb2x2ZWQgc2hhcmQuIiAiUmVwb3NpdG9yeSIKICAgICAgICAgICAgICAgIGFydGljbGVXcml0ZVJlcG9zaXRvcnkgPSBjb21wb25lbnQgIkFydGljbGVXcml0ZVJlcG9zaXRvcnkiICJDcmVhdGVzLCB1cGRhdGVzIGFuZCBkZWxldGVzIGFydGljbGVzIGluIHRoZSByZXNvbHZlZCBzaGFyZCAoUkVTVCBzdGFuZC1pbnMgZm9yIENyZWF0ZS9VcGRhdGUpLiIgIlJlcG9zaXRvcnkiCiAgICAgICAgICAgICAgICBhcnRpY2xlU2hhcmRSZXNvbHZlciA9IGNvbXBvbmVudCAiQXJ0aWNsZVNoYXJkUmVzb2x2ZXIiICJSZXNvbHZlcyBhIGxvY2F0aW9uIGNvZGUgdG8gdGhlIGNvcnJlY3Qgc2hhcmQgY29ubmVjdGlvbiBzdHJpbmcuIiAiQ29tcG9uZW50IgogICAgICAgICAgICAgICAgYXJ0aWNsZVF1ZXVlQ29uc3VtZXIgPSBjb21wb25lbnQgIkFydGljbGVRdWV1ZUNvbnN1bWVyIiAiV2lsbCBjb25zdW1lIEFydGljbGVRdWV1ZSBmb3IgQ3JlYXRlL1VwZGF0ZSBvbmNlIHdpcmVkIHVwLiBDdXJyZW50bHkgaWRsZS4iICJCYWNrZ3JvdW5kIFNlcnZpY2UiCgogICAgICAgICAgICAgICAgYXJ0aWNsZXNDb250cm9sbGVyIC0+IGFydGljbGVSZWFkUmVwb3NpdG9yeSAiRGVsZWdhdGVzIEdFVCByZXF1ZXN0cyB0byIKICAgICAgICAgICAgICAgIGFydGljbGVzQ29udHJvbGxlciAtPiBhcnRpY2xlV3JpdGVSZXBvc2l0b3J5ICJEZWxlZ2F0ZXMgQ3JlYXRlL1VwZGF0ZS9EZWxldGUgUkVTVCBzdGFuZC1pbnMgdG8iCiAgICAgICAgICAgICAgICBhcnRpY2xlUmVhZFJlcG9zaXRvcnkgLT4gYXJ0aWNsZVNoYXJkUmVzb2x2ZXIgIlJlc29sdmVzIHNoYXJkIHZpYSIKICAgICAgICAgICAgICAgIGFydGljbGVXcml0ZVJlcG9zaXRvcnkgLT4gYXJ0aWNsZVNoYXJkUmVzb2x2ZXIgIlJlc29sdmVzIHNoYXJkIHZpYSIKICAgICAgICAgICAgICAgIGFydGljbGVRdWV1ZUNvbnN1bWVyIC0+IGFydGljbGVXcml0ZVJlcG9zaXRvcnkgIldpbGwgcGVyc2lzdCBjb25zdW1lZCBtZXNzYWdlcyB2aWEgKG5vdCB5ZXQgd2lyZWQpIgogICAgICAgICAgICB9CiAgICAgICAgICAgIGFydGljbGVTZXJ2aWNlTEIgPSBjb250YWluZXIgIkFydGljbGVTZXJ2aWNlIExvYWQgQmFsYW5jZXIiICJEaXN0cmlidXRlcyByZXF1ZXN0cyBhY3Jvc3MgQXJ0aWNsZVNlcnZpY2UgcmVwbGljYXMuIiAiTG9hZCBCYWxhbmNlciIKICAgICAgICAgICAgY29tbWVudFNlcnZpY2UgPSBjb250YWluZXIgIkNvbW1lbnRTZXJ2aWNlIiAiTWFuYWdlcyBjb21tZW50cy4iICJTZXJ2aWNlIgogICAgICAgICAgICBzdWJzY3JpYmVyU2VydmljZSA9IGNvbnRhaW5lciAiU3Vic2NyaWJlclNlcnZpY2UiICJNYW5hZ2VzIG5ld3NsZXR0ZXIgc3Vic2NyaXB0aW9ucy4iICJTZXJ2aWNlIgogICAgICAgICAgICBuZXdzbGV0dGVyU2VydmljZSA9IGNvbnRhaW5lciAiTmV3c2xldHRlclNlcnZpY2UiICJTZW5kcyBuZXdzbGV0dGVycy4iICJTZXJ2aWNlIgoKICAgICAgICAgICAgLy8gRGF0YWJhc2VzCiAgICAgICAgICAgIGRyYWZ0RGIgPSBjb250YWluZXIgIkRyYWZ0RGF0YWJhc2UiICJTdG9yZXMgYXJ0aWNsZSBkcmFmdHMuIiAiRGF0YWJhc2UiCiAgICAgICAgICAgIGFydGljbGVEYiA9IGNvbnRhaW5lciAiQXJ0aWNsZURhdGFiYXNlIiAiU3RvcmVzIHB1Ymxpc2hlZCBhcnRpY2xlcy4gKHotYXhpcyBzcGxpdDogc2hhcmRlZCBwZXIgY29udGluZW50LCA4IGluc3RhbmNlcykiICJEYXRhYmFzZSIKICAgICAgICAgICAgY29tbWVudERiID0gY29udGFpbmVyICJDb21tZW50RGF0YWJhc2UiICJTdG9yZXMgY29tbWVudHMuIiAiRGF0YWJhc2UiCiAgICAgICAgICAgIHByb2Zhbml0eURiID0gY29udGFpbmVyICJQcm9mYW5pdHlEYXRhYmFzZSIgIlN0b3JlcyBwcm9oaWJpdGVkIHdvcmRzLiIgIkRhdGFiYXNlIgogICAgICAgICAgICBzdWJzY3JpYmVyRGIgPSBjb250YWluZXIgIlN1YnNjcmliZXJEYXRhYmFzZSIgIlN0b3JlcyBzdWJzY3JpYmVyIGluZm9ybWF0aW9uLiIgIkRhdGFiYXNlIgoKICAgICAgICAgICAgLy8gUXVldWVzCiAgICAgICAgICAgIGFydGljbGVRdWV1ZSA9IGNvbnRhaW5lciAiQXJ0aWNsZVF1ZXVlIiAiUXVldWUgZm9yIG5ld2x5IHB1Ymxpc2hlZCBhcnRpY2xlcy4iICJRdWV1ZSIKICAgICAgICAgICAgc3Vic2NyaWJlclF1ZXVlID0gY29udGFpbmVyICJTdWJzY3JpYmVyUXVldWUiICJRdWV1ZSBmb3IgbmV3IG5ld3NsZXR0ZXIgc3Vic2NyaXB0aW9ucy4iICJRdWV1ZSIKICAgICAgICB9CgoKICAgICAgICAvLyBQdWJsaXNoZXIgd29ya2Zsb3cKICAgICAgICBwdWJsaXNoZXIgLT4gd2ViYXBwICJDcmVhdGVzIGRyYWZ0cyBhbmQgcHVibGlzaGVzIGFydGljbGVzIgoKICAgICAgICB3ZWJhcHAgLT4gZHJhZnRTZXJ2aWNlICJTYXZlIGFuZCByZXRyaWV2ZSBkcmFmdHMiCiAgICAgICAgZHJhZnRTZXJ2aWNlIC0+IGRyYWZ0RGIgIlJlYWRzIGFuZCB3cml0ZXMgZHJhZnRzIgoKICAgICAgICB3ZWJhcHAgLT4gcHVibGlzaGVyU2VydmljZSAiUHVibGlzaGVzIGFydGljbGUiCgogICAgICAgIHB1Ymxpc2hlclNlcnZpY2UgLT4gcHJvZmFuaXR5U2VydmljZSAiQ2hlY2tzIGFydGljbGUgY29udGVudCIKICAgICAgICBwcm9mYW5pdHlTZXJ2aWNlIC0+IHByb2Zhbml0eURiICJSZWFkcyBwcm9oaWJpdGVkIHdvcmRzIgoKICAgICAgICBwdWJsaXNoZXJTZXJ2aWNlIC0+IGFydGljbGVRdWV1ZSAiUHVibGlzaGVzIGFwcHJvdmVkIGFydGljbGUiCgogICAgICAgIGFydGljbGVRdWV1ZSAtPiBhcnRpY2xlRGIgIlN0b3JlcyBwdWJsaXNoZWQgYXJ0aWNsZSIKCiAgICAgICAgLy8gQXJ0aWNsZVNlcnZpY2UgY29tcG9uZW50LWxldmVsIHJlbGF0aW9ucyAoaW1wbHkgdGhlIEFydGljbGVTZXJ2aWNlIGNvbnRhaW5lci1sZXZlbAogICAgICAgIC8vIHJlbGF0aW9ucyB0byBBcnRpY2xlUXVldWUvQXJ0aWNsZURhdGFiYXNlLCBzbyBubyBzZXBhcmF0ZSBjb250YWluZXItbGV2ZWwgb25lcyBoZXJlKQogICAgICAgIGFydGljbGVTZXJ2aWNlTEIgLT4gYXJ0aWNsZXNDb250cm9sbGVyICJSb3V0ZXMgcmVxdWVzdHMgdG8iCiAgICAgICAgYXJ0aWNsZVJlYWRSZXBvc2l0b3J5IC0+IGFydGljbGVEYiAiUmVhZHMgYXJ0aWNsZXMgZnJvbSIKICAgICAgICBhcnRpY2xlV3JpdGVSZXBvc2l0b3J5IC0+IGFydGljbGVEYiAiV3JpdGVzIGFydGljbGVzIHRvIgogICAgICAgIGFydGljbGVRdWV1ZUNvbnN1bWVyIC0+IGFydGljbGVRdWV1ZSAiU3Vic2NyaWJlcyB0byAoaWRsZSAtIG5vdCB3aXJlZCB1cCB5ZXQpIgoKCiAgICAgICAgLy8gUmVhZGVyIC0gYXJ0aWNsZXMKICAgICAgICByZWFkZXIgLT4gd2Vic2l0ZSAiUmVhZHMgYXJ0aWNsZXMiCiAgICAgICAgLy8gd2Vic2l0ZSAtPiBhcnRpY2xlU2VydmljZSAiUmVxdWVzdHMgYXJ0aWNsZXMiCiAgICAgICAgd2Vic2l0ZSAtPiBhcnRpY2xlU2VydmljZUxCICJSZXF1ZXN0cyBhcnRpY2xlcyIKICAgICAgICAvLyBhcnRpY2xlU2VydmljZUxCIC0+IGFydGljbGVTZXJ2aWNlIGlzIGltcGxpZWQgYnkgYXJ0aWNsZVNlcnZpY2VMQiAtPiBhcnRpY2xlc0NvbnRyb2xsZXIgYWJvdmUKCiAgICAgICAgLy8gUmVhZGVyIC0gY29tbWVudHMKICAgICAgICByZWFkZXIgLT4gd2Vic2l0ZSAiUG9zdHMgY29tbWVudHMiCiAgICAgICAgd2Vic2l0ZSAtPiBjb21tZW50U2VydmljZSAiQ3JlYXRlcyBhbmQgcmV0cmlldmVzIGNvbW1lbnRzIgoKICAgICAgICBjb21tZW50U2VydmljZSAtPiBwcm9mYW5pdHlTZXJ2aWNlICJDaGVja3MgY29tbWVudCBjb250ZW50IgogICAgICAgIGNvbW1lbnRTZXJ2aWNlIC0+IGNvbW1lbnREYiAiUmVhZHMgYW5kIHdyaXRlcyBjb21tZW50cyIKCgogICAgICAgIC8vIFJlYWRlciAtIG5ld3NsZXR0ZXIgc3Vic2NyaXB0aW9uCiAgICAgICAgcmVhZGVyIC0+IHdlYnNpdGUgIlN1YnNjcmliZXMgdG8gbmV3c2xldHRlciIKICAgICAgICB3ZWJzaXRlIC0+IHN1YnNjcmliZXJTZXJ2aWNlICJSZWdpc3RlcnMgc3Vic2NyaWJlciIKCiAgICAgICAgc3Vic2NyaWJlclNlcnZpY2UgLT4gc3Vic2NyaWJlckRiICJSZWFkcyBhbmQgd3JpdGVzIHN1YnNjcmliZXIgZGF0YSIKICAgICAgICBzdWJzY3JpYmVyU2VydmljZSAtPiBzdWJzY3JpYmVyUXVldWUgIlF1ZXVlcyBuZXcgc3Vic2NyaWJlcnMiCgoKICAgICAgICAvLyBOZXdzbGV0dGVyCiAgICAgICAgLy8gbmV3c2xldHRlclNlcnZpY2UgLT4gYXJ0aWNsZVNlcnZpY2UgIlJldHJpZXZlcyBhcnRpY2xlcyIKICAgICAgICBuZXdzbGV0dGVyU2VydmljZSAtPiBhcnRpY2xlU2VydmljZUxCICJSZXRyaWV2ZXMgYXJ0aWNsZXMiCiAgICAgICAgbmV3c2xldHRlclNlcnZpY2UgLT4gc3Vic2NyaWJlclNlcnZpY2UgIlJldHJpZXZlcyBzdWJzY3JpYmVycyIKCgogICAgICAgIGRlcGxveW1lbnRFbnZpcm9ubWVudCAiUHJvZHVjdGlvbiIgewoKICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkxvYWQgQmFsYW5jZXIiICJEb2NrZXIgY29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBsb2FkQmFsYW5jZXIgPSBjb250YWluZXJJbnN0YW5jZSBhcnRpY2xlU2VydmljZUxCCiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJXZWJzaXRlIiAiRG9ja2VyIGNvbnRhaW5lciIgewogICAgICAgICAgICAgICAgd2Vic2l0ZUluc3RhbmNlID0gY29udGFpbmVySW5zdGFuY2Ugd2Vic2l0ZQogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJOZXdzbGV0dGVyU2VydmljZSIgIkRvY2tlciBjb250YWluZXIiIHsKICAgICAgICAgICAgICAgIG5ld3NsZXR0ZXJTZXJ2aWNlSW5zdGFuY2UgPSBjb250YWluZXJJbnN0YW5jZSBuZXdzbGV0dGVyU2VydmljZQogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJBcnRpY2xlUXVldWUiICJEb2NrZXIgY29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBhcnRpY2xlUXVldWVJbnN0YW5jZSA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVRdWV1ZQogICAgICAgICAgICB9CgogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiQXJ0aWNsZVNlcnZpY2UgSW5zdGFuY2UgMSIgIkRvY2tlciBjb250YWluZXIiIHsKICAgICAgICAgICAgICAgIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UxID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZVNlcnZpY2UKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiQXJ0aWNsZVNlcnZpY2UgSW5zdGFuY2UgMiIgIkRvY2tlciBjb250YWluZXIiIHsKICAgICAgICAgICAgICAgIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UyID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZVNlcnZpY2UKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiQXJ0aWNsZVNlcnZpY2UgSW5zdGFuY2UgMyIgIkRvY2tlciBjb250YWluZXIiIHsKICAgICAgICAgICAgICAgIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UzID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZVNlcnZpY2UKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkFmcmljYSIgIlNRTCBTZXJ2ZXIiIHsKICAgICAgICAgICAgICAgIGFmcmljYURiID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZURiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkFzaWEiICJTUUwgU2VydmVyIiB7CiAgICAgICAgICAgICAgICBhc2lhRGIgPSBjb250YWluZXJJbnN0YW5jZSBhcnRpY2xlRGIKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiRXVyb3BlIiAiU1FMIFNlcnZlciIgewogICAgICAgICAgICAgICAgZXVyb3BlRGIgPSBjb250YWluZXJJbnN0YW5jZSBhcnRpY2xlRGIKICAgICAgICAgICAgfQogICAgICAgICAgICBkZXBsb3ltZW50Tm9kZSAiTm9ydGggQW1lcmljYSIgIlNRTCBTZXJ2ZXIiIHsKICAgICAgICAgICAgICAgIG5vcnRoQW1lcmljYURiID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZURiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIlNvdXRoIEFtZXJpY2EiICJTUUwgU2VydmVyIiB7CiAgICAgICAgICAgICAgICBzb3V0aEFtZXJpY2FEYiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVEYgogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJBdXN0cmFsaWEiICJTUUwgU2VydmVyIiB7CiAgICAgICAgICAgICAgICBhdXN0cmFsaWFEYiA9IGNvbnRhaW5lckluc3RhbmNlIGFydGljbGVEYgogICAgICAgICAgICB9CiAgICAgICAgICAgIGRlcGxveW1lbnROb2RlICJBbnRhcmN0aWNhIiAiU1FMIFNlcnZlciIgewogICAgICAgICAgICAgICAgYW50YXJjdGljYURiID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZURiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZGVwbG95bWVudE5vZGUgIkdsb2JhbCIgIlNRTCBTZXJ2ZXIiIHsKICAgICAgICAgICAgICAgIGdsb2JhbERiID0gY29udGFpbmVySW5zdGFuY2UgYXJ0aWNsZURiCiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICB9CgoKICAgIHZpZXdzIHsKCiAgICAgICAgLy8gQzQgTGV2ZWwgMSAtIFN5c3RlbSBDb250ZXh0CiAgICAgICAgc3lzdGVtQ29udGV4dCBoYXBweUhlYWRsaW5lcyAiU3lzdGVtQ29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KCgogICAgICAgIC8vIEM0IExldmVsIDIgLSBDb250YWluZXIgZGlhZ3JhbQogICAgICAgIGNvbnRhaW5lciBoYXBweUhlYWRsaW5lcyAiQ29udGFpbmVycyIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KCiAgICAgICAgLy8gQzQgTGV2ZWwgMyAtIENvbXBvbmVudCBkaWFncmFtCiAgICAgICAgY29tcG9uZW50IGFydGljbGVTZXJ2aWNlICJBcnRpY2xlU2VydmljZUNvbXBvbmVudHMiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIC8vIEM0IExldmVsIDUgLSBEZXBsb3ltZW50IGRpYWdyYW0KICAgICAgICBkZXBsb3ltZW50IGhhcHB5SGVhZGxpbmVzICJQcm9kdWN0aW9uIiAiQXJ0aWNsZVNlcnZpY2VEZXBsb3ltZW50IiB7CiAgICAgICAgICAgIGluY2x1ZGUgd2Vic2l0ZUluc3RhbmNlIG5ld3NsZXR0ZXJTZXJ2aWNlSW5zdGFuY2UgbG9hZEJhbGFuY2VyIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UxIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UyIGFydGljbGVTZXJ2aWNlSW5zdGFuY2UzCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIGRlcGxveW1lbnQgaGFwcHlIZWFkbGluZXMgIlByb2R1Y3Rpb24iICJBcnRpY2xlRGF0YWJhc2VEZXBsb3ltZW50IiB7CiAgICAgICAgICAgIGluY2x1ZGUgYXJ0aWNsZVNlcnZpY2VJbnN0YW5jZTEgYXJ0aWNsZVF1ZXVlSW5zdGFuY2UgYWZyaWNhRGIgYXNpYURiIGV1cm9wZURiIG5vcnRoQW1lcmljYURiIHNvdXRoQW1lcmljYURiIGF1c3RyYWxpYURiIGFudGFyY3RpY2FEYiBnbG9iYWxEYgogICAgICAgICAgICBhdXRvbGF5b3V0IGxyCiAgICAgICAgfQoKICAgICAgICB0aGVtZSBkZWZhdWx0CiAgICB9Cn0=",
     "structurizr.inspection.info" : "0",
     "structurizr.inspection.ignore" : "0",
     "structurizr.inspection.warning" : "0"
   },
   "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "9",
+      "elements" : [ {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "ArticleServiceComponents",
+      "name" : "Component View: Happy Headlines - ArticleService",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "15"
+      }, {
+        "id" : "16"
+      }, {
+        "id" : "17"
+      }, {
+        "id" : "18"
+      }, {
+        "id" : "19"
+      }, {
+        "id" : "39"
+      }, {
+        "id" : "40"
+      }, {
+        "id" : "42"
+      }, {
+        "id" : "44"
+      }, {
+        "id" : "45"
+      } ]
+    } ],
     "configuration" : {
       "styles" : { },
       "terminology" : { },
@@ -970,47 +1147,47 @@
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "10",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "11",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "12",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "13",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "14",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "15",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "16",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "17",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "18",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "19",
-        "x" : 0,
-        "y" : 0
-      }, {
         "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "27",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
         "x" : 0,
         "y" : 0
       } ],
@@ -1019,27 +1196,9 @@
       "name" : "Container View: Happy Headlines",
       "order" : 2,
       "relationships" : [ {
-        "id" : "21"
-      }, {
-        "id" : "23"
-      }, {
-        "id" : "24"
-      }, {
-        "id" : "25"
-      }, {
-        "id" : "26"
-      }, {
-        "id" : "27"
-      }, {
-        "id" : "28"
-      }, {
-        "id" : "29"
-      }, {
-        "id" : "30"
-      }, {
         "id" : "31"
       }, {
-        "id" : "32"
+        "id" : "33"
       }, {
         "id" : "34"
       }, {
@@ -1053,17 +1212,35 @@
       }, {
         "id" : "39"
       }, {
-        "id" : "40"
-      }, {
         "id" : "41"
-      }, {
-        "id" : "42"
       }, {
         "id" : "43"
       }, {
-        "id" : "44"
+        "id" : "46"
       }, {
-        "id" : "45"
+        "id" : "47"
+      }, {
+        "id" : "49"
+      }, {
+        "id" : "50"
+      }, {
+        "id" : "51"
+      }, {
+        "id" : "52"
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "55"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "57"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
       } ],
       "softwareSystemId" : "3"
     } ],
@@ -1076,38 +1253,6 @@
         "vertices" : true
       },
       "elements" : [ {
-        "id" : "46",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "47",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "48",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "49",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "51",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "52",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "56",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "57",
-        "x" : 0,
-        "y" : 0
-      }, {
         "id" : "60",
         "x" : 0,
         "y" : 0
@@ -1116,60 +1261,27 @@
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "64",
+        "id" : "62",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "63",
         "x" : 0,
         "y" : 0
       }, {
         "id" : "65",
         "x" : 0,
         "y" : 0
-      } ],
-      "environment" : "Production",
-      "key" : "ArticleServiceDeployment",
-      "name" : "Deployment View: Happy Headlines - Production",
-      "order" : 3,
-      "relationships" : [ {
-        "id" : "50"
       }, {
-        "id" : "53"
-      }, {
-        "id" : "58"
-      }, {
-        "id" : "62"
-      }, {
-        "id" : "66"
-      } ],
-      "softwareSystemId" : "3"
-    }, {
-      "automaticLayout" : {
-        "edgeSeparation" : 50,
-        "nodeSeparation" : 50,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 100,
-        "vertices" : true
-      },
-      "elements" : [ {
-        "id" : "54",
+        "id" : "66",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "55",
+        "id" : "70",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "56",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "57",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "68",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "69",
+        "id" : "71",
         "x" : 0,
         "y" : 0
       }, {
@@ -1181,92 +1293,157 @@
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "80",
+        "id" : "78",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "81",
+        "id" : "79",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "environment" : "Production",
+      "key" : "ArticleServiceDeployment",
+      "name" : "Deployment View: Happy Headlines - Production",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "64"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "72"
+      }, {
+        "id" : "76"
+      }, {
+        "id" : "80"
+      } ],
+      "softwareSystemId" : "3"
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "68",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "86",
+        "id" : "69",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "87",
+        "id" : "70",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "92",
+        "id" : "71",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "93",
+        "id" : "82",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "98",
+        "id" : "83",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "99",
+        "id" : "88",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "104",
+        "id" : "89",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "105",
+        "id" : "94",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "110",
+        "id" : "95",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "111",
+        "id" : "100",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "101",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "106",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "107",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "112",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "113",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "118",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "119",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "124",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "125",
         "x" : 0,
         "y" : 0
       } ],
       "environment" : "Production",
       "key" : "ArticleDatabaseDeployment",
       "name" : "Deployment View: Happy Headlines - Production",
-      "order" : 4,
+      "order" : 5,
       "relationships" : [ {
-        "id" : "100"
+        "id" : "102"
       }, {
-        "id" : "101"
+        "id" : "103"
       }, {
-        "id" : "106"
+        "id" : "108"
       }, {
-        "id" : "107"
+        "id" : "109"
       }, {
-        "id" : "112"
+        "id" : "114"
       }, {
-        "id" : "113"
+        "id" : "115"
       }, {
-        "id" : "59"
+        "id" : "120"
       }, {
-        "id" : "70"
+        "id" : "121"
       }, {
-        "id" : "71"
+        "id" : "126"
       }, {
-        "id" : "76"
+        "id" : "127"
       }, {
-        "id" : "77"
+        "id" : "73"
       }, {
-        "id" : "82"
+        "id" : "84"
       }, {
-        "id" : "83"
+        "id" : "85"
       }, {
-        "id" : "88"
+        "id" : "90"
       }, {
-        "id" : "89"
+        "id" : "91"
       }, {
-        "id" : "94"
+        "id" : "96"
       }, {
-        "id" : "95"
+        "id" : "97"
       } ],
       "softwareSystemId" : "3"
     } ],
@@ -1296,9 +1473,9 @@
       "name" : "System Context View: Happy Headlines",
       "order" : 1,
       "relationships" : [ {
-        "id" : "22"
+        "id" : "32"
       }, {
-        "id" : "33"
+        "id" : "48"
       } ],
       "softwareSystemId" : "3"
     } ]

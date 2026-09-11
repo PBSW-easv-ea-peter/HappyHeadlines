@@ -8,7 +8,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IArticleShardResolver, ArticleShardResolver>();
 builder.Services.AddScoped<IArticleReadRepository, ArticleReadRepository>();
 builder.Services.AddScoped<IArticleWriteRepository, ArticleWriteRepository>();
-builder.Services.AddSingleton<IArticleQueuePublisher, NoOpArticleQueuePublisher>();
+builder.Services.AddHostedService<ArticleQueueConsumer>();
 
 var app = builder.Build();
 

@@ -88,3 +88,40 @@ services:
       - articledb-an
       - articledb-af
       - articledb-global
+
+  commentdb:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: comments
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres/comment:/docker-entrypoint-initdb.d:ro
+
+  profanitydb:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: profanity
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    volumes:
+      - ./database/postgres/profanity:/docker-entrypoint-initdb.d:ro
+
+  profanityservice:
+    build:
+      context: ./HappyHeadlines/ProfanityService/
+    image: happyheadlines/profanityservice
+    ports:
+      - "8082:8080"
+    depends_on:
+      - profanitydb
+
+  commentservice:
+    build:
+      context: ./HappyHeadlines/CommentService/
+    image: happyheadlines/commentservice
+    ports:
+      - "8081:8080"
+    depends_on:
+      - commentdb
+      - profanityservice

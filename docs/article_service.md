@@ -27,21 +27,36 @@ bag én fælles `ArticlesController`. Det er en modulær-monolit-udgave af CQRS
 (Command Query Responsibility Segregation) — læs og skriv er adskilt i koden, selvom de
 kører i samme proces og mod samme database i denne omgang.
 
-## Konsistens-model: direkte skrivning, ikke via kø
+## Konsistens-model: Create og Update er kø-drevne, Delete er direkte REST
 
-Det oprindelige container-diagram (uge 1) viser artikler blive skrevet til
-ArticleDatabase via ArticleQueue (fra PublisherService). Denne uge er ArticleService den
-første service, der bygges, så der findes endnu ikke nogen rigtig ArticleQueue at koble
-op på. Vi har derfor besluttet:
+Underviseren har afklaret (forumtråd "Spørgsmål til arkitekturbeslutning for 2. uge",
+uge 36) at CUD ikke er tre ligeværdige REST-operationer:
 
-- Create/Update/Delete skriver **direkte** til den relevante shard-database.
-- Der er lagt et boilerplate-seam ind (`IArticleQueuePublisher`, med en no-op
-  implementation `NoOpArticleQueuePublisher`), som kaldes efter en vellykket oprettelse.
-  Når ArticleQueue findes, er planen at skifte DI-registreringen ud med en rigtig
-  implementering, uden at ændre repository- eller controller-koden.
-- Konsekvens: da både læs og skriv går direkte mod databasen, er der ingen eventual
-  consistency at forholde sig til i denne uge. Det ændrer sig, når publicering fra
-  PublisherService kobles på via køen i en senere uge.
+- **Create**: sker ved at ArticleService **konsumerer** ArticleQueue — matcher det
+  oprindelige uge 35-diagram, hvor `PublisherService -> ArticleQueue` og
+  `ArticleService -> ArticleQueue` (subscriber). Det er PublisherService, der lægger en
+  godkendt artikel i køen; ArticleService's rolle er at forbruge beskeden og persistere
+  den i ArticleDatabase.
+- **Update**: gruppen har besluttet at Update følger samme spor som Create (kø-drevet),
+  frem for Delete-sporet. Dette er **ikke** bekræftet af underviseren — kun Create og
+  Delete er eksplicit afklaret i forumtråden. Bør nævnes som en eksplicit antagelse i
+  rapporten/præsentationen, og gerne følges op med et opklarende spørgsmål til
+  underviseren.
+- **Delete**: bekræftet af underviseren som en direkte REST-operation — "tager et Id og
+  sletter artiklen baseret på det Id".
+
+**Konsekvens for denne uges implementering:** hverken PublisherService eller en rigtig
+ArticleQueue findes endnu, så Create og Update kan ikke reelt trigges via kø-forbrug i
+denne omgang. Opgaveteksten kræver stadig fire REST-endpoints, så `POST` og `PUT` er
+bevaret som **midlertidige REST-stand-ins**, der skriver direkte til den relevante
+shard-database — men den egentlige, tiltænkte trigger for Create og Update er en
+kø-konsument. Boilerplate-seamet er derfor lavet som en konsument (`ArticleQueueConsumer`,
+en `BackgroundService`), ikke en publisher: når ArticleQueue og PublisherService findes,
+er planen at `ArticleQueueConsumer` kalder ind i de samme `IArticleWriteRepository`-
+metoder (`CreateAsync`/`UpdateAsync`), som `ArticlesController` også bruger til
+stand-in-endpointsne. Den er idle nu, da der intet er at konsumere endnu.
+
+`DELETE` er upåvirket af ovenstående — den er og forbliver en ægte, direkte REST-operation.
 
 ## Sharding
 

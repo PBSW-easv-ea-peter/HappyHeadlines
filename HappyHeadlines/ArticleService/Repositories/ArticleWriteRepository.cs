@@ -1,5 +1,4 @@
 using ArticleService.Models;
-using ArticleService.Queue;
 using ArticleService.Sharding;
 using Dapper;
 using Npgsql;
@@ -9,12 +8,10 @@ namespace ArticleService.Repositories;
 public class ArticleWriteRepository : IArticleWriteRepository
 {
     private readonly IArticleShardResolver _shardResolver;
-    private readonly IArticleQueuePublisher _queuePublisher;
 
-    public ArticleWriteRepository(IArticleShardResolver shardResolver, IArticleQueuePublisher queuePublisher)
+    public ArticleWriteRepository(IArticleShardResolver shardResolver)
     {
         _shardResolver = shardResolver;
-        _queuePublisher = queuePublisher;
     }
 
     public async Task<Article> CreateAsync(string location, UpsertArticleRequest request)
@@ -27,7 +24,7 @@ public class ArticleWriteRepository : IArticleWriteRepository
                       publish_date as PublishDate, location, section_id as SectionId
             """;
 
-        var article = await connection.QuerySingleAsync<Article>(sql, new
+        return await connection.QuerySingleAsync<Article>(sql, new
         {
             request.JournalistId,
             request.Title,
@@ -36,9 +33,6 @@ public class ArticleWriteRepository : IArticleWriteRepository
             Location = location.ToUpperInvariant(),
             request.SectionId
         });
-
-        await _queuePublisher.PublishArticleCreatedAsync(article);
-        return article;
     }
 
     public async Task<bool> UpdateAsync(string location, long id, UpsertArticleRequest request)

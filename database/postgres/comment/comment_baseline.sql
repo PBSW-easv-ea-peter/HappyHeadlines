@@ -1,10 +1,11 @@
 CREATE TABLE comments (
-    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    article_id   BIGINT NOT NULL,
-    author_name  VARCHAR(255) NOT NULL,
-    text         TEXT NOT NULL,
-    created_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status       SMALLINT NOT NULL DEFAULT 1 -- 0 = Approved, 1 = PendingProfanityCheck, 2 = Rejected
+    id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    article_id       BIGINT NOT NULL,
+    article_location VARCHAR NOT NULL,
+    author_name      VARCHAR(25) NOT NULL,
+    text             VARCHAR(500) NOT NULL,
+    created_date     TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status           SMALLINT NOT NULL DEFAULT 1 -- 0 = Approved, 1 = PendingProfanityCheck, 2 = Rejected
 );
 
 do $$

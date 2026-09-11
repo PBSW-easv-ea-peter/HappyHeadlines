@@ -1,3 +1,4 @@
+using CommentService.Handlers;
 using CommentService.Profanity;
 using CommentService.Repositories;
 
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommentHandler, CommentHandler>();
 
 // Direct HTTP call to ProfanityService - no gateway or UI in between, per this week's
 // requirement. The timeout keeps a hanging ProfanityService from blocking CommentService's

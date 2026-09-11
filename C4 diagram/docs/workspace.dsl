@@ -17,8 +17,15 @@ workspace "Happy Headlines" "Positive news platform" {
             // Services
             draftService = container "DraftService" "Manages article drafts." "Service"
             publisherService = container "PublisherService" "Publishes approved articles." "Service"
-            profanityService = container "ProfanityService" "Filters inappropriate language." "Service"
-            articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas)" "Service" {
+            profanityService = container "ProfanityService" "Filters inappropriate language." "Service" "Implemented" {
+                profanityController = component "ProfanityController" "Exposes REST endpoint to check a single word against the banned list." "ASP.NET Core Controller"
+                profanityChecker = component "ProfanityChecker" "Normalizes and delegates word lookups." "Component"
+                profanityRepository = component "ProfanityRepository" "Looks up words in banned_words via Dapper." "Repository"
+
+                profanityController -> profanityChecker "Delegates word lookup to"
+                profanityChecker -> profanityRepository "Looks up word via"
+            }
+            articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas)" "Service" "Implemented" {
                 articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
                 articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
                 articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
@@ -32,15 +39,24 @@ workspace "Happy Headlines" "Positive news platform" {
                 articleQueueConsumer -> articleWriteRepository "Will persist consumed messages via (not yet wired)"
             }
             articleServiceLB = container "ArticleService Load Balancer" "Distributes requests across ArticleService replicas." "Load Balancer"
-            commentService = container "CommentService" "Manages comments." "Service"
+            commentService = container "CommentService" "Manages comments." "Service" "Implemented" {
+                commentsController = component "CommentsController" "Exposes REST endpoints for posting and retrieving comments, scoped by article location." "ASP.NET Core Controller"
+                commentHandler = component "CommentHandler" "Classifies comment text word-by-word via ProfanityService and orchestrates persistence." "Component"
+                commentRepository = component "CommentRepository" "Reads and writes comments (incl. article_id/article_location) via Dapper." "Repository"
+                profanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker." "Component"
+
+                commentsController -> commentHandler "Delegates classification and persistence to"
+                commentHandler -> profanityClient "Checks each word via"
+                commentHandler -> commentRepository "Persists and reads comments via"
+            }
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
             newsletterService = container "NewsletterService" "Sends newsletters." "Service"
 
             // Databases
             draftDb = container "DraftDatabase" "Stores article drafts." "Database"
-            articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "Database"
-            commentDb = container "CommentDatabase" "Stores comments." "Database"
-            profanityDb = container "ProfanityDatabase" "Stores prohibited words." "Database"
+            articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "Database" "Implemented"
+            commentDb = container "CommentDatabase" "Stores comments." "Database" "Implemented"
+            profanityDb = container "ProfanityDatabase" "Stores prohibited words." "Database" "Implemented"
             subscriberDb = container "SubscriberDatabase" "Stores subscriber information." "Database"
 
             // Queues
@@ -58,7 +74,6 @@ workspace "Happy Headlines" "Positive news platform" {
         webapp -> publisherService "Publishes article"
 
         publisherService -> profanityService "Checks article content"
-        profanityService -> profanityDb "Reads prohibited words"
 
         publisherService -> articleQueue "Publishes approved article"
 
@@ -71,6 +86,10 @@ workspace "Happy Headlines" "Positive news platform" {
         articleWriteRepository -> articleDb "Writes articles to"
         articleQueueConsumer -> articleQueue "Subscribes to (idle - not wired up yet)"
 
+        // ProfanityService component-level relations (imply the ProfanityService
+        // container-level relation to ProfanityDatabase, so no separate one here)
+        profanityRepository -> profanityDb "Reads prohibited words from"
+
 
         // Reader - articles
         reader -> website "Reads articles"
@@ -82,8 +101,10 @@ workspace "Happy Headlines" "Positive news platform" {
         reader -> website "Posts comments"
         website -> commentService "Creates and retrieves comments"
 
-        commentService -> profanityService "Checks comment content"
-        commentService -> commentDb "Reads and writes comments"
+        // CommentService component-level relations (imply the CommentService container-level
+        // relations to ProfanityService/CommentDatabase, so no separate container-level ones here)
+        profanityClient -> profanityService "Checks word via HTTP POST /api/profanity/check"
+        commentRepository -> commentDb "Reads and writes comments in"
 
 
         // Reader - newsletter subscription
@@ -175,6 +196,16 @@ workspace "Happy Headlines" "Positive news platform" {
             autolayout lr
         }
 
+        component commentService "CommentServiceComponents" {
+            include *
+            autolayout lr
+        }
+
+        component profanityService "ProfanityServiceComponents" {
+            include *
+            autolayout lr
+        }
+
         // C4 Level 5 - Deployment diagram
         deployment happyHeadlines "Production" "ArticleServiceDeployment" {
             include websiteInstance newsletterServiceInstance loadBalancer articleServiceInstance1 articleServiceInstance2 articleServiceInstance3
@@ -184,6 +215,13 @@ workspace "Happy Headlines" "Positive news platform" {
         deployment happyHeadlines "Production" "ArticleDatabaseDeployment" {
             include articleServiceInstance1 articleQueueInstance africaDb asiaDb europeDb northAmericaDb southAmericaDb australiaDb antarcticaDb globalDb
             autolayout lr
+        }
+
+        styles {
+            element "Implemented" {
+                background "#1BA86B"
+                color "#ffffff"
+            }
         }
 
         theme default

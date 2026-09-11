@@ -9,18 +9,13 @@ public enum CommentStatus
     Rejected = 2
 }
 
-public class Comment
+public class CommentEntity
 {
     public long Id { get; set; }
     public long ArticleId { get; set; }
+    public string ArticleLocation { get; set; } = string.Empty;
     public string AuthorName { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
     public DateTimeOffset CreatedDate { get; set; }
     public CommentStatus Status { get; set; }
-}
-
-public class PostCommentRequest
-{
-    public string AuthorName { get; set; } = string.Empty;
-    public string Text { get; set; } = string.Empty;
 }

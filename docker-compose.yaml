@@ -1,3 +1,4 @@
+## Structirizr inde i 'C4 diagram*' anvender port 8081
 services:
   articledb-eu:
     image: postgres:18-trixie
@@ -121,7 +122,7 @@ services:
       context: ./HappyHeadlines/CommentService/
     image: happyheadlines/commentservice
     ports:
-      - "8081:8080"
+      - "8083:8080"
     depends_on:
       - commentdb
       - profanityservice

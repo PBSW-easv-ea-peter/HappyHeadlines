@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using ProfanityService.Checking;
 using ProfanityService.Models;
-using ProfanityService.Repositories;
 
 namespace ProfanityService.Controllers;
 
@@ -8,11 +8,11 @@ namespace ProfanityService.Controllers;
 [Route("api/profanity")]
 public class ProfanityController : ControllerBase
 {
-    private readonly IProfanityRepository _repository;
+    private readonly IProfanityChecker _checker;
 
-    public ProfanityController(IProfanityRepository repository)
+    public ProfanityController(IProfanityChecker checker)
     {
-        _repository = repository;
+        _checker = checker;
     }
 
     // POST, not GET or PUT: this checks a word against the profanity list - a computation
@@ -27,6 +27,6 @@ public class ProfanityController : ControllerBase
             return BadRequest("Word must not be empty.");
         }
 
-        return Ok(await _repository.IsProfaneAsync(request.Word));
+        return Ok(await _checker.CheckAsync(request.Word));
     }
 }

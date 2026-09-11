@@ -4,6 +4,6 @@ namespace CommentService.Repositories;
 
 public interface ICommentRepository
 {
-    Task<IEnumerable<Comment>> GetApprovedByArticleIdAsync(long articleId);
-    Task<Comment> CreateAsync(long articleId, PostCommentRequest request, CommentStatus status);
+    Task<IEnumerable<CommentEntity>> GetApprovedByArticleIdAsync(string articleLocation, long articleId);
+    Task<CommentEntity> CreateAsync(string articleLocation, long articleId, PostCommentRequest request, CommentStatus status);
 }

@@ -16,24 +16,50 @@ public class ArticleReadRepository : IArticleReadRepository
 
     public async Task<IEnumerable<Article>> GetAllAsync(string location)
     {
-        await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(location));
+        await using var connection = new NpgsqlConnection(
+            _shardResolver.GetConnectionString(location));
+
         const string sql = """
-            select id, journalist_id as JournalistId, title, breadtext, created_date as CreatedDate,
-                   publish_date as PublishDate, location, section_id as SectionId
-            from articles
+            select
+                a.id,
+                j.name as JournalistName,
+                a.title,
+                a.breadtext,
+                a.created_date as CreatedDate,
+                a.publish_date as PublishDate,
+                a.location,
+                s.name as SectionName
+            from articles a
+            inner join journalists j on j.id = a.journalist_id
+            inner join sections s on s.id = a.section_id
             """;
+
         return await connection.QueryAsync<Article>(sql);
     }
 
     public async Task<Article?> GetByIdAsync(string location, long id)
     {
-        await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(location));
+        await using var connection = new NpgsqlConnection(
+            _shardResolver.GetConnectionString(location));
+
         const string sql = """
-            select id, journalist_id as JournalistId, title, breadtext, created_date as CreatedDate,
-                   publish_date as PublishDate, location, section_id as SectionId
-            from articles
-            where id = @Id
+            select
+                a.id,
+                j.name as JournalistName,
+                a.title,
+                a.breadtext,
+                a.created_date as CreatedDate,
+                a.publish_date as PublishDate,
+                a.location,
+                s.name as SectionName
+            from articles a
+            inner join journalists j on j.id = a.journalist_id
+            inner join sections s on s.id = a.section_id
+            where a.id = @Id
             """;
-        return await connection.QueryFirstOrDefaultAsync<Article>(sql, new { Id = id });
+
+        return await connection.QueryFirstOrDefaultAsync<Article>(
+            sql,
+            new { Id = id });
     }
 }

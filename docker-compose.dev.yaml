@@ -129,6 +129,8 @@ services:
       POSTGRES_DB: comments
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5440:5432"  # HostPort:ContainerPort
     volumes:
       - ./database/postgres/comment:/docker-entrypoint-initdb.d:ro
 
@@ -138,6 +140,8 @@ services:
       POSTGRES_DB: profanity
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5441:5432"  # HostPort:ContainerPort
     volumes:
       - ./database/postgres/profanity:/docker-entrypoint-initdb.d:ro
 

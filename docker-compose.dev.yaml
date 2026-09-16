@@ -137,6 +137,8 @@ services:
       POSTGRES_DB: comments
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5440:5432"  # HostPort:ContainerPort
     volumes:
       - ./database/init/comment/comment_baseline.sql:/docker-entrypoint-initdb.d/01_comment_baseline.sql:ro
       - ./database/queries/comment/seed_comments.sql:/docker-entrypoint-initdb.d/02_seed_comments.sql:ro
@@ -147,6 +149,8 @@ services:
       POSTGRES_DB: profanity
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5441:5432"  # HostPort:ContainerPort
     volumes:
       - ./database/init/profanity/profanity_baseline.sql:/docker-entrypoint-initdb.d/01_profanity_baseline.sql:ro
       - ./database/queries/profanity/seed_banned_words.sql:/docker-entrypoint-initdb.d/02_seed_banned_words.sql:ro

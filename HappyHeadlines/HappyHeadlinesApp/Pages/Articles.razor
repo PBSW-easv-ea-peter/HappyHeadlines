@@ -1,0 +1,90 @@
+@page "/articles"
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+    <MudText Typo="Typo.h3" Class="mb-6">
+        Articles
+    </MudText>
+
+@if (articles is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudGrid>
+        @foreach (var article in articles)
+        {
+            <MudItem xs="12" md="6">
+                <MudCard Class="h-100">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center mb-3">
+                            <MudChip T="string" Size="Size.Small">
+                                @article.Location
+                            </MudChip>
+
+                            <MudText Typo="Typo.caption">
+                                #@article.Id
+                            </MudText>
+                        </div>
+
+                        <MudText Typo="Typo.h5" Class="mb-3">
+                            @article.Title
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mb-4">
+                            By @article.JournalistName
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mb-4">
+                            @article.BreadText
+                        </MudText>
+
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+                            @article.SectionName
+                        </MudChip>
+                    </MudCardContent>
+
+                    <MudCardActions>
+                        <MudText Typo="Typo.caption">
+                            Created @article.CreatedDate.ToLocalTime().ToString("g")
+                        </MudText>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+</MudContainer>
+
+@code {
+    private IEnumerable<Article>? articles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        articles = await Http.GetFromJsonAsync<IEnumerable<Article>>(
+            "http://localhost:5000/api/articles/eu");
+    }
+
+    public class Article
+    {
+        public long Id { get; set; }
+
+        public string JournalistName { get; set; } = string.Empty;
+
+        public string Title { get; set; } = string.Empty;
+
+        public DateTimeOffset CreatedDate { get; set; }
+
+        public string Location { get; set; } = string.Empty;
+
+        public string SectionName { get; set; } = string.Empty;
+
+        public string BreadText { get; set; } = string.Empty;
+    }
+}

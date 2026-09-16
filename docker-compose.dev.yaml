@@ -12,8 +12,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5432:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Articles from North America
   articledb-na:
@@ -22,8 +24,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5433:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Articles from South America
   articledb-sa:
@@ -32,8 +36,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5434:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Articles from Australia
   articledb-au:
@@ -42,8 +48,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5435:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Articles from Asia
   articledb-as:
@@ -52,8 +60,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5436:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Articles from Antarctica
   articledb-an:
@@ -62,8 +72,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5437:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Articles from Africa
   articledb-af:
@@ -72,8 +84,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5438:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
 
   ## Global articles
   articledb-global:
@@ -82,9 +96,10 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5439:5432"  # HostPort:ContainerPort
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
-
+      - ./database_dev/postgres/article:/docker-entrypoint-initdb.d:ro
   articleservice:
     build:
       context: ./HappyHeadlines/ArticleService/
@@ -102,6 +117,7 @@ services:
 #      - articledb-an
 #      - articledb-af
 #      - articledb-global
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Comments 

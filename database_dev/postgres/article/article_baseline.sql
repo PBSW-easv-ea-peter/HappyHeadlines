@@ -67,3 +67,21 @@ if not exists (select 1 from pg_constraint where conname = 'fk_articles_journali
                 check (location IN ('EU', 'NA', 'SA', 'AU', 'AS', 'AN', 'AF', 'GO'));
     end if;
 end $$;
+
+-- Mock Data --
+INSERT INTO journalists (name, operations) VALUES
+('Emma Johnson', 'Global News'),
+('Liam Chen', 'Tech Today'),
+('Sophia Garcia', 'Green Earth'),
+('Noah Wilson', 'Health Watch'),
+('Olivia Brown', 'Culture Pulse'),
+('James Lee', 'Political Insight'),
+('Ava Martinez', 'Science Daily'),
+('Ethan Davis', 'World Affairs');
+
+INSERT INTO sections (name) VALUES
+('Politics'),
+('Technology'),
+('Environment'),
+('Health'),
+('Culture');

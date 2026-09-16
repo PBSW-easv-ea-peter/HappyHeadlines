@@ -13,10 +13,13 @@ public class ProfanityRepository : IProfanityRepository
             ?? throw new InvalidOperationException("ConnectionStrings:ProfanityDatabase is not configured.");
     }
 
-    public async Task<bool> IsProfaneAsync(string word)
+    public async Task<IReadOnlyList<string>> FindBannedWordsAsync(IEnumerable<string> words)
     {
+        var lowercasedWords = words.Select(w => w.ToLowerInvariant()).ToArray();
+
         await using var connection = new NpgsqlConnection(_connectionString);
-        const string sql = "select exists(select 1 from banned_words where word = lower(@Word))";
-        return await connection.ExecuteScalarAsync<bool>(sql, new { Word = word });
+        const string sql = "select word from banned_words where word = ANY(@Words)";
+        var matches = await connection.QueryAsync<string>(sql, new { Words = lowercasedWords });
+        return matches.ToList();
     }
 }

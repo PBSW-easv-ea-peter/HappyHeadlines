@@ -12,8 +12,8 @@ service: CommentService & ProfanityService
 
 - **CommentService** eksponerer en REST-API til at poste og hente kommentarer på artikler
   og gemmer dem i CommentDatabase.
-- **ProfanityService** eksponerer en REST-API til at tjekke enkeltord mod en liste af
-  forbudte ord, opslået i ProfanityDatabase.
+- **ProfanityService** eksponerer en REST-API til at tjekke en hel kommentartekst i ét
+  kald mod en liste af forbudte ord, opslået i ProfanityDatabase.
 
 Kravet for uge 37 er, at de to services er fault-isolerede efter swim lane-principperne
 (kap. 21), at CommentService kalder ProfanityService **direkte** (ingen gateway eller UI
@@ -28,16 +28,16 @@ controlleren udelukkende står for HTTP-bindings (route, statuskoder):
 **CommentService:**
 ```
 CommentsController (HTTP only)
-    -> CommentHandler (orkestrering: klassificeringsloop pr. unikt ord)
-        -> IProfanityClient / ProfanityFacade (Polly retry + circuit breaker)
+    -> CommentHandler (orkestrering: ét klassificeringskald pr. kommentar)
+        -> IProfanityClient (Polly retry + circuit breaker)
         -> ICommentRepository
 ```
 
 **ProfanityService:**
 ```
 ProfanityController (HTTP only)
-    -> IProfanityChecker (opslagslogik, normalisering)
-        -> IProfanityRepository
+    -> IProfanityChecker (splitter/dedupliker teksten, opslagslogik)
+        -> IProfanityRepository (matcher flere ord i ét DB-kald)
 ```
 
 API-kontrakten er adskilt fra persisteringsmodellen: `CommentDto` (API) og `CommentEntity`
@@ -84,6 +84,20 @@ konkret anvendelse af **Design to be disabled** (kun *visningen* af nye, endnu i
 kommentarer "slukkes") og **Isolate faults** (en fejlende ProfanityService rammer aldrig
 andet end verificeringen af nye kommentarer).
 
+### HTTP-respons ved POST
+
+`POST /api/comments/{location}/{articleId}` returnerer:
+
+- **`201 Created`** — kommentaren er gemt, uanset om den blev klassificeret som
+  `Approved` eller `Rejected`. Begge tilfælde er et teknisk vellykket kald; klienten kan se
+  forskellen på `comment.Status` i response-body. En `Rejected`-kommentar er altså gemt,
+  men flagget — ikke afvist.
+- **`422 Unprocessable Entity`** — reserveret til når selve kaldet til ProfanityService
+  teknisk ikke gik igennem (circuit breaker åben/timeout, status
+  `PendingProfanityCheck`). Kommentaren gemmes stadig med denne status (og forbliver skjult
+  via `GetApprovedAsync`), men HTTP-svaret signalerer at klienten ikke kan stole på at
+  kommentaren er blevet profanitetstjekket.
+
 ## Data model & article-reference
 
 ArticleService er Z-akse-shardet per kontinent (8 uafhængige databaser, hver med egen
@@ -107,29 +121,52 @@ ArticleService selv, konsolidering er ude af scope.
 |---|---|---|---|
 | CommentService | GET | `/api/comments/{location}/{articleId}` | Hent godkendte kommentarer på en artikel |
 | CommentService | POST | `/api/comments/{location}/{articleId}` | Post en kommentar på en artikel |
-| ProfanityService | POST | `/api/profanity/check` | Tjek om et enkelt ord er forbudt (bool) |
+| ProfanityService | POST | `/api/profanity/check` | Tjek en hel tekst; returnerer listen af matchede forbudte ord (tom liste = ren tekst) |
 
 Ingen DELETE-endpoint: hverken opgaveteksten (`docs/Tredje uge.md`) eller underviserens
 eget diagram (`docs/week37-fault-isolation-diagram.png`) kræver sletning af kommentarer —
 kun "posting" og "requesting".
 
 **Hvorfor POST og ikke GET eller PUT på ProfanityService?** Kaldet er en
-beregning/handling ("tjek dette ord"), ikke en oprettelse eller erstatning af en ressource.
-GET ville kræve ordet som query-parameter, hvilket bliver upraktisk, hvis tjekket senere
-udvides fra ét ord til en hel sætning.
+beregning/handling ("tjek denne tekst"), ikke en oprettelse eller erstatning af en
+ressource. GET ville kræve teksten som query-parameter, hvilket er upraktisk for en hel
+sætning/kommentar — en af grundene til at endpointet blev udvidet fra ét ord til hele
+kommentarteksten i ét kald.
+
+## Tests
+
+`CommentService.Tests` og `ProfanityService.Tests` er unit-testprojekter (xUnit + Moq),
+sidestillet med de to services i solutionen:
+
+- **`CommentHandlerTests`**: klassificeringslogikken (`Approved`/`Rejected`/
+  `PendingProfanityCheck`), inkl. en eksplicit verifikation af at `IProfanityClient`
+  kaldes **én gang med hele teksten** pr. kommentar, ikke ét kald pr. ord.
+- **`CommentsControllerTests`**: location-/felt-validering og HTTP-statusmapping (`201`
+  for både `Approved` og `Rejected`, `422` for `PendingProfanityCheck`).
+- **`ProfanityCheckerTests`**: ord-splitning/dedup (case-insensitiv) og at
+  repository-resultatet sendes videre uændret.
+- **`ProfanityControllerTests`**: tom-tekst-validering og pass-through af resultatet.
+
+Scope er bevidst afgrænset til unit-tests: alle afhængigheder (`ICommentRepository`,
+`IProfanityClient`, `IProfanityRepository`) er mocket, så testene kører uden ægte
+Postgres eller HTTP-kald og uden Docker. `CommentRepository`/`ProfanityRepository`
+(rå Dapper/SQL) og cross-service-flowet er derfor **ikke** dækket — det ville kræve
+integrationstests. Kør med `dotnet test CommentService.Tests` /
+`dotnet test ProfanityService.Tests` fra `HappyHeadlines`-mappen.
 
 ## Kendt gæld
 
 - **Ingen reconciliation for `PendingProfanityCheck`:** intet baggrundsjob genforsøger i
   dag kommentarer, der blev sat i venteposition, mens circuit breakeren var åben.
-- **Ingen batch-profanity-check:** `CommentHandler` foretager ét HTTP-kald til
-  ProfanityService pr. unikt ord i kommentaren, i stedet for ét kald for hele teksten.
 - **Ingen admin-endpoints for `banned_words`:** listen er seedet med 3 placeholder-ord
   (`idiot`, `stupid`, `dumb`) og kan ikke vedligeholdes uden en ny deployment.
 - **Ingen auth/autorisation:** ingen af endpoints kræver godkendelse — hvem som helst kan
   poste under vilkårligt forfatternavn.
-- **Ingen automatiserede tests** for nogen af de to services (samme gæld som resten af
-  reposet).
+- **Kun unit-tests, ingen integrationstests:** `CommentService.Tests`/
+  `ProfanityService.Tests` dækker handler-/checker-/controller-logik med mocks (se
+  "Tests" ovenfor), men `CommentRepository`/`ProfanityRepository` og det faktiske
+  HTTP-flow mellem de to services er utestet. ArticleService har fortsat ingen tests
+  overhovedet.
 - **`C4 diagram/docs/workspace.dsl`** indeholder stadig relationen
   `publisherService -> profanityService`, som ikke er implementeret — kun CommentService
   kalder i praksis ProfanityService. Opdateres i en separat, kommende omgang.

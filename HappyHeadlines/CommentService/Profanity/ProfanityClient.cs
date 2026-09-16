@@ -43,23 +43,24 @@ public class ProfanityClient : IProfanityClient
         _resiliencePolicy = retryPolicy.WrapAsync(circuitBreakerPolicy);
     }
 
-    public async Task<ProfanityCheckResult> CheckAsync(string word, CancellationToken cancellationToken = default)
+    public async Task<ProfanityCheckResult> CheckAsync(string text, CancellationToken cancellationToken = default)
     {
         try
         {
-            var isProfane = await _resiliencePolicy.ExecuteAsync(async ct =>
+            var bannedWords = await _resiliencePolicy.ExecuteAsync(async ct =>
             {
-                var response = await _httpClient.PostAsJsonAsync("api/profanity/check", new { Word = word }, ct);
+                var response = await _httpClient.PostAsJsonAsync("api/profanity/check", new { Text = text }, ct);
                 response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<bool>(cancellationToken: ct);
+                return await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: ct)
+                    ?? [];
             }, cancellationToken);
 
-            return new ProfanityCheckResult(IsProfane: isProfane, CircuitOpen: false);
+            return new ProfanityCheckResult(BannedWords: bannedWords, CircuitOpen: false);
         }
         catch (BrokenCircuitException exception)
         {
-            _logger.LogWarning(exception, "ProfanityService circuit is open - skipping check for '{Word}'", word);
-            return new ProfanityCheckResult(IsProfane: false, CircuitOpen: true);
+            _logger.LogWarning(exception, "ProfanityService circuit is open - skipping profanity check");
+            return new ProfanityCheckResult(BannedWords: [], CircuitOpen: true);
         }
     }
 }

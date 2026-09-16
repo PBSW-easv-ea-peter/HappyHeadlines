@@ -2,5 +2,5 @@ namespace ProfanityService.Repositories;
 
 public interface IProfanityRepository
 {
-    Task<bool> IsProfaneAsync(string word);
+    Task<IReadOnlyList<string>> FindBannedWordsAsync(IEnumerable<string> words);
 }

@@ -15,18 +15,18 @@ public class ProfanityController : ControllerBase
         _checker = checker;
     }
 
-    // POST, not GET or PUT: this checks a word against the profanity list - a computation
+    // POST, not GET or PUT: this checks text against the profanity list - a computation
     // that returns a result without creating or replacing any resource. POST also avoids
-    // the URL-encoding issues GET query parameters would bring if this is later extended
-    // from a single word to a full sentence/comment. See docs/comment_and_profanity_services.md.
+    // the URL-encoding issues GET query parameters would bring for a full sentence/comment.
+    // See docs/comment_and_profanity_services.md.
     [HttpPost("check")]
-    public async Task<ActionResult<bool>> Check(ProfanityCheckRequest request)
+    public async Task<ActionResult<IReadOnlyList<string>>> Check(ProfanityCheckRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Word))
+        if (string.IsNullOrWhiteSpace(request.Text))
         {
-            return BadRequest("Word must not be empty.");
+            return BadRequest("Text must not be empty.");
         }
 
-        return Ok(await _checker.CheckAsync(request.Word));
+        return Ok(await _checker.CheckAsync(request.Text));
     }
 }

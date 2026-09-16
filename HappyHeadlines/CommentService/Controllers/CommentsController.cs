@@ -45,13 +45,15 @@ public class CommentsController : ControllerBase
             return BadRequest("AuthorName and Text must not be empty.");
         }
 
-        var (comment, rejected) = await _handler.PostAsync(location, articleId, request);
+        var (comment, status) = await _handler.PostAsync(location, articleId, request);
 
-        if (rejected)
+        if (status == Models.CommentStatus.PendingProfanityCheck)
         {
-            return UnprocessableEntity("Comment was rejected: it contains profanity.");
+            return UnprocessableEntity("Could not verify comment: ProfanityService is unavailable.");
         }
 
+        // Comment is saved either way (Approved or Rejected) - the caller can tell them
+        // apart via comment.Status in the response body.
         return CreatedAtAction(nameof(GetForArticle), new { location, articleId }, comment);
     }
 }

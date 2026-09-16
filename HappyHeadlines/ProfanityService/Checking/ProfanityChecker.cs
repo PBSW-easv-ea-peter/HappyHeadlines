@@ -15,5 +15,12 @@ public class ProfanityChecker : IProfanityChecker
         _repository = repository;
     }
 
-    public Task<bool> CheckAsync(string word) => _repository.IsProfaneAsync(word.Trim());
+    public Task<IReadOnlyList<string>> CheckAsync(string text)
+    {
+        var words = text
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        return _repository.FindBannedWordsAsync(words);
+    }
 }

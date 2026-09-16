@@ -25,39 +25,27 @@ public class CommentHandler : ICommentHandler
         return entities.Select(CommentDto.FromEntity);
     }
 
-    public async Task<(CommentDto Comment, bool Rejected)> PostAsync(string articleLocation, long articleId, PostCommentRequest request)
+    public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, long articleId, PostCommentRequest request)
     {
         var status = await ClassifyAsync(request.Text);
         var entity = await _repository.CreateAsync(articleLocation, articleId, request, status);
-        return (CommentDto.FromEntity(entity), status == CommentStatus.Rejected);
+        return (CommentDto.FromEntity(entity), status);
     }
 
     private async Task<CommentStatus> ClassifyAsync(string text)
     {
-        var words = text
-            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase);
+        var result = await _profanityClient.CheckAsync(text);
 
-        foreach (var word in words)
+        if (result.CircuitOpen)
         {
-            var result = await _profanityClient.CheckAsync(word);
-
-            if (result.CircuitOpen)
-            {
-                // Fault isolation in practice: ProfanityService is unavailable and the
-                // circuit breaker has tripped. CommentService itself stays up and keeps
-                // accepting comments (design to be disabled + isolate faults) instead of
-                // failing the whole request - it just cannot vouch for this one yet.
-                _logger.LogWarning("ProfanityService unavailable - comment queued for review instead of being rejected outright.");
-                return CommentStatus.PendingProfanityCheck;
-            }
-
-            if (result.IsProfane)
-            {
-                return CommentStatus.Rejected;
-            }
+            // Fault isolation in practice: ProfanityService is unavailable and the
+            // circuit breaker has tripped. CommentService itself stays up and keeps
+            // accepting comments (design to be disabled + isolate faults) instead of
+            // failing the whole request - it just cannot vouch for this one yet.
+            _logger.LogWarning("ProfanityService unavailable - comment queued for review instead of being rejected outright.");
+            return CommentStatus.PendingProfanityCheck;
         }
 
-        return CommentStatus.Approved;
+        return result.IsProfane ? CommentStatus.Rejected : CommentStatus.Approved;
     }
 }

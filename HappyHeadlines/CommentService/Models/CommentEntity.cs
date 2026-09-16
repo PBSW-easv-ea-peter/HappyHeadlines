@@ -1,6 +1,6 @@
 namespace CommentService.Models;
 
-// Numeric values are persisted directly (see database/postgres/comment/comment_baseline.sql)
+// Numeric values are persisted directly (see database/init/comment/comment_baseline.sql)
 // - do not reorder the members without also updating the check_comment_status constraint.
 public enum CommentStatus
 {

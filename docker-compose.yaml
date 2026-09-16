@@ -13,7 +13,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Articles from North America
   articledb-na:
@@ -23,7 +24,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Articles from South America
   articledb-sa:
@@ -33,7 +35,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Articles from Australia
   articledb-au:
@@ -43,7 +46,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Articles from Asia
   articledb-as:
@@ -53,7 +57,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Articles from Antarctica
   articledb-an:
@@ -63,7 +68,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Articles from Africa
   articledb-af:
@@ -73,7 +79,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   ## Global articles
   articledb-global:
@@ -83,7 +90,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d:ro
+      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
+      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
   articleservice:
     build:
@@ -114,7 +122,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres/comment:/docker-entrypoint-initdb.d:ro
+      - ./database/init/comment/comment_baseline.sql:/docker-entrypoint-initdb.d/01_comment_baseline.sql:ro
+      - ./database/queries/comment/seed_comments.sql:/docker-entrypoint-initdb.d/02_seed_comments.sql:ro
 
   profanitydb:
     image: postgres:18-trixie
@@ -123,7 +132,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
     volumes:
-      - ./database/postgres/profanity:/docker-entrypoint-initdb.d:ro
+      - ./database/init/profanity/profanity_baseline.sql:/docker-entrypoint-initdb.d/01_profanity_baseline.sql:ro
+      - ./database/queries/profanity/seed_banned_words.sql:/docker-entrypoint-initdb.d/02_seed_banned_words.sql:ro
 
   profanityservice:
     build:

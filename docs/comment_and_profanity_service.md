@@ -180,8 +180,8 @@ ArticleService i samme `happyheadlines`-stack.
 - `commentservice` publiceres på host-port `8083` (ændret fra oprindeligt `8081`, som var
   optaget af en lokal Structurizr-instans), `profanityservice` på `8082`.
 - Hver service har sin egen Postgres-database (`commentdb`, `profanitydb`), initialiseret
-  via `database/postgres/comment/comment_baseline.sql` og
-  `database/postgres/profanity/profanity_baseline.sql`.
+  via `database/init/comment/comment_baseline.sql` og
+  `database/init/profanity/profanity_baseline.sql` (seed-data i `database/queries/`).
 - `commentservice` afhænger af `profanitydb` (i `depends_on`), men det styrer kun
   opstartsrækkefølgen, ikke om ProfanityService faktisk er klar til at modtage kald —
   det er netop derfor retry- og circuit breaker-logikken er relevant fra første opstart.

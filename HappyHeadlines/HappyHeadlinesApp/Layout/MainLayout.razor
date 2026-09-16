@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @* Required *@
-<MudThemeProvider />
+<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -10,4 +10,59 @@
 @* Needed for snackbars *@
 <MudSnackbarProvider />
 
-@Body
+<MudLayout>
+
+    <MudAppBar Elevation="0" Class="border-bottom header" id="appBar">
+        <MudGrid Class="w-100 align-center">
+
+            <!-- Left -->
+            <MudItem xs="4" Class="d-flex justify-start align-center">
+                <MudIconButton Icon="@DarkLightModeButtonIcon"
+                               Color="Color.Inherit"
+                               Size="Size.Small"
+                               Ripple="false"
+                               OnClick="@DarkModeToggle" />
+
+                <MudLink Href="@PageRoutes.Home"
+                         Target="_blank"
+                         Color="Color.Inherit">
+                    <MudIconButton Icon="@("fa-brands fa-instagram")"
+                                   Color="Color.Inherit"
+                                   Size="Size.Small"/>
+                </MudLink>
+            </MudItem>
+
+            <!-- Center -->
+            <MudItem xs="4" Class="d-flex justify-center header-top-center">
+                <MudLink Href="@PageRoutes.Home"
+                         Color="Color.Inherit"
+                         Underline="Underline.None">
+                    <MudText>
+                        Happy Headlines
+                    </MudText>
+                </MudLink>
+            </MudItem>
+
+            <!-- Right -->
+            <MudItem xs="4" Class="header-top-right d-flex justify-end align-center" >
+                <MudLink Href="@PageRoutes.Administration"
+                         Color="Color.Inherit"
+                         Underline="Underline.None">
+                    <MudText Typo="Typo.h6" Class="appointment-text">
+                        To Administration
+                    </MudText>
+                </MudLink>
+            </MudItem>
+
+        </MudGrid>
+    </MudAppBar>
+
+    <!-- Navbar -->
+    <Navbar />
+
+    <!-- Main -->
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+
+</MudLayout>

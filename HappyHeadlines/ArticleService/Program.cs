@@ -17,10 +17,10 @@ builder.Services.AddSingleton<IArticleShardResolver, ArticleShardResolver>();
 builder.Services.AddScoped<IArticleReadRepository, ArticleReadRepository>();
 builder.Services.AddScoped<IArticleWriteRepository, ArticleWriteRepository>();
 
-if (builder.Environment.IsDevelopment())
-{
+// if (!builder.Environment.IsDevelopment())
+// {
     builder.Services.AddHostedService<ArticleSeeder>();
-}
+// }
 
 builder.Services.AddHostedService<ArticleQueueConsumer>();
 

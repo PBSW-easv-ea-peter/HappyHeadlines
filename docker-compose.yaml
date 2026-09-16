@@ -93,14 +93,18 @@ services:
       - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
       - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
 
+  ## Article Service
   articleservice:
     build:
       context: ./HappyHeadlines/ArticleService/
     image: happyheadlines/articleservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
     ports:
       - "8080:8080"
-    deploy:
-      replicas: 3
+#    deploy:
+#      replicas: 3
 #    depends_on:
 #      - articledb-eu
 #      - articledb-na
@@ -139,17 +143,30 @@ services:
     build:
       context: ./HappyHeadlines/ProfanityService/
     image: happyheadlines/profanityservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8081
     ports:
-      - "8082:8080"
-    depends_on:
-      - profanitydb
+      - "8081:8081"
 
   commentservice:
     build:
       context: ./HappyHeadlines/CommentService/
     image: happyheadlines/commentservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8082
     ports:
-      - "8083:8080"
-    depends_on:
-      - commentdb
-      - profanityservice
+      - "8082:8082"
+
+# ──────────────────────────────────────────────────────────────────────────────
+#        Clients 
+# ──────────────────────────────────────────────────────────────────────────────
+
+  happyheadlines:
+    build:
+      context: ./HappyHeadlines
+      dockerfile: HappyHeadlines.wasm/Dockerfile
+    image: happyheadlines/happyheadlines
+    ports:
+      - "8000:8000"

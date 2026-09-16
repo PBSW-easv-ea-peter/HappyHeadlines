@@ -1,22 +1,23 @@
 {
   "profiles": {
-    "CommentService": {
+    "ProfanityService": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "http://localhost:8082",
+      "applicationUrl": "http://localhost:8081",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "CommentService (Production)": {
+    "ProfanityService (Production)": {
       "commandName": "Project",
       "dotnetRunMessages": false,
       "launchBrowser": false,
-      "applicationUrl": "http://0.0.0.0:8082",
+      "applicationUrl": "http://0.0.0.0:8081",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
     }
   }
 }
+

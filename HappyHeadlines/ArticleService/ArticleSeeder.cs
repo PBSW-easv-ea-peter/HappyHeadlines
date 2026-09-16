@@ -22,6 +22,8 @@ public class ArticleSeeder : IHostedService
     {
         _logger.LogInformation("Seeding articles...");
 
+        await Task.Delay(10000);
+
         foreach (var location in Articles
                      .Select(article => article.Location)
                      .Distinct())

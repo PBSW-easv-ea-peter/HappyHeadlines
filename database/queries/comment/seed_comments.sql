@@ -3,6 +3,14 @@
 -- here are NOT enforced by a foreign key. The values below match the insertion order of the
 -- mock articles seeded by ArticleService's ArticleSeeder.cs (run it first if you want the
 -- ids to actually resolve to real articles via the API).
+
+INSERT INTO status (id, name)
+VALUES
+    (0, 'Approved'),
+    (1, 'PendingProfanityCheck'),
+    (2, 'Rejected')
+ON CONFLICT (id) DO NOTHING;
+
 do $$
 begin
     if not exists (select 1 from comments where author_name = 'Alice' and text = 'Great overview, thanks for the summary!') then

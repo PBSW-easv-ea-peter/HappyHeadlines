@@ -4,6 +4,12 @@ using CommentService.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// OpenAPI
+builder.Services.AddOpenApi();
+
+// Swagger
+builder.Services.AddSwaggerGen();
+
 builder.Services.AddControllers();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentHandler, CommentHandler>();
@@ -20,6 +26,14 @@ builder.Services.AddHttpClient<IProfanityClient, ProfanityClient>(client =>
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 

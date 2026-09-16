@@ -1,6 +1,7 @@
 using ArticleService.Sharding;
 using Dapper;
 using Npgsql;
+using System.Net.Sockets;
 
 namespace ArticleService.Seeding;
 
@@ -36,6 +37,14 @@ public class ArticleSeeder : IHostedService
                     "Skipping seeding for this database. Error: {Message}",
                     location,
                     ex.Message);
+            }
+            catch (SocketException ex)
+            {
+                _logger.LogWarning(
+                        "Could not connect to the {Location} article database. " +
+                        "Skipping seeding for this database. Error: {Message}",
+                        location,
+                        ex.Message);
             }
         }
 

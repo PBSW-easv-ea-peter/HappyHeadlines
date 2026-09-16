@@ -106,7 +106,7 @@
             try
             {
                 articleDtos = await Http.GetFromJsonAsync<IEnumerable<ArticleDTO>>(
-                    "http://localhost:5000/api/articles/eu");
+                    "http://localhost:8080/api/articles/go");
             }
             catch (Exception ex)
             {
@@ -130,7 +130,7 @@
                 try
                 {
                     return await Http.GetFromJsonAsync<IEnumerable<Comment>>(
-                        $"http://localhost:8083/api/eu/{articleDto.Id}") ?? Enumerable.Empty<Comment>();
+                        $"http://localhost:8082/api/comments/GO/{articleDto.Id}") ?? Enumerable.Empty<Comment>();
                 }
                 catch (Exception ex)
                 {

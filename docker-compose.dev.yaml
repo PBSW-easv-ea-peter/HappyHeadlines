@@ -112,10 +112,12 @@ services:
     build:
       context: ./HappyHeadlines/ArticleService/
     image: happyheadlines/articleservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "8080:8080"
-    deploy:
-      replicas: 3
+#    deploy:
+#      replicas: 3
 #    depends_on:
 #      - articledb-eu
 #      - articledb-na
@@ -159,17 +161,23 @@ services:
     build:
       context: ./HappyHeadlines/ProfanityService/
     image: happyheadlines/profanityservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8081
     ports:
-      - "8082:8080"
-    depends_on:
-      - profanitydb
+      - "8081:8081"
+#    depends_on:
+#      - profanitydb
 
   commentservice:
     build:
       context: ./HappyHeadlines/CommentService/
     image: happyheadlines/commentservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8082
     ports:
-      - "8083:8080"
-    depends_on:
-      - commentdb
-      - profanityservice
+      - "8082:8082"
+#    depends_on:
+#      - commentdb
+#      - profanityservice

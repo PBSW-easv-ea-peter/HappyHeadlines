@@ -1,0 +1,57 @@
+@page "/articles"
+@page "/articles/{Region}"
+
+@using Microsoft.Extensions.Logging
+@using System.Net.Http.Json
+@using HappyHeadlinesPages.web.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject ILogger<Articles> Logger
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+
+    <MudText Typo="Typo.h3" Class="mb-6">
+        Articles
+    </MudText>
+
+    <MudStack Row="true"
+              Spacing="1"
+              Class="mb-6"
+              Justify="Justify.Center">
+
+        <MudButton Variant="@(Region is null
+                                 ? Variant.Filled
+                                 : Variant.Outlined)"
+                   Color="Color.Primary"
+                   OnClick="@(() => NavigateToRegion(null))">
+            ALL
+        </MudButton>
+
+        @foreach (var region in Regions)
+        {
+            <MudButton Variant="@(IsCurrentRegion(region)
+                                     ? Variant.Filled
+                                     : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick="@(() => NavigateToRegion(region))">
+                @region.ToUpper()
+            </MudButton>
+        }
+
+    </MudStack>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" />
+    }
+    else if (articles is not null)
+    {
+        <MudGrid>
+            @foreach (var article in articles)
+            {
+                <ArticlePresenter Article="@article" />
+            }
+        </MudGrid>
+    }
+
+</MudContainer>

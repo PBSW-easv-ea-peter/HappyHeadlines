@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CommentService/CommentService.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CommentService.Tests/CommentService.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -112,8 +112,8 @@ services:
   ## Article Service
   articleservice:
     build:
-      context: ./HappyHeadlines/ArticleService/
-    image: happyheadlines/articleservice
+      context: ./apps/article_service/
+    image: happyheadlines/article_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
@@ -150,8 +150,8 @@ services:
 
   profanityservice:
     build:
-      context: ./HappyHeadlines/ProfanityService/
-    image: happyheadlines/profanityservice
+      context: ./apps/profanity_service/
+    image: happyheadlines/profanity_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8081
@@ -160,8 +160,8 @@ services:
 
   commentservice:
     build:
-      context: ./HappyHeadlines/CommentService/
-    image: happyheadlines/commentservice
+      context: ./apps/comment_service/
+    image: happyheadlines/comment_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8082
@@ -174,9 +174,8 @@ services:
 
   happyheadlines:
     build:
-      context: ./HappyHeadlines
-      dockerfile: HappyHeadlines.wasm/Dockerfile
-    image: happyheadlines/happyheadlines
+      context: ./apps/happy-headlines-web_service
+    image: happyheadlines/happyheadlines_web:dev
     ports:
       - "8000:8000"
 

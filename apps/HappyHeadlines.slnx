@@ -3,4 +3,23 @@
   <Folder Name="/article_service/src/">
     <Project Path="article_service/src/ArticleService/ArticleService.csproj" />
   </Folder>
+  <Folder Name="/comment_service/" />
+  <Folder Name="/comment_service/src/">
+    <Project Path="comment_service/src/CommentService/CommentService.csproj" />
+  </Folder>
+  <Folder Name="/comment_service/tests/">
+    <Project Path="comment_service/tests/CommentService.Tests/CommentService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/happy-headlines-web_service/" />
+  <Folder Name="/happy-headlines-web_service/src/">
+    <Project Path="happy-headlines-web_service/src/HappyHeadlines.web.wasm/HappyHeadlines.web.wasm.csproj" />
+    <Project Path="happy-headlines-web_service/src/HappyHeadlinesPages.web/HappyHeadlinesPages.web.csproj" />
+  </Folder>
+  <Folder Name="/profanity_service/" />
+  <Folder Name="/profanity_service/src/">
+    <Project Path="profanity_service/src/ProfanityService/ProfanityService.csproj" />
+  </Folder>
+  <Folder Name="/profanity_service/tests/">
+    <Project Path="profanity_service/tests/ProfanityService.Tests/ProfanityService.Tests.csproj" />
+  </Folder>
 </Solution>

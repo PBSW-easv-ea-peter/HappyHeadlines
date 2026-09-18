@@ -33,7 +33,7 @@ public class CommentsController : ControllerBase
     }
 
     [HttpPost("{location}/{articleId:long}")]
-    public async Task<ActionResult<CommentDto>> Post(string location, long articleId, PostCommentRequest request)
+    public async Task<ActionResult<CommentDto>> Post(string location, long articleId, PostCommentRequest request, CancellationToken ct = default)
     {
         if (!ValidLocations.Contains(location))
         {
@@ -45,7 +45,7 @@ public class CommentsController : ControllerBase
             return BadRequest("AuthorName and Text must not be empty.");
         }
 
-        var (comment, status) = await _handler.PostAsync(location, articleId, request);
+        var (comment, status) = await _handler.PostAsync(location, articleId, request, ct);
 
         if (status == Models.CommentStatus.PendingProfanityCheck)
         {

@@ -25,16 +25,16 @@ public class CommentHandler : ICommentHandler
         return entities.Select(CommentDto.FromEntity);
     }
 
-    public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, long articleId, PostCommentRequest request)
+    public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, long articleId, PostCommentRequest request, CancellationToken ct = default)
     {
-        var status = await ClassifyAsync(request.Text);
+        var status = await ClassifyAsync(request.Text, ct);
         var entity = await _repository.CreateAsync(articleLocation, articleId, request, status);
         return (CommentDto.FromEntity(entity), status);
     }
 
-    private async Task<CommentStatus> ClassifyAsync(string text)
+    private async Task<CommentStatus> ClassifyAsync(string text, CancellationToken cancellationToken)
     {
-        var result = await _profanityClient.CheckAsync(text);
+        var result = await _profanityClient.CheckAsync(text, cancellationToken);
 
         if (result.CircuitOpen)
         {

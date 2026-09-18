@@ -11,6 +11,9 @@
 *.sln.docstates
 **/.idea
 
+# Data used by containers
+**/tmp-data
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

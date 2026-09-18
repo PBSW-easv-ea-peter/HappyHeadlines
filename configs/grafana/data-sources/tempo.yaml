@@ -1,0 +1,9 @@
+datasources:
+  - name: Tempo
+    type: tempo
+    url: http://tempo:3200
+    access: server 
+    basicAuth: false
+    jsonData:
+      tlsAuth: false
+      tlsAuthWithCACert: false

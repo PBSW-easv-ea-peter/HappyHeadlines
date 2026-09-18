@@ -1,0 +1,38 @@
+﻿@page "/not-found"
+@using HappyHeadlinesApp.Layout
+@layout MainLayout
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex justify-center align-center" Style="min-height: 70vh;">
+    <MudPaper Elevation="4" Class="pa-8 text-center">
+        <MudText Typo="Typo.overline" Color="Color.Error">
+            🚨 BREAKING NEWS 🚨
+        </MudText>
+
+        <MudText Typo="Typo.h1" Class="mt-4">
+            404
+        </MudText>
+
+        <MudText Typo="Typo.h4" Class="mt-2">
+            Local Page Goes Missing
+        </MudText>
+
+        <MudDivider Class="my-6" />
+
+        <MudText Typo="Typo.body1">
+            In a shocking turn of events, the page you were looking for
+            has completely disappeared.
+            Authorities have searched the internet, checked the archives,
+            and asked three suspicious-looking servers.
+        </MudText>
+
+        <MudButton
+            Href="/"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Size="Size.Large"
+            StartIcon="@Icons.Material.Filled.Home"
+            Class="mt-6">
+            Return to the Newsroom
+        </MudButton>
+    </MudPaper>
+</MudContainer>

@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["apps/article_service/src/ArticleService/ArticleService.csproj", "."]
+COPY ["src/ArticleService/ArticleService.csproj", "."]
 RUN dotnet restore
 
-COPY ["apps/article_service/src/ArticleService/.", "."]
+COPY ["./src/ArticleService/", "."]
 RUN dotnet publish -c Release -o /app
 
 # Final stage

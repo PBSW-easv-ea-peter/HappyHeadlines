@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HappyHeadlines.web.wasm/HappyHeadlines.web.wasm.csproj" />
+    <Project Path="src/HappyHeadlinesApp/HappyHeadlinesApp.csproj" />
+  </Folder>
+</Solution>

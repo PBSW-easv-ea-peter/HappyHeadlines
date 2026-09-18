@@ -14,14 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <_ContentIncludedByDefault Remove="Layout\MainLayout.razor" />
-      <_ContentIncludedByDefault Remove="Pages\Home.razor" />
-      <_ContentIncludedByDefault Remove="Pages\NotFound.razor" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\app.css" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\HappyHeadlinesApp\HappyHeadlinesApp.csproj" />
+      <ProjectReference Include="..\HappyHeadlinesPages.web\HappyHeadlinesPages.web.csproj" />
     </ItemGroup>
 
 </Project>

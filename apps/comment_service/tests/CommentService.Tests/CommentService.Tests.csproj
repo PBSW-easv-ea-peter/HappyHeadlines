@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommentService\CommentService.csproj" />
+    <ProjectReference Include="..\..\src\CommentService\CommentService.csproj" />
   </ItemGroup>
 
 </Project>

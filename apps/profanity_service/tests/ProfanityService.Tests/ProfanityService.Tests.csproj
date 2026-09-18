@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ProfanityService\ProfanityService.csproj" />
+    <ProjectReference Include="..\..\src\ProfanityService\ProfanityService.csproj" />
   </ItemGroup>
 
 </Project>

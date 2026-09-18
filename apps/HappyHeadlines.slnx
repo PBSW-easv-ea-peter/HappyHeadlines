@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/article_service/" />
+  <Folder Name="/article_service/src/">
+    <Project Path="article_service/src/ArticleService/ArticleService.csproj" />
+  </Folder>
+</Solution>

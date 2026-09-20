@@ -18,6 +18,20 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentHandler, CommentHandler>();
 
+var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
+    ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebApp", policy =>
+    {
+        policy
+            .WithOrigins(webAppBaseUrl)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // // Create a resilience pipeline with a retry and circuit breaker
 // builder.Services.AddResiliencePipeline(
 //     "ProfanityService",
@@ -131,6 +145,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowWebApp");
 
 app.MapControllers();
 

@@ -10,7 +10,8 @@ public interface IDraftHandler
     Task<DraftActionResult> UpdateContentAsync(long id, EditDraftRequest request);
     Task<DraftActionResult> SubmitForApprovalAsync(long id, CancellationToken cancellationToken = default);
     Task<DraftActionResult> ApproveAsync(long id, ApproveDraftRequest request);
-    Task<DraftActionResult> RejectAsync(long id);
+    Task<DraftActionResult> RejectAsync(long id, RejectDraftRequest request);
     Task<DraftActionResult> PublishAsync(long id);
     Task<DraftActionResult> ArchiveAsync(long id);
+    Task<DraftActionResult> ReactivateAsync(long id);
 }

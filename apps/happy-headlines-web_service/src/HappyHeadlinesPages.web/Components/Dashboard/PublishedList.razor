@@ -1,0 +1,27 @@
+@using HappyHeadlinesPages.web.Models
+@using HappyHeadlinesPages.web.Layout
+
+<MudText Typo="Typo.h6" Class="mb-3">Published Articles</MudText>
+
+@if (!Articles.Any())
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary">Nothing published yet.</MudText>
+}
+else
+{
+    <MudStack Spacing="2">
+        @foreach (var article in Articles)
+        {
+            <MudPaper Class="pa-4" Elevation="0" Outlined="true"
+                      Style="@($"border-left: 4px solid {CustomMudTheme.LogoBlue};")">
+                <div class="d-flex justify-space-between align-center mb-1">
+                    <MudText Typo="Typo.subtitle1">@article.Title</MudText>
+                    <MudChip T="string" Size="Size.Small">@article.Location</MudChip>
+                </div>
+                <MudText Typo="Typo.caption">
+                    @article.SectionName &middot; Published @article.CreatedDate.ToLocalTime().ToString("d MMM yyyy")
+                </MudText>
+            </MudPaper>
+        }
+    </MudStack>
+}

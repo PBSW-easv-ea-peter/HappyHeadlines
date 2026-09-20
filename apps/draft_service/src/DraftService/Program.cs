@@ -16,6 +16,20 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IDraftRepository, DraftRepository>();
 builder.Services.AddScoped<IDraftHandler, DraftHandler>();
 
+var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
+    ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebApp", policy =>
+    {
+        policy
+            .WithOrigins(webAppBaseUrl)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services
     .AddHttpClient<IProfanityClient, ProfanityClient>(client =>
     {
@@ -87,6 +101,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowWebApp");
 
 app.MapControllers();
 

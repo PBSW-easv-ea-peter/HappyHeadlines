@@ -145,9 +145,9 @@ public class DraftHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(MakeDraft(1, DraftStatus.PendingApproval));
         var updated = MakeDraft(1, DraftStatus.Approved);
-        _repository.Setup(r => r.ApproveAsync(1, DraftStatus.PendingApproval, 7)).ReturnsAsync(updated);
+        _repository.Setup(r => r.ApproveAsync(1, DraftStatus.PendingApproval, 7, "Looks good")).ReturnsAsync(updated);
 
-        var result = await _handler.ApproveAsync(1, new ApproveDraftRequest { JournalistId = 7 });
+        var result = await _handler.ApproveAsync(1, new ApproveDraftRequest { JournalistId = 7, Note = "Looks good" });
 
         Assert.Equal(DraftActionOutcome.Success, result.Outcome);
         Assert.Same(updated, result.Draft);
@@ -161,7 +161,7 @@ public class DraftHandlerTests
         var result = await _handler.ApproveAsync(1, new ApproveDraftRequest { JournalistId = 7 });
 
         Assert.Equal(DraftActionOutcome.IllegalTransition, result.Outcome);
-        _repository.Verify(r => r.ApproveAsync(It.IsAny<long>(), It.IsAny<DraftStatus>(), It.IsAny<long>()), Times.Never);
+        _repository.Verify(r => r.ApproveAsync(It.IsAny<long>(), It.IsAny<DraftStatus>(), It.IsAny<long>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class DraftHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((Draft?)null);
 
-        var result = await _handler.RejectAsync(1);
+        var result = await _handler.RejectAsync(1, new RejectDraftRequest());
 
         Assert.Equal(DraftActionOutcome.NotFound, result.Outcome);
     }

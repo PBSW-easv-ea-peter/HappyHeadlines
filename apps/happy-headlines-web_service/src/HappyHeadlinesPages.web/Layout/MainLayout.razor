@@ -13,6 +13,11 @@
 <MudLayout>
 
     <MudAppBar Elevation="0" Class="border-bottom header" id="appBar">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@DrawerToggle" />
+
         <MudGrid Class="w-100 align-center">
 
             <!-- Left -->
@@ -33,11 +38,11 @@
             </MudItem>
 
             <!-- Center -->
-            <MudItem xs="4" Class="d-flex justify-center header-top-center">
+            <MudItem xs="4" Class="d-flex justify-center align-center header-top-center">
                 <MudLink Href="@PageRoutes.Home"
                          Color="Color.Inherit"
                          Underline="Underline.None">
-                    <MudText>
+                    <MudText Typo="Typo.h5" Class="site-wordmark">
                         Happy Headlines
                     </MudText>
                 </MudLink>
@@ -57,8 +62,14 @@
         </MudGrid>
     </MudAppBar>
 
-    <!-- Navbar -->
-    <Navbar />
+    <!-- Side nav -->
+    <MudDrawer Open="_drawerOpen"
+               Elevation="1"
+               ClipMode="DrawerClipMode.Always"
+               Variant="DrawerVariant.Persistent"
+               Width="240px">
+        <Navbar />
+    </MudDrawer>
 
     <!-- Main -->
     <MudMainContent>

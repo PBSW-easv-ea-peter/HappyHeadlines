@@ -17,6 +17,7 @@ CREATE TABLE drafts (
     approved_date                 TIMESTAMPTZ,
     flagged_words                 TEXT[] NOT NULL DEFAULT '{}', -- set by ProfanityService when submitted for approval; reset when the content is edited
     status                        SMALLINT NOT NULL DEFAULT 0, -- 0=WorkInProgress, 1=PendingApproval, 2=Approved, 3=Published, 4=Archived
+    review_note                   TEXT, -- optional reviewer feedback set on approve/reject; cleared on the next submit-for-approval
 
     CONSTRAINT fk_drafts_status
         FOREIGN KEY (status)

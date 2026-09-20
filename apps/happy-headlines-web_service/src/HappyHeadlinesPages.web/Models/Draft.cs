@@ -1,4 +1,4 @@
-namespace DraftService.Models;
+namespace HappyHeadlinesPages.web.Models;
 
 public enum DraftStatus
 {
@@ -27,6 +27,17 @@ public class Draft
     public string? ReviewNote { get; set; }
 }
 
+public class ApproveDraftRequest
+{
+    public long JournalistId { get; set; }
+    public string? Note { get; set; }
+}
+
+public class RejectDraftRequest
+{
+    public string? Note { get; set; }
+}
+
 public class CreateDraftRequest
 {
     public long JournalistId { get; set; }
@@ -43,15 +54,4 @@ public class EditDraftRequest
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public long SectionId { get; set; }
-}
-
-public class ApproveDraftRequest
-{
-    public long JournalistId { get; set; }
-    public string? Note { get; set; }
-}
-
-public class RejectDraftRequest
-{
-    public string? Note { get; set; }
 }

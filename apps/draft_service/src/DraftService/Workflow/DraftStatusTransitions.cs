@@ -8,7 +8,8 @@ public enum DraftAction
     Approve,
     Reject,
     Publish,
-    Archive
+    Archive,
+    Reactivate
 }
 
 // Single source of truth for which status transitions are legal, so the controller
@@ -26,7 +27,8 @@ public static class DraftStatusTransitions
             (DraftStatus.WorkInProgress, DraftStatus.Archived),
             (DraftStatus.PendingApproval, DraftStatus.Archived),
             (DraftStatus.Approved, DraftStatus.Archived)
-        ]
+        ],
+        [DraftAction.Reactivate] = [(DraftStatus.Archived, DraftStatus.WorkInProgress)]
     };
 
     public static bool TryGetResultStatus(DraftAction action, DraftStatus currentStatus, out DraftStatus resultStatus)

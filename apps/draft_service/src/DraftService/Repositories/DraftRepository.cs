@@ -19,7 +19,7 @@ public class DraftRepository : IDraftRepository
         created_by_journalist_id as CreatedByJournalistId, created_date as CreatedDate,
         last_edited_by_journalist_id as LastEditedByJournalistId, last_edited_date as LastEditedDate,
         approved_by_journalist_id as ApprovedByJournalistId, approved_date as ApprovedDate,
-        flagged_words as FlaggedWords, status
+        flagged_words as FlaggedWords, status, review_note as ReviewNote
         """;
 
     public async Task<IEnumerable<Draft>> GetAllAsync(long? createdBy)
@@ -102,7 +102,8 @@ public class DraftRepository : IDraftRepository
         var sql = $"""
             update drafts
             set status = @NewStatus,
-                flagged_words = @FlaggedWords
+                flagged_words = @FlaggedWords,
+                review_note = null
             where id = @Id and status = @ExpectedCurrentStatus
             returning {SelectColumns}
             """;
@@ -134,14 +135,15 @@ public class DraftRepository : IDraftRepository
         });
     }
 
-    public async Task<Draft?> ApproveAsync(long id, DraftStatus expectedCurrentStatus, long approvedByJournalistId)
+    public async Task<Draft?> ApproveAsync(long id, DraftStatus expectedCurrentStatus, long approvedByJournalistId, string? note)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
             update drafts
             set status = @NewStatus,
                 approved_by_journalist_id = @ApprovedByJournalistId,
-                approved_date = current_timestamp
+                approved_date = current_timestamp,
+                review_note = @Note
             where id = @Id and status = @ExpectedCurrentStatus
             returning {SelectColumns}
             """;
@@ -151,6 +153,27 @@ public class DraftRepository : IDraftRepository
             Id = id,
             NewStatus = (short)DraftStatus.Approved,
             ApprovedByJournalistId = approvedByJournalistId,
+            Note = note,
+            ExpectedCurrentStatus = (short)expectedCurrentStatus
+        });
+    }
+
+    public async Task<Draft?> RejectAsync(long id, DraftStatus expectedCurrentStatus, string? note)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        var sql = $"""
+            update drafts
+            set status = @NewStatus,
+                review_note = @Note
+            where id = @Id and status = @ExpectedCurrentStatus
+            returning {SelectColumns}
+            """;
+
+        return await connection.QueryFirstOrDefaultAsync<Draft>(sql, new
+        {
+            Id = id,
+            NewStatus = (short)DraftStatus.WorkInProgress,
+            Note = note,
             ExpectedCurrentStatus = (short)expectedCurrentStatus
         });
     }

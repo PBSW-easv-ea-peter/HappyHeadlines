@@ -1,0 +1,75 @@
+@page "/drafts"
+
+@using HappyHeadlinesPages.web.Models
+@using HappyHeadlinesPages.web.Components.Dashboard
+@using HappyHeadlinesPages.web.Layout
+@using System.Net.Http.Json
+@using Microsoft.Extensions.Logging
+@inject HttpClient Http
+@inject ILogger<Drafts> Logger
+@inject CurrentJournalistState JournalistState
+@implements IDisposable
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mb-12">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4" Wrap="Wrap.Wrap">
+        <MudText Typo="Typo.h3">Editorial Dashboard</MudText>
+
+        <MudStack Row="true" Spacing="2">
+            <MudButton
+                Variant="Variant.Outlined"
+                Color="Color.Secondary"
+                StartIcon="@Icons.Material.Filled.People"
+                Href="@PageRoutes.Administration">
+                Manage Staff
+            </MudButton>
+
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                StartIcon="@Icons.Material.Filled.Add"
+                Href="@PageRoutes.NewDraft">
+                New Draft
+            </MudButton>
+        </MudStack>
+    </MudStack>
+
+    <MudText Typo="Typo.h5" Class="mb-6">
+        @Greeting &#128075; Let's make the world a little happier.
+    </MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mb-6" />
+    }
+    else
+    {
+        <MudGrid Class="mb-8">
+            <StatusSummaryCard Title="Drafts" Count="@MyDraftCount" Icon="@Icons.Material.Filled.EditNote" AccentColor="@CustomMudTheme.LogoYellow" />
+            <StatusSummaryCard Title="Needs Changes" Count="@MyNeedsChangesCount" Icon="@Icons.Material.Filled.Flag" AccentColor="@CustomMudTheme.LogoPink" />
+            <StatusSummaryCard Title="Awaiting Review" Count="@AwaitingReviewCount" Icon="@Icons.Material.Filled.RateReview" AccentColor="@CustomMudTheme.LogoPurple" />
+            <StatusSummaryCard Title="Published" Count="@MyPublishedCount" Icon="@Icons.Material.Filled.Public" AccentColor="@CustomMudTheme.LogoBlue" />
+        </MudGrid>
+
+        <MudPaper Class="pa-4 mb-8" Elevation="1">
+            <YourWorkList Drafts="@MyActiveDrafts" />
+        </MudPaper>
+
+        <MudPaper Class="pa-4 mb-8" Elevation="1">
+            <NeedsReviewList Drafts="@PendingApprovalDrafts" />
+        </MudPaper>
+
+        <MudDivider Class="mb-6" />
+
+        <MudPaper Class="pa-4 mb-6" Elevation="0" Outlined="true">
+            <PublishedList Articles="@MyPublishedArticles" />
+        </MudPaper>
+
+        <EngagementPanel />
+
+        <MudPaper Class="pa-4 mt-6" Elevation="0" Outlined="true">
+            <ArchivedList Drafts="@MyArchivedDrafts" OnReactivate="ReactivateAsync" />
+        </MudPaper>
+    }
+
+</MudContainer>

@@ -1,0 +1,114 @@
+@page "/drafts/{Id:long}/edit"
+
+@using HappyHeadlinesPages.web.Models
+@using HappyHeadlinesPages.web.Components.Dashboard
+@using System.Net.Http.Json
+@using Microsoft.Extensions.Logging
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject CurrentJournalistState JournalistState
+@inject ILogger<EditDraft> Logger
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6 mb-12">
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" />
+    }
+    else if (_draft is null)
+    {
+        <MudAlert Severity="Severity.Error">Draft not found.</MudAlert>
+    }
+    else
+    {
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudText Typo="Typo.h3">@PageTitle</MudText>
+            <DraftStatusBadge Status="@_draft.Status" FlaggedWords="@_draft.FlaggedWords" ReviewNote="@_draft.ReviewNote" />
+        </MudStack>
+
+        @if (!IsReadOnly && !string.IsNullOrWhiteSpace(_draft.ReviewNote))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                <b>Editor feedback:</b> @_draft.ReviewNote
+            </MudAlert>
+        }
+
+        @if (HasBeenSubmitted)
+        {
+            <MudAlert Severity="@(_draft.FlaggedWords.Length > 0 ? Severity.Warning : Severity.Success)" Class="mb-4">
+                @if (_draft.FlaggedWords.Length > 0)
+                {
+                    <text><b>Profanity check:</b> @_draft.FlaggedWords.Length word(s) flagged - @string.Join(", ", _draft.FlaggedWords)</text>
+                }
+                else
+                {
+                    <text><b>Profanity check:</b> no issues found.</text>
+                }
+            </MudAlert>
+        }
+
+        @if (IsReadOnly && !string.IsNullOrWhiteSpace(_draft.ReviewNote) && _draft.Status != DraftStatus.PendingApproval)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                <b>Editor feedback:</b> @_draft.ReviewNote
+            </MudAlert>
+        }
+
+        <MudPaper Class="pa-6" Elevation="1">
+            <MudTextField T="string" Label="Title" @bind-Value="title" Class="mb-4" Disabled="@IsReadOnly" />
+
+            <MudSelect T="string" Label="Location" @bind-Value="location" Class="mb-4" Disabled="@IsReadOnly">
+                @foreach (var loc in Locations.All)
+                {
+                    <MudSelectItem T="string" Value="@loc.Code">@loc.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="long" Label="Section" @bind-Value="sectionId" Class="mb-4" Disabled="@IsReadOnly">
+                @foreach (var sectionOption in Sections.All)
+                {
+                    <MudSelectItem T="long" Value="@sectionOption.Id">@sectionOption.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField T="string" Label="Body" @bind-Value="breadtext" Lines="10" Class="mb-6" Disabled="@IsReadOnly" />
+
+            @if (_draft.Status == DraftStatus.PendingApproval)
+            {
+                <MudTextField T="string" Label="Note for the author (optional)" @bind-Value="reviewNote" Lines="3" Class="mb-6" />
+            }
+
+            <MudStack Row="true" Spacing="2">
+                @if (!IsReadOnly)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@isSaving">
+                        Save Changes
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="SubmitForApprovalAsync" Disabled="@isSaving">
+                        Submit for Approval
+                    </MudButton>
+                }
+                else if (_draft.Status == DraftStatus.PendingApproval)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ApproveAsync" Disabled="@isSaving">
+                        Approve
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="RejectAsync" Disabled="@isSaving">
+                        Reject
+                    </MudButton>
+                }
+                else if (_draft.Status == DraftStatus.Archived)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ReactivateAsync" Disabled="@isSaving">
+                        Reactivate
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Text" Href="@PageRoutes.Drafts">
+                    Back to Dashboard
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+
+</MudContainer>

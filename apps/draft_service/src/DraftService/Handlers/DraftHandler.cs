@@ -109,17 +109,36 @@ public class DraftHandler : IDraftHandler
             return DraftActionResult.IllegalTransition($"Cannot approve a draft in {draft.Status} status.");
         }
 
-        var updated = await _repository.ApproveAsync(id, draft.Status, request.JournalistId);
+        var updated = await _repository.ApproveAsync(id, draft.Status, request.JournalistId, request.Note);
         return updated is null
             ? DraftActionResult.ConcurrentChange()
             : DraftActionResult.Success(updated);
     }
 
-    public Task<DraftActionResult> RejectAsync(long id) => TransitionAsync(id, DraftAction.Reject);
+    public async Task<DraftActionResult> RejectAsync(long id, RejectDraftRequest request)
+    {
+        var draft = await _repository.GetByIdAsync(id);
+        if (draft is null)
+        {
+            return DraftActionResult.NotFound();
+        }
+
+        if (!DraftStatusTransitions.TryGetResultStatus(DraftAction.Reject, draft.Status, out _))
+        {
+            return DraftActionResult.IllegalTransition($"Cannot reject a draft in {draft.Status} status.");
+        }
+
+        var updated = await _repository.RejectAsync(id, draft.Status, request.Note);
+        return updated is null
+            ? DraftActionResult.ConcurrentChange()
+            : DraftActionResult.Success(updated);
+    }
 
     public Task<DraftActionResult> PublishAsync(long id) => TransitionAsync(id, DraftAction.Publish);
 
     public Task<DraftActionResult> ArchiveAsync(long id) => TransitionAsync(id, DraftAction.Archive);
+
+    public Task<DraftActionResult> ReactivateAsync(long id) => TransitionAsync(id, DraftAction.Reactivate);
 
     private async Task<DraftActionResult> TransitionAsync(long id, DraftAction action)
     {
@@ -142,9 +161,9 @@ public class DraftHandler : IDraftHandler
 
     private static string DescribeAction(DraftAction action) => action switch
     {
-        DraftAction.Reject => "reject",
         DraftAction.Publish => "publish",
         DraftAction.Archive => "archive",
+        DraftAction.Reactivate => "reactivate",
         _ => action.ToString()
     };
 }

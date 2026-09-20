@@ -50,8 +50,8 @@ public class DraftsController : ControllerBase
         ToActionResult(await _handler.ApproveAsync(id, request));
 
     [HttpPost("{id:long}/reject")]
-    public async Task<ActionResult<Draft>> Reject(long id) =>
-        ToActionResult(await _handler.RejectAsync(id));
+    public async Task<ActionResult<Draft>> Reject(long id, RejectDraftRequest request) =>
+        ToActionResult(await _handler.RejectAsync(id, request));
 
     [HttpPost("{id:long}/publish")]
     public async Task<ActionResult<Draft>> Publish(long id) =>
@@ -60,6 +60,10 @@ public class DraftsController : ControllerBase
     [HttpPost("{id:long}/archive")]
     public async Task<ActionResult<Draft>> Archive(long id) =>
         ToActionResult(await _handler.ArchiveAsync(id));
+
+    [HttpPost("{id:long}/reactivate")]
+    public async Task<ActionResult<Draft>> Reactivate(long id) =>
+        ToActionResult(await _handler.ReactivateAsync(id));
 
     private ActionResult<Draft> ToActionResult(DraftActionResult result) => result.Outcome switch
     {

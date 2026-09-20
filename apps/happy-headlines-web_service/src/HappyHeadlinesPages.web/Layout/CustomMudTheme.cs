@@ -4,6 +4,16 @@ namespace HappyHeadlinesPages.web.Layout;
 
 public static class CustomMudTheme
 {
+    // Accent colors from the Happy Headlines logo, for use where the palette above
+    // doesn't have a matching named slot (e.g. status badges/cards).
+    public const string LogoBlue = "#2F86D6";
+    public const string LogoGreen = "#3CB878";
+    public const string LogoYellow = "#F2B134";
+    public const string LogoOrange = "#F26430";
+    public const string LogoPink = "#F25C78";
+    public const string LogoPurple = "#7C5CBF";
+    public const string LogoNavy = "#1B2A4A";
+
     public static MudTheme Theme => new()
     {
         PaletteLight = LightPalette,
@@ -41,8 +51,8 @@ public static class CustomMudTheme
 
     private static readonly PaletteLight LightPalette = new()
     {
-        Primary = "#f4e2d3",
-        Secondary = "#bbddfa",
+        Primary = LogoBlue,
+        Secondary = LogoGreen,
 
         AppbarText = "#424242",
         AppbarBackground = "rgba(255,255,255,1)",

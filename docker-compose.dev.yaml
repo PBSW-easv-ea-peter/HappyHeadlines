@@ -169,7 +169,33 @@ services:
       - "8082:8082"
 
 # ──────────────────────────────────────────────────────────────────────────────
-#        Clients 
+#        Drafts
+# ──────────────────────────────────────────────────────────────────────────────
+
+  draftdb:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: drafts
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres1234
+    ports:
+      - "5442:5432"  # HostPort:ContainerPort
+    volumes:
+      - ./database/init/draft/draft_baseline.sql:/docker-entrypoint-initdb.d/01_draft_baseline.sql:ro
+      - ./database/queries/draft/seed_drafts.sql:/docker-entrypoint-initdb.d/02_seed_drafts.sql:ro
+
+  draftservice:
+    build:
+      context: ./apps/draft_service/
+    image: happyheadlines/draft_service:dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8083
+    ports:
+      - "8083:8083"
+
+# ──────────────────────────────────────────────────────────────────────────────
+#        Clients
 # ──────────────────────────────────────────────────────────────────────────────
 
   happyheadlines:

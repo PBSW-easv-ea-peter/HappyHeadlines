@@ -1,7 +1,38 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Happy Headlines</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center text-center" Style="min-height: 70vh; justify-content: center;">
+    <MudText Typo="Typo.h3" Class="mb-2">
+        Happy Headlines
+    </MudText>
 
-Welcome to your new app.
+    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-4">
+        Good news, every day.
+    </MudText>
+
+    <MudText Typo="Typo.body1" Class="mb-8">
+        We share uplifting stories from around the world, because news should
+        leave you feeling hopeful, not anxious.
+    </MudText>
+
+    <MudStack Row="true" Spacing="4" Justify="Justify.Center" Wrap="Wrap.Wrap">
+        <MudButton
+            Href="@PageRoutes.Articles"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Size="Size.Large"
+            StartIcon="@Icons.Material.Filled.Article">
+            Read Articles
+        </MudButton>
+
+        <MudButton
+            Href="@PageRoutes.Drafts"
+            Variant="Variant.Outlined"
+            Color="Color.Secondary"
+            Size="Size.Large"
+            StartIcon="@Icons.Material.Filled.EditNote">
+            Drafts
+        </MudButton>
+    </MudStack>
+</MudContainer>

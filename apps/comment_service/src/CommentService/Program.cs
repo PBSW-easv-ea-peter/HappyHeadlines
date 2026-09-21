@@ -3,6 +3,7 @@ using CommentService.Profanity;
 using CommentService.Repositories;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
+using CommentService.Setup;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 
@@ -13,6 +14,8 @@ builder.Services.AddOpenApi();
 
 // Swagger
 builder.Services.AddSwaggerGen();
+
+builder.ConfigureOpenTelemetry();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();

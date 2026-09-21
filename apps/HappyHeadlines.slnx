@@ -10,6 +10,13 @@
   <Folder Name="/comment_service/tests/">
     <Project Path="comment_service/tests/CommentService.Tests/CommentService.Tests.csproj" />
   </Folder>
+  <Folder Name="/draft_service/" />
+  <Folder Name="/draft_service/src/">
+    <Project Path="draft_service/src/DraftService/DraftService.csproj" />
+  </Folder>
+  <Folder Name="/draft_service/tests/">
+    <Project Path="draft_service/tests/DraftService.Tests/DraftService.Tests.csproj" />
+  </Folder>
   <Folder Name="/happy-headlines-web_service/" />
   <Folder Name="/happy-headlines-web_service/src/">
     <Project Path="happy-headlines-web_service/src/HappyHeadlines.web.wasm/HappyHeadlines.web.wasm.csproj" />

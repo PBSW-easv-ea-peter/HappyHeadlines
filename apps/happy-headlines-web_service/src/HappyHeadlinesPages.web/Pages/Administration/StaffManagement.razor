@@ -1,0 +1,48 @@
+@page "/administration"
+
+@using HappyHeadlinesPages.web.Models
+@inject ISnackbar Snackbar
+
+<PageTitle>Staff Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mb-12">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2" Wrap="Wrap.Wrap">
+        <MudText Typo="Typo.h3">Staff Management</MudText>
+
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            StartIcon="@Icons.Material.Filled.PersonAdd"
+            OnClick="ShowComingSoon">
+            Add Staff Member
+        </MudButton>
+    </MudStack>
+
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-6">
+        Journalists and publishers with access to the editorial dashboard.
+    </MudText>
+
+    <MudStack Spacing="2">
+        @foreach (var journalist in Journalists.All)
+        {
+            <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
+                        <MudAvatar Color="Color.Primary">@Initials(journalist.Name)</MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.subtitle1">@journalist.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Journalist</MudText>
+                        </div>
+                    </MudStack>
+
+                    <MudStack Row="true" Spacing="1">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="ShowComingSoon" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="ShowComingSoon" />
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        }
+    </MudStack>
+
+</MudContainer>

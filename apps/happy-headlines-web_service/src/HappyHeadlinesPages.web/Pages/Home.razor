@@ -1,7 +1,132 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+@using HappyHeadlinesPages.web.Models
+@using HappyHeadlinesPages.web.Layout
+@using System.Net.Http.Json
+@using Microsoft.Extensions.Logging
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject ILogger<Home> Logger
+@inject CurrentJournalistState JournalistState
+@implements IDisposable
 
-<h1>Hello, world!</h1>
+<PageTitle>Happy Headlines</PageTitle>
 
-Welcome to your new app.
+<div style="@HeroBackgroundStyle" class="pt-6 pb-10">
+
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudPaper Class="pa-6" Elevation="2">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="4">
+                <div>
+                    <MudText Typo="Typo.h5">Welcome back, @FirstName</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Ready to write something positive today?
+                    </MudText>
+                </div>
+
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@Icons.Material.Filled.EditNote"
+                    Href="@PageRoutes.NewDraft">
+                    Start Writing
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center text-center mt-8">
+        <MudText Typo="Typo.h3" Class="mb-2">
+            Happy Headlines
+        </MudText>
+
+        <div style="@RainbowBarStyle"></div>
+
+        <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-4">
+            Good news, every day.
+        </MudText>
+
+        <MudText Typo="Typo.body1" Class="mb-6">
+            We share uplifting stories from around the world, because news should
+            leave you feeling hopeful, not anxious.
+        </MudText>
+
+        <MudButton
+            Href="@PageRoutes.Articles"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Size="Size.Large"
+            StartIcon="@Icons.Material.Filled.Article">
+            Read Articles
+        </MudButton>
+    </MudContainer>
+
+</div>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8 mb-12">
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mb-6" />
+    }
+    else if (FeaturedArticle is null)
+    {
+        <MudText Typo="Typo.body1" Color="Color.Secondary" Class="text-center">
+            No articles yet.
+        </MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.h4" Class="mb-4">Featured Story</MudText>
+
+        <MudPaper Class="cursor-pointer mb-8" Elevation="3" Style="overflow:hidden;" @onclick="@(() => GoToArticle(FeaturedArticle))">
+            <div style="@($"height:10px;background-color:{Sections.ColorOfName(FeaturedArticle.SectionName)};")"></div>
+
+            <div class="pa-8">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <MudChip T="string" Size="Size.Medium"
+                             Style="@($"background-color:{Sections.ColorOfName(FeaturedArticle.SectionName)};color:white;")">
+                        @FeaturedArticle.SectionName
+                    </MudChip>
+                    <MudText Typo="Typo.caption">@FeaturedArticle.Location</MudText>
+                </div>
+
+                <MudText Typo="Typo.h3" Class="mb-3">@FeaturedArticle.Title</MudText>
+
+                <MudText Typo="Typo.body2" Class="mb-4">
+                    By @FeaturedArticle.JournalistName &middot; @FeaturedArticle.CreatedDate.ToLocalTime().ToString("d MMM yyyy")
+                </MudText>
+
+                <MudText Typo="Typo.body1">@FeaturedArticle.BreadText</MudText>
+            </div>
+        </MudPaper>
+
+        @if (OtherArticles.Any())
+        {
+            <MudText Typo="Typo.h4" Class="mb-4">Latest Headlines</MudText>
+
+            <MudGrid>
+                @foreach (var article in OtherArticles)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4 h-100 cursor-pointer" Elevation="1"
+                                  Style="@($"border-left: 4px solid {Sections.ColorOfName(article.SectionName)}; background-color:{Sections.ColorOfName(article.SectionName)}0D;")"
+                                  @onclick="@(() => GoToArticle(article))">
+                            <div class="d-flex justify-space-between align-center mb-2">
+                                <MudChip T="string" Size="Size.Small"
+                                         Style="@($"background-color:{Sections.ColorOfName(article.SectionName)};color:white;")">
+                                    @article.SectionName
+                                </MudChip>
+                                <MudText Typo="Typo.caption">@article.Location</MudText>
+                            </div>
+
+                            <MudText Typo="Typo.subtitle1" Class="mb-1">@article.Title</MudText>
+                            <MudText Typo="Typo.caption">By @article.JournalistName</MudText>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    }
+
+</MudContainer>

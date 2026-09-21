@@ -1,0 +1,17 @@
+@using HappyHeadlinesPages.web.Layout
+@using HappyHeadlinesPages.web.Models
+
+<MudTooltip Text="@TooltipText" Disabled="@(!HasFlaggedWords)">
+    @if (AccentStyle is not null)
+    {
+        <MudChip T="string" Size="Size.Small" Style="@AccentStyle">
+            @Label
+        </MudChip>
+    }
+    else
+    {
+        <MudChip T="string" Size="Size.Small" Color="@ChipColor">
+            @Label
+        </MudChip>
+    }
+</MudTooltip>

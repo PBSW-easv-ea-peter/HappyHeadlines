@@ -12,6 +12,12 @@
         font-weight: 500;
     }
 
+    .header .site-wordmark {
+        font-family: "EB Garamond", serif;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
     .header .header-top-right {
         font-weight: 700;
         font-size: 1rem;

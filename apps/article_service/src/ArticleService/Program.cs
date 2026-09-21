@@ -24,12 +24,15 @@ builder.Services.AddScoped<IArticleWriteRepository, ArticleWriteRepository>();
 
 builder.Services.AddHostedService<ArticleQueueConsumer>();
 
+var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
+    ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Development", policy =>
+    options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins()
+            .WithOrigins(webAppBaseUrl)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -45,7 +48,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("Development");
+app.UseCors("AllowWebApp");
 
 app.MapControllers();
 

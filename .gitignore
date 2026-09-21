@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Pre-refactor project layout, superseded by apps/. Left behind as build
+# output in working trees created before the restructure (fabd77f).
+/HappyHeadlines/
+
 # User-specific files
 *.rsuser
 *.suo

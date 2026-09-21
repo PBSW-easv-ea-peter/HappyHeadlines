@@ -1,0 +1,39 @@
+@using HappyHeadlinesPages.web.Models
+
+<MudText Typo="Typo.h5" Class="mb-1">Needs Review</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+    @Drafts.Count() stories waiting for approval
+</MudText>
+
+@if (!Drafts.Any())
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary">Nothing to review right now.</MudText>
+}
+else
+{
+    <MudStack Spacing="2">
+        @foreach (var draft in Drafts)
+        {
+            <MudPaper Class="pa-4" Elevation="0" Outlined="true"
+                      Style="@($"border-left: 4px solid {DraftAccentColors.For(draft.Status, null)};")">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <div>
+                        <MudText Typo="Typo.subtitle1">@draft.Title</MudText>
+                        <MudText Typo="Typo.caption">
+                            By @Journalists.NameOf(draft.CreatedByJournalistId) &middot; Submitted @draft.LastEditedDate.ToLocalTime().ToString("g")
+                        </MudText>
+                        @if (draft.FlaggedWords.Length > 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">
+                                Flagged words: @string.Join(", ", draft.FlaggedWords)
+                            </MudText>
+                        }
+                    </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/drafts/{draft.Id}/edit")">
+                        Review
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        }
+    </MudStack>
+}

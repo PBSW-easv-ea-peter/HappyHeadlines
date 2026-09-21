@@ -1,9 +1,49 @@
-<MudPaper Class="d-flex justify-center main-navbar header border-bottom"
-          Elevation="0"
-          Square="true"
-          id="navbar">
-    <MudStack Spacing="4" Row="true" AlignItems="AlignItems.Center">
-        <a class="navbar-link" href="@PageRoutes.Home">Home</a>
-        <a class="navbar-link" href="@PageRoutes.Articles">Articles</a>
-    </MudStack>
-</MudPaper>
+@using HappyHeadlinesPages.web.Models
+@using HappyHeadlinesPages.web.Layout
+@using Microsoft.AspNetCore.Components.Routing
+@inject CurrentJournalistState JournalistState
+
+<div class="d-flex flex-column h-100 pa-2" id="navbar">
+    <MudLink Href="@PageRoutes.Home" Underline="Underline.None" Class="navbar-logo-link">
+        <img src="_content/HappyHeadlinesPages.web/images/logo.png"
+             alt="Happy Headlines"
+             class="navbar-logo" />
+    </MudLink>
+
+    <MudNavMenu>
+        <MudNavLink Href="@PageRoutes.Home" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">Home</MudNavLink>
+        <MudNavLink Href="@PageRoutes.Articles" Icon="@Icons.Material.Filled.Article" IconColor="Color.Success">Articles</MudNavLink>
+        <MudNavLink Href="@PageRoutes.Drafts" Icon="@Icons.Material.Filled.EditNote" IconColor="Color.Warning">Drafts</MudNavLink>
+    </MudNavMenu>
+
+    <MudSpacer />
+
+    <MudDivider Class="mb-2" Style="@($"border-color:{CustomMudTheme.LogoPurple}66;")" />
+
+    <div class="px-4 pb-4">
+        <MudText Typo="Typo.caption">Signed in as</MudText>
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="my-2">
+            <MudAvatar Color="Color.Primary" Size="Size.Small">@Initials</MudAvatar>
+            <MudText Typo="Typo.body2">@Journalists.NameOf(JournalistState.JournalistId)</MudText>
+        </MudStack>
+        <MudSelect T="long" Value="JournalistState.JournalistId" ValueChanged="JournalistState.SetJournalist" Dense="true" Margin="Margin.Dense">
+            @foreach (var journalist in Journalists.All)
+            {
+                <MudSelectItem T="long" Value="@journalist.Id">@journalist.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+</div>
+
+@code {
+    private string Initials
+    {
+        get
+        {
+            var parts = Journalists.NameOf(JournalistState.JournalistId)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            return string.Concat(parts.Select(p => p[0])).ToUpperInvariant();
+        }
+    }
+}

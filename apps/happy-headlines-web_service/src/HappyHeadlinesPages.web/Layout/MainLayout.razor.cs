@@ -12,7 +12,7 @@ public partial class MainLayout
     {
         base.OnInitialized();
 
-        _theme = new MudTheme(); // CustomMbTheme.Theme;
+        _theme = CustomMudTheme.Theme;
     }
 
     private void DrawerToggle()

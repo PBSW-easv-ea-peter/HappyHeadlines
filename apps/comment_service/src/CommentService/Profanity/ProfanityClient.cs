@@ -27,11 +27,14 @@ public class ProfanityClient : IProfanityClient
 
         try
         {
+            _logger.LogInformation($"Checking for banned words: {text}");
             var response = await _httpClient.PostAsJsonAsync(
                     "api/profanity/check",
                     new { Text = text },
                     cancellationToken);
-
+            response.EnsureSuccessStatusCode();
+            bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken)
+                ?? [];
 //            bannedWords = await _pipeline.ExecuteAsync(async ct =>
 //            {
 //                var response = await _httpClient.PostAsJsonAsync("api/profanity/check", new { Text = text }, ct);
@@ -52,6 +55,11 @@ public class ProfanityClient : IProfanityClient
         catch (TaskCanceledException)
         {
             _logger.LogWarning("TaskCanceledException was throw.");
+        }
+        finally
+        {
+            _logger.LogInformation($"Returned output from ProfanityService: {string.Join(", ", bannedWords)}, {circuitIsOpen}");
+        
         }
 
         return new ProfanityCheckResult(bannedWords, circuitIsOpen);

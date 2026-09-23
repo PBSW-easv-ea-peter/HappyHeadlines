@@ -31,7 +31,7 @@ services:
       - "3000:3000"
     volumes:
       - ./configs/grafana/data-sources:/etc/grafana/provisioning/datasources:ro
-      - ./tmp-data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Articles
@@ -236,4 +236,33 @@ services:
     image: happyheadlines/happyheadlines_web:dev
     ports:
       - "8000:8000"
+
+# ──────────────────────────────────────────────────────────────────────────────
+#        Message Brokers 
+# ──────────────────────────────────────────────────────────────────────────────
+  
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    user: "1000"  # Run as non-root (default RabbitMQ user)
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+#    volumes:
+#      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
+# =============================================================================
+#        Volumes
+# =============================================================================
+
+volumes:
+  rabbitmq_data:
+  grafana_data:
 

@@ -7,6 +7,8 @@
 # output in working trees created before the restructure (fabd77f).
 /HappyHeadlines/
 
+**/.structurizr/
+
 # User-specific files
 *.rsuser
 *.suo

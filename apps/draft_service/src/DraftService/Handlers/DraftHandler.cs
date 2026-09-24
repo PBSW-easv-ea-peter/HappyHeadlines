@@ -26,7 +26,7 @@ public class DraftHandler : IDraftHandler
 
     public Task<IEnumerable<Draft>> GetAllAsync(long? createdBy) => _repository.GetAllAsync(createdBy);
 
-    public Task<Draft?> GetByIdAsync(long id) => _repository.GetByIdAsync(id);
+    public Task<Draft?> GetByIdAsync(Guid id) => _repository.GetByIdAsync(id);
 
     public async Task<DraftActionResult> CreateAsync(CreateDraftRequest request)
     {
@@ -39,7 +39,7 @@ public class DraftHandler : IDraftHandler
         return DraftActionResult.Success(draft);
     }
 
-    public async Task<DraftActionResult> UpdateContentAsync(long id, EditDraftRequest request)
+    public async Task<DraftActionResult> UpdateContentAsync(Guid id, EditDraftRequest request)
     {
         if (!ValidLocations.Contains(request.Location))
         {
@@ -63,7 +63,7 @@ public class DraftHandler : IDraftHandler
             : DraftActionResult.Success(updated);
     }
 
-    public async Task<DraftActionResult> SubmitForApprovalAsync(long id, CancellationToken cancellationToken = default)
+    public async Task<DraftActionResult> SubmitForApprovalAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -96,7 +96,7 @@ public class DraftHandler : IDraftHandler
             : DraftActionResult.Success(updated);
     }
 
-    public async Task<DraftActionResult> ApproveAsync(long id, ApproveDraftRequest request)
+    public async Task<DraftActionResult> ApproveAsync(Guid id, ApproveDraftRequest request)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -115,7 +115,7 @@ public class DraftHandler : IDraftHandler
             : DraftActionResult.Success(updated);
     }
 
-    public async Task<DraftActionResult> RejectAsync(long id, RejectDraftRequest request)
+    public async Task<DraftActionResult> RejectAsync(Guid id, RejectDraftRequest request)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -134,13 +134,13 @@ public class DraftHandler : IDraftHandler
             : DraftActionResult.Success(updated);
     }
 
-    public Task<DraftActionResult> PublishAsync(long id) => TransitionAsync(id, DraftAction.Publish);
+    public Task<DraftActionResult> PublishAsync(Guid id) => TransitionAsync(id, DraftAction.Publish);
 
-    public Task<DraftActionResult> ArchiveAsync(long id) => TransitionAsync(id, DraftAction.Archive);
+    public Task<DraftActionResult> ArchiveAsync(Guid id) => TransitionAsync(id, DraftAction.Archive);
 
-    public Task<DraftActionResult> ReactivateAsync(long id) => TransitionAsync(id, DraftAction.Reactivate);
+    public Task<DraftActionResult> ReactivateAsync(Guid id) => TransitionAsync(id, DraftAction.Reactivate);
 
-    private async Task<DraftActionResult> TransitionAsync(long id, DraftAction action)
+    private async Task<DraftActionResult> TransitionAsync(Guid id, DraftAction action)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)

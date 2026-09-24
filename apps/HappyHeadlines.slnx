@@ -29,4 +29,12 @@
   <Folder Name="/profanity_service/tests/">
     <Project Path="profanity_service/tests/ProfanityService.Tests/ProfanityService.Tests.csproj" />
   </Folder>
+  <Folder Name="/shared/" />
+  <Folder Name="/shared/src/">
+    <Project Path="shared/src/Messaging/Messaging.csproj" />
+  </Folder>
+  <Folder Name="/publish_service/" />
+  <Folder Name="/publish_service/src/">
+    <Project Path="publish_service/src/PublishService/PublishService.csproj" />
+  </Folder>
 </Solution>

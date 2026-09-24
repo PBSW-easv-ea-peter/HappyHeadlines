@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+using PublishService.Services.Handlers;
 
 namespace PublishService.Endpoints;
 
@@ -7,11 +9,13 @@ public static class PublishActions
     {
         var group = app.MapGroup("/api");
 
-        group.MapPost("publish-draft/{id:int}", PublishDraft);
+        group.MapPost("publish-draft/{id:guid}", PublishDraft);
     }
 
-    private static IResult PublishDraft()
+    private static async Task<IResult> PublishDraft(
+        [FromServices] IPublishHandler handler,
+        Guid id)
     {
-        return Results.Ok();
+        return await handler.PublishAsync(id);
     }
 }

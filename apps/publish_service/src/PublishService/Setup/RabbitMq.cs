@@ -7,16 +7,15 @@ namespace PublishService.Setup;
 
 public static class RabbitMq
 {
-    public static WebApplicationBuilder ConfigureRabbitMq(
-        this WebApplicationBuilder builder)
+    extension(WebApplicationBuilder builder)
     {
-        builder.AddConnectionFactory();
-
-        return builder;
+        public void ConfigureRabbitMq()
+        {
+            builder.AddConnectionFactory();
+        }
     }
 
-    private static WebApplicationBuilder AddConnectionFactory(
-        this WebApplicationBuilder builder)
+    private static void AddConnectionFactory(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<RabbitMqOptions>(
             builder.Configuration.GetSection("RabbitMQ"));
@@ -34,8 +33,6 @@ public static class RabbitMq
                 Password = options.Password
             };
         });
-
-        return builder;
     }
 
     public static async Task ConfigureExchangesAsync(

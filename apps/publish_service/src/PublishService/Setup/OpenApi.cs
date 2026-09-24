@@ -8,7 +8,7 @@ public static class OpenApi
         builder
             .AddSwagger()
             .AddOpenApi();
-        
+
         return builder;
     }
 
@@ -25,4 +25,18 @@ public static class OpenApi
         builder.Services.AddOpenApi();
         return builder;
     }
+
+    public static WebApplication UseOpenApi(this WebApplication app)
+    {
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        
+        return app;
+    }
+
 }

@@ -1,10 +1,8 @@
-namespace Messaging.Events;
+namespace PublishService.Models;
 
-public class PublishedArticleEvent
+public class Draft
 {
     public required Guid Id { get; init; }
-
-    public required Guid DraftId { get; init; }
 
     public required string JournalistName { get; init; }
 
@@ -15,8 +13,6 @@ public class PublishedArticleEvent
     public required string Location { get; init; }
 
     public required DateTime CreatedDate { get; init; }
-
-    public required DateTime PublishDate { get; init; }
 
     public required string BreadText { get; init; }
 }

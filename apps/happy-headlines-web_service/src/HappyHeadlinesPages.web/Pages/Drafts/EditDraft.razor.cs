@@ -21,7 +21,20 @@ public partial class EditDraft : ComponentBase
     private string breadtext = string.Empty;
     private string location = string.Empty;
     private long sectionId;
+    private IReadOnlyCollection<long> creditedJournalistIds = [];
+    private string byline = string.Empty;
     private string reviewNote = string.Empty;
+
+    private void RegenerateByline()
+    {
+        byline = BylineFormatter.Generate(
+            JournalistState.All.Where(j => creditedJournalistIds.Contains(j.Id)));
+    }
+
+    private void SetCreditedJournalistIds(IReadOnlyCollection<long> ids)
+    {
+        creditedJournalistIds = ids.ToHashSet();
+    }
 
     private bool IsReadOnly => _draft is null || _draft.Status != DraftStatus.WorkInProgress;
 
@@ -55,6 +68,8 @@ public partial class EditDraft : ComponentBase
                 breadtext = _draft.Breadtext;
                 location = _draft.Location;
                 sectionId = _draft.SectionId;
+                creditedJournalistIds = _draft.CreditedJournalists.Select(j => j.Id).ToHashSet();
+                byline = _draft.Byline;
             }
         }
         catch (Exception ex)
@@ -80,7 +95,9 @@ public partial class EditDraft : ComponentBase
                     Title = title,
                     Breadtext = breadtext,
                     Location = location,
-                    SectionId = sectionId
+                    SectionId = sectionId,
+                    CreditedJournalistIds = creditedJournalistIds.ToList(),
+                    Byline = string.IsNullOrWhiteSpace(byline) ? null : byline
                 });
 
             if (!response.IsSuccessStatusCode)

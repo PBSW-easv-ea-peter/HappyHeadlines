@@ -1,4 +1,5 @@
 using DraftService.Models;
+using DraftService.Workflow;
 using Dapper;
 using Npgsql;
 
@@ -19,7 +20,7 @@ public class DraftRepository : IDraftRepository
         created_by_journalist_id as CreatedByJournalistId, created_date as CreatedDate,
         last_edited_by_journalist_id as LastEditedByJournalistId, last_edited_date as LastEditedDate,
         approved_by_journalist_id as ApprovedByJournalistId, approved_date as ApprovedDate,
-        flagged_words as FlaggedWords, status, review_note as ReviewNote
+        flagged_words as FlaggedWords, status, review_note as ReviewNote, byline as Byline
         """;
 
     public async Task<IEnumerable<Draft>> GetAllAsync(long? createdBy)
@@ -32,7 +33,9 @@ public class DraftRepository : IDraftRepository
             order by created_date desc
             """;
 
-        return await connection.QueryAsync<Draft>(sql, new { CreatedBy = createdBy });
+        var drafts = (await connection.QueryAsync<Draft>(sql, new { CreatedBy = createdBy })).ToList();
+        await AttachCreditedJournalistsAsync(connection, drafts);
+        return drafts;
     }
 
     public async Task<Draft?> GetByIdAsync(long id)
@@ -44,33 +47,53 @@ public class DraftRepository : IDraftRepository
             where id = @Id
             """;
 
-        return await connection.QueryFirstOrDefaultAsync<Draft>(sql, new { Id = id });
+        var draft = await connection.QueryFirstOrDefaultAsync<Draft>(sql, new { Id = id });
+        if (draft is not null)
+        {
+            await AttachCreditedJournalistsAsync(connection, [draft]);
+        }
+
+        return draft;
     }
 
     public async Task<Draft> CreateAsync(CreateDraftRequest request)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
+
+        var creditedJournalists = await GetJournalistsAsync(connection, request.CreditedJournalistIds);
+        var byline = request.Byline ?? BylineGenerator.Generate(creditedJournalists);
+
         var sql = $"""
             insert into drafts
-                (title, breadtext, location, section_id, created_by_journalist_id, last_edited_by_journalist_id)
+                (title, breadtext, location, section_id, created_by_journalist_id, last_edited_by_journalist_id, byline)
             values
-                (@Title, @Breadtext, @Location, @SectionId, @JournalistId, @JournalistId)
+                (@Title, @Breadtext, @Location, @SectionId, @JournalistId, @JournalistId, @Byline)
             returning {SelectColumns}
             """;
 
-        return await connection.QuerySingleAsync<Draft>(sql, new
+        var draft = await connection.QuerySingleAsync<Draft>(sql, new
         {
             request.Title,
             request.Breadtext,
             Location = request.Location.ToUpperInvariant(),
             request.SectionId,
-            request.JournalistId
+            request.JournalistId,
+            Byline = byline
         });
+
+        await ReplaceCreditedJournalistsAsync(connection, draft.Id, request.CreditedJournalistIds);
+        draft.CreditedJournalists = creditedJournalists;
+
+        return draft;
     }
 
     public async Task<Draft?> UpdateContentAsync(long id, EditDraftRequest request)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
+
+        var creditedJournalists = await GetJournalistsAsync(connection, request.CreditedJournalistIds);
+        var byline = request.Byline ?? BylineGenerator.Generate(creditedJournalists);
+
         var sql = $"""
             update drafts
             set title = @Title,
@@ -79,12 +102,13 @@ public class DraftRepository : IDraftRepository
                 section_id = @SectionId,
                 last_edited_by_journalist_id = @JournalistId,
                 last_edited_date = current_timestamp,
-                flagged_words = ARRAY[]::text[]
+                flagged_words = ARRAY[]::text[],
+                byline = @Byline
             where id = @Id and status = @RequiredStatus
             returning {SelectColumns}
             """;
 
-        return await connection.QueryFirstOrDefaultAsync<Draft>(sql, new
+        var draft = await connection.QueryFirstOrDefaultAsync<Draft>(sql, new
         {
             Id = id,
             request.Title,
@@ -92,8 +116,19 @@ public class DraftRepository : IDraftRepository
             Location = request.Location.ToUpperInvariant(),
             request.SectionId,
             request.JournalistId,
+            Byline = byline,
             RequiredStatus = (short)DraftStatus.WorkInProgress
         });
+
+        if (draft is null)
+        {
+            return null;
+        }
+
+        await ReplaceCreditedJournalistsAsync(connection, id, request.CreditedJournalistIds);
+        draft.CreditedJournalists = creditedJournalists;
+
+        return draft;
     }
 
     public async Task<Draft?> SubmitForApprovalAsync(long id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords)
@@ -176,5 +211,64 @@ public class DraftRepository : IDraftRepository
             Note = note,
             ExpectedCurrentStatus = (short)expectedCurrentStatus
         });
+    }
+
+    private static async Task<List<Journalist>> GetJournalistsAsync(NpgsqlConnection connection, IReadOnlyList<long> journalistIds)
+    {
+        if (journalistIds.Count == 0)
+        {
+            return [];
+        }
+
+        const string sql = "select id, name from journalists where id = any(@Ids)";
+        var journalists = await connection.QueryAsync<Journalist>(sql, new { Ids = journalistIds.ToArray() });
+        return journalists.ToList();
+    }
+
+    private static async Task ReplaceCreditedJournalistsAsync(NpgsqlConnection connection, long draftId, IReadOnlyList<long> journalistIds)
+    {
+        await connection.ExecuteAsync("delete from draft_journalists where draft_id = @DraftId", new { DraftId = draftId });
+
+        if (journalistIds.Count == 0)
+        {
+            return;
+        }
+
+        var rows = journalistIds.Select(journalistId => new { DraftId = draftId, JournalistId = journalistId });
+        await connection.ExecuteAsync(
+            "insert into draft_journalists (draft_id, journalist_id) values (@DraftId, @JournalistId)",
+            rows);
+    }
+
+    private static async Task AttachCreditedJournalistsAsync(NpgsqlConnection connection, IReadOnlyList<Draft> drafts)
+    {
+        if (drafts.Count == 0)
+        {
+            return;
+        }
+
+        const string sql = """
+            select dj.draft_id as DraftId, j.id as Id, j.name as Name
+            from draft_journalists dj
+            inner join journalists j on j.id = dj.journalist_id
+            where dj.draft_id = any(@DraftIds)
+            """;
+
+        var rows = await connection.QueryAsync<CreditedJournalistRow>(sql, new { DraftIds = drafts.Select(d => d.Id).ToArray() });
+        var byDraftId = rows
+            .GroupBy(r => r.DraftId)
+            .ToDictionary(g => g.Key, g => g.Select(r => new Journalist { Id = r.Id, Name = r.Name }).ToList());
+
+        foreach (var draft in drafts)
+        {
+            draft.CreditedJournalists = byDraftId.TryGetValue(draft.Id, out var journalists) ? journalists : [];
+        }
+    }
+
+    private sealed class CreditedJournalistRow
+    {
+        public long DraftId { get; set; }
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

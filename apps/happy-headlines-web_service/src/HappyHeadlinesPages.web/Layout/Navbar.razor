@@ -2,6 +2,7 @@
 @using HappyHeadlinesPages.web.Layout
 @using Microsoft.AspNetCore.Components.Routing
 @inject CurrentJournalistState JournalistState
+@implements IDisposable
 
 <div class="d-flex flex-column h-100 pa-2" id="navbar">
     <MudLink Href="@PageRoutes.Home" Underline="Underline.None" Class="navbar-logo-link">
@@ -24,10 +25,10 @@
         <MudText Typo="Typo.caption">Signed in as</MudText>
         <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="my-2">
             <MudAvatar Color="Color.Primary" Size="Size.Small">@Initials</MudAvatar>
-            <MudText Typo="Typo.body2">@Journalists.NameOf(JournalistState.JournalistId)</MudText>
+            <MudText Typo="Typo.body2">@JournalistState.NameOf(JournalistState.JournalistId)</MudText>
         </MudStack>
         <MudSelect T="long" Value="JournalistState.JournalistId" ValueChanged="JournalistState.SetJournalist" Dense="true" Margin="Margin.Dense">
-            @foreach (var journalist in Journalists.All)
+            @foreach (var journalist in JournalistState.All)
             {
                 <MudSelectItem T="long" Value="@journalist.Id">@journalist.Name</MudSelectItem>
             }
@@ -40,10 +41,22 @@
     {
         get
         {
-            var parts = Journalists.NameOf(JournalistState.JournalistId)
+            var parts = JournalistState.NameOf(JournalistState.JournalistId)
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             return string.Concat(parts.Select(p => p[0])).ToUpperInvariant();
         }
+    }
+
+    protected override void OnInitialized()
+    {
+        JournalistState.OnChange += OnJournalistStateChanged;
+    }
+
+    private void OnJournalistStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        JournalistState.OnChange -= OnJournalistStateChanged;
     }
 }

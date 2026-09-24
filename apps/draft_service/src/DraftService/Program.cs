@@ -1,6 +1,7 @@
 using DraftService.Handlers;
 using DraftService.Profanity;
 using DraftService.Repositories;
+using DraftService.Setup;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 
@@ -12,8 +13,11 @@ builder.Services.AddOpenApi();
 // Swagger
 builder.Services.AddSwaggerGen();
 
+builder.ConfigureOpenTelemetry();
+
 builder.Services.AddControllers();
 builder.Services.AddScoped<IDraftRepository, DraftRepository>();
+builder.Services.AddScoped<IJournalistRepository, JournalistRepository>();
 builder.Services.AddScoped<IDraftHandler, DraftHandler>();
 
 var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]

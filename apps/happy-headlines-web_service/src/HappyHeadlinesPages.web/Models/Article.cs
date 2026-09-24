@@ -8,7 +8,7 @@ public class Article : ArticleDTO
 public class ArticleDTO
 {
     public long Id { get; set; }
-    public string JournalistName { get; set; } = string.Empty;
+    public string Byline { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public DateTimeOffset CreatedDate { get; set; }
     public string Location { get; set; } = string.Empty;

@@ -1,4 +1,11 @@
 ## Structirizr inde i 'C4 diagram*' anvender port 8081
+
+x-flyway-article-env: &flyway-article-env
+  FLYWAY_USER: postgres
+  FLYWAY_PASSWORD: Postgres1234
+  FLYWAY_LOCATIONS: filesystem:/flyway/sql
+  FLYWAY_CONNECT_RETRIES: "10"
+
 services:
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -12,9 +19,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-eu-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-eu:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-eu:
+        condition: service_healthy
 
   ## Articles from North America
   articledb-na:
@@ -23,9 +44,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-na-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-na:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-na:
+        condition: service_healthy
 
   ## Articles from South America
   articledb-sa:
@@ -34,9 +69,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-sa-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-sa:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-sa:
+        condition: service_healthy
 
   ## Articles from Australia
   articledb-au:
@@ -45,9 +94,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-au-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-au:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-au:
+        condition: service_healthy
 
   ## Articles from Asia
   articledb-as:
@@ -56,9 +119,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-as-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-as:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-as:
+        condition: service_healthy
 
   ## Articles from Antarctica
   articledb-an:
@@ -67,9 +144,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-an-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-an:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-an:
+        condition: service_healthy
 
   ## Articles from Africa
   articledb-af:
@@ -78,9 +169,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-af-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-af:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-af:
+        condition: service_healthy
 
   ## Global articles
   articledb-global:
@@ -89,9 +194,23 @@ services:
       POSTGRES_DB: articles
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  articledb-global-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      <<: *flyway-article-env
+      FLYWAY_URL: jdbc:postgresql://articledb-global:5432/articles
     volumes:
-      - ./database/init/article/article_baseline.sql:/docker-entrypoint-initdb.d/01_article_baseline.sql:ro
-      - ./database/queries/article/seed_reference_data.sql:/docker-entrypoint-initdb.d/02_seed_reference_data.sql:ro
+      - ./database/migrations/article:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      articledb-global:
+        condition: service_healthy
 
   ## Article Service
   articleservice:
@@ -105,18 +224,29 @@ services:
       - "8080:8080"
 #    deploy:
 #      replicas: 3
-#    depends_on:
-#      - articledb-eu
-#      - articledb-na
-#      - articledb-sa
-#      - articledb-au
-#      - articledb-as
-#      - articledb-an
-#      - articledb-af
-#      - articledb-global
+    # NOTE: this stack is deployed via `docker stack deploy` (Swarm), which ignores
+    # depends_on entirely - this gating is only reliable under plain `docker compose up`
+    # (see docker-compose.dev.yaml). Kept here for documentation/local-testing purposes.
+    depends_on:
+      articledb-eu-migrate:
+        condition: service_completed_successfully
+      articledb-na-migrate:
+        condition: service_completed_successfully
+      articledb-sa-migrate:
+        condition: service_completed_successfully
+      articledb-au-migrate:
+        condition: service_completed_successfully
+      articledb-as-migrate:
+        condition: service_completed_successfully
+      articledb-an-migrate:
+        condition: service_completed_successfully
+      articledb-af-migrate:
+        condition: service_completed_successfully
+      articledb-global-migrate:
+        condition: service_completed_successfully
 
 # ──────────────────────────────────────────────────────────────────────────────
-#        Comments 
+#        Comments
 # ──────────────────────────────────────────────────────────────────────────────
 
   commentdb:
@@ -169,9 +299,26 @@ services:
       POSTGRES_DB: drafts
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Postgres1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d drafts"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  draftdb-migrate:
+    image: flyway/flyway:10-alpine
+    environment:
+      FLYWAY_URL: jdbc:postgresql://draftdb:5432/drafts
+      FLYWAY_USER: postgres
+      FLYWAY_PASSWORD: Postgres1234
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_CONNECT_RETRIES: "10"
     volumes:
-      - ./database/init/draft/draft_baseline.sql:/docker-entrypoint-initdb.d/01_draft_baseline.sql:ro
-      - ./database/queries/draft/seed_drafts.sql:/docker-entrypoint-initdb.d/02_seed_drafts.sql:ro
+      - ./database/migrations/draft:/flyway/sql:ro
+    command: migrate
+    depends_on:
+      draftdb:
+        condition: service_healthy
 
   draftservice:
     build:
@@ -182,6 +329,12 @@ services:
       ASPNETCORE_URLS: http://+:8083
     ports:
       - "8083:8083"
+    # NOTE: this stack is deployed via `docker stack deploy` (Swarm), which ignores
+    # depends_on entirely - this gating is only reliable under plain `docker compose up`
+    # (see docker-compose.dev.yaml). Kept here for documentation/local-testing purposes.
+    depends_on:
+      draftdb-migrate:
+        condition: service_completed_successfully
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Clients

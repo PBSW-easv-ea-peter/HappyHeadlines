@@ -96,7 +96,7 @@ public partial class Articles : ComponentBase
                 .Select((articleDto, index) => new Article
                 {
                     Id = articleDto.Id,
-                    JournalistName = articleDto.JournalistName,
+                    Byline = articleDto.Byline,
                     Title = articleDto.Title,
                     CreatedDate = articleDto.CreatedDate,
                     Location = articleDto.Location,

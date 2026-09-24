@@ -2,6 +2,7 @@
 
 @using HappyHeadlinesPages.web.Models
 @inject ISnackbar Snackbar
+@inject CurrentJournalistState JournalistState
 
 <PageTitle>Staff Management</PageTitle>
 
@@ -24,7 +25,7 @@
     </MudText>
 
     <MudStack Spacing="2">
-        @foreach (var journalist in Journalists.All)
+        @foreach (var journalist in JournalistState.All)
         {
             <MudPaper Class="pa-4" Elevation="0" Outlined="true">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">

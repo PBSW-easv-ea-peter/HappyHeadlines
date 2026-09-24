@@ -25,6 +25,8 @@ public class Draft
     public string[] FlaggedWords { get; set; } = [];
     public DraftStatus Status { get; set; }
     public string? ReviewNote { get; set; }
+    public string Byline { get; set; } = string.Empty;
+    public List<Journalist> CreditedJournalists { get; set; } = [];
 }
 
 public class CreateDraftRequest
@@ -34,6 +36,10 @@ public class CreateDraftRequest
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public long SectionId { get; set; }
+    public List<long> CreditedJournalistIds { get; set; } = [];
+
+    // Null means: auto-generate from CreditedJournalistIds. Non-null is a manual override.
+    public string? Byline { get; set; }
 }
 
 public class EditDraftRequest
@@ -43,6 +49,10 @@ public class EditDraftRequest
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public long SectionId { get; set; }
+    public List<long> CreditedJournalistIds { get; set; } = [];
+
+    // Null means: auto-generate from CreditedJournalistIds. Non-null is a manual override.
+    public string? Byline { get; set; }
 }
 
 public class ApproveDraftRequest

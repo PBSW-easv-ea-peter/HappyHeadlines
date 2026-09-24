@@ -17,19 +17,19 @@ public class PublishHandler(
 {
     public async Task<IResult> PublishAsync(Guid id)
     {
-        Draft? draft;
+        DraftDTO? draft;
         try
         {
             draft = await draftService.GetDraftAsync(id);
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            logger.LogError("A network error occurred while trying to get draft with ID {Id}", id);
+            logger.LogError("A network error occurred while trying to get draft with ID {Id}. Exception: {ex}", id, ex);
             return Results.StatusCode(503);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            logger.LogError("An unexpected error occurred while trying to get draft with ID {Id}", id);
+            logger.LogError("An unexpected error occurred while trying to get draft with ID {Id}. Exception: {ex}", id, ex);
             return Results.StatusCode(500);
         }
 

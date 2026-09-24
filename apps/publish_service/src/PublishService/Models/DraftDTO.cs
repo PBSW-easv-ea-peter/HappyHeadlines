@@ -1,6 +1,6 @@
 namespace PublishService.Models;
 
-public class Draft
+public class DraftDTO
 {
     public required Guid Id { get; init; }
 

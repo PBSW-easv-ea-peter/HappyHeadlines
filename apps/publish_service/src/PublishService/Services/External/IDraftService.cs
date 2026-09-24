@@ -4,5 +4,5 @@ namespace PublishService.Services.External;
 
 public interface IDraftService
 {
-    Task<Draft?> GetDraftAsync(Guid id);
+    Task<DraftDTO?> GetDraftAsync(Guid id);
 }

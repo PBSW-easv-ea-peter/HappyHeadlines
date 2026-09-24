@@ -4,9 +4,9 @@ namespace PublishService.Services.External;
 
 public class FakeDraftService : IDraftService
 {
-    private static readonly List<Draft> Drafts =
+    private static readonly List<DraftDTO> Drafts =
     [
-        new Draft
+        new DraftDTO
         {
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
             JournalistName = "Sophie Martin",
@@ -16,7 +16,7 @@ public class FakeDraftService : IDraftService
             CreatedDate = new DateTime(2026, 9, 20, 10, 30, 0),
             BreadText = "Artificial intelligence is becoming an increasingly important part of modern software development."
         },
-        new Draft
+        new DraftDTO
         {
             Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
             JournalistName = "Thomas Bernard",
@@ -28,7 +28,7 @@ public class FakeDraftService : IDraftService
         }
     ];
 
-    public Task<Draft?> GetDraftAsync(Guid id)
+    public Task<DraftDTO?> GetDraftAsync(Guid id)
     {
         var draft = Drafts.FirstOrDefault(d => d.Id == id);
 

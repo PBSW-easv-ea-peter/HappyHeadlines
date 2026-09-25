@@ -11,7 +11,7 @@ public enum DraftStatus
 
 public class Draft
 {
-    public long Id { get; set; }
+    public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;

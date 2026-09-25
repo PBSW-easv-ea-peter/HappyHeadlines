@@ -9,6 +9,8 @@ namespace DraftService.Tests.Controllers;
 
 public class DraftsControllerTests
 {
+    private static readonly Guid DraftId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     private readonly Mock<IDraftHandler> _handler = new();
     private readonly DraftsController _controller;
 
@@ -17,7 +19,7 @@ public class DraftsControllerTests
         _controller = new DraftsController(_handler.Object);
     }
 
-    private static Draft MakeDraft(long id, DraftStatus status) => new()
+    private static Draft MakeDraft(Guid id, DraftStatus status) => new()
     {
         Id = id,
         Title = "Title",
@@ -32,9 +34,9 @@ public class DraftsControllerTests
     [Fact]
     public async Task GetById_UnknownId_ReturnsNotFound()
     {
-        _handler.Setup(h => h.GetByIdAsync(1)).ReturnsAsync((Draft?)null);
+        _handler.Setup(h => h.GetByIdAsync(DraftId)).ReturnsAsync((Draft?)null);
 
-        var result = await _controller.GetById(1);
+        var result = await _controller.GetById(DraftId);
 
         Assert.IsType<NotFoundResult>(result.Result);
     }
@@ -42,10 +44,10 @@ public class DraftsControllerTests
     [Fact]
     public async Task GetById_KnownId_ReturnsDraft()
     {
-        var draft = MakeDraft(1, DraftStatus.WorkInProgress);
-        _handler.Setup(h => h.GetByIdAsync(1)).ReturnsAsync(draft);
+        var draft = MakeDraft(DraftId, DraftStatus.WorkInProgress);
+        _handler.Setup(h => h.GetByIdAsync(DraftId)).ReturnsAsync(draft);
 
-        var result = await _controller.GetById(1);
+        var result = await _controller.GetById(DraftId);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(draft, ok.Value);
@@ -66,7 +68,7 @@ public class DraftsControllerTests
     public async Task Create_Success_ReturnsCreatedAtAction()
     {
         var request = new CreateDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "EU", SectionId = 1 };
-        var draft = MakeDraft(1, DraftStatus.WorkInProgress);
+        var draft = MakeDraft(DraftId, DraftStatus.WorkInProgress);
         _handler.Setup(h => h.CreateAsync(request)).ReturnsAsync(DraftActionResult.Success(draft));
 
         var result = await _controller.Create(request);
@@ -79,9 +81,9 @@ public class DraftsControllerTests
     public async Task Update_NotFound_ReturnsNotFound()
     {
         var request = new EditDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "EU", SectionId = 1 };
-        _handler.Setup(h => h.UpdateContentAsync(1, request)).ReturnsAsync(DraftActionResult.NotFound());
+        _handler.Setup(h => h.UpdateContentAsync(DraftId, request)).ReturnsAsync(DraftActionResult.NotFound());
 
-        var result = await _controller.Update(1, request);
+        var result = await _controller.Update(DraftId, request);
 
         Assert.IsType<NotFoundResult>(result.Result);
     }
@@ -90,10 +92,10 @@ public class DraftsControllerTests
     public async Task Update_IllegalTransition_ReturnsConflict()
     {
         var request = new EditDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "EU", SectionId = 1 };
-        _handler.Setup(h => h.UpdateContentAsync(1, request))
+        _handler.Setup(h => h.UpdateContentAsync(DraftId, request))
             .ReturnsAsync(DraftActionResult.IllegalTransition("Cannot edit a draft in PendingApproval status."));
 
-        var result = await _controller.Update(1, request);
+        var result = await _controller.Update(DraftId, request);
 
         Assert.IsType<ConflictObjectResult>(result.Result);
     }
@@ -102,10 +104,10 @@ public class DraftsControllerTests
     public async Task Update_Success_ReturnsOk()
     {
         var request = new EditDraftRequest { JournalistId = 1, Title = "New", Breadtext = "B", Location = "EU", SectionId = 1 };
-        var updated = MakeDraft(1, DraftStatus.WorkInProgress);
-        _handler.Setup(h => h.UpdateContentAsync(1, request)).ReturnsAsync(DraftActionResult.Success(updated));
+        var updated = MakeDraft(DraftId, DraftStatus.WorkInProgress);
+        _handler.Setup(h => h.UpdateContentAsync(DraftId, request)).ReturnsAsync(DraftActionResult.Success(updated));
 
-        var result = await _controller.Update(1, request);
+        var result = await _controller.Update(DraftId, request);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(updated, ok.Value);
@@ -114,11 +116,11 @@ public class DraftsControllerTests
     [Fact]
     public async Task SubmitForApproval_Success_ReturnsOk()
     {
-        var updated = MakeDraft(1, DraftStatus.PendingApproval);
-        _handler.Setup(h => h.SubmitForApprovalAsync(1, It.IsAny<CancellationToken>()))
+        var updated = MakeDraft(DraftId, DraftStatus.PendingApproval);
+        _handler.Setup(h => h.SubmitForApprovalAsync(DraftId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(DraftActionResult.Success(updated));
 
-        var result = await _controller.SubmitForApproval(1, CancellationToken.None);
+        var result = await _controller.SubmitForApproval(DraftId, CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(updated, ok.Value);
@@ -127,10 +129,10 @@ public class DraftsControllerTests
     [Fact]
     public async Task Approve_IllegalTransition_ReturnsConflict()
     {
-        _handler.Setup(h => h.ApproveAsync(1, It.IsAny<ApproveDraftRequest>()))
+        _handler.Setup(h => h.ApproveAsync(DraftId, It.IsAny<ApproveDraftRequest>()))
             .ReturnsAsync(DraftActionResult.IllegalTransition("Cannot approve a draft in WorkInProgress status."));
 
-        var result = await _controller.Approve(1, new ApproveDraftRequest { JournalistId = 7 });
+        var result = await _controller.Approve(DraftId, new ApproveDraftRequest { JournalistId = 7 });
 
         Assert.IsType<ConflictObjectResult>(result.Result);
     }
@@ -138,9 +140,9 @@ public class DraftsControllerTests
     [Fact]
     public async Task Archive_ConcurrentChange_ReturnsConflict()
     {
-        _handler.Setup(h => h.ArchiveAsync(1)).ReturnsAsync(DraftActionResult.ConcurrentChange());
+        _handler.Setup(h => h.ArchiveAsync(DraftId)).ReturnsAsync(DraftActionResult.ConcurrentChange());
 
-        var result = await _controller.Archive(1);
+        var result = await _controller.Archive(DraftId);
 
         Assert.IsType<ConflictObjectResult>(result.Result);
     }

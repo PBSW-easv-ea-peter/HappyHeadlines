@@ -24,11 +24,17 @@ public class JournalistRepository : IJournalistRepository
         return journalists.OrderBy(BylineGenerator.LastName, StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task<bool> ExistsAsync(long id)
+    public async Task<IReadOnlyCollection<long>> FindExistingIdsAsync(IReadOnlyCollection<long> ids)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        const string sql = "select exists(select 1 from journalists where id = @Id)";
+        if (ids.Count == 0)
+        {
+            return [];
+        }
 
-        return await connection.ExecuteScalarAsync<bool>(sql, new { Id = id });
+        await using var connection = new NpgsqlConnection(_connectionString);
+        const string sql = "select id from journalists where id = any(@Ids)";
+
+        var existingIds = await connection.QueryAsync<long>(sql, new { Ids = ids.ToArray() });
+        return existingIds.ToList();
     }
 }

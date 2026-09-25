@@ -90,7 +90,7 @@ public partial class Drafts : ComponentBase
         _allArticles = await ArticleCatalog.GetAllArticlesAsync(Http, Logger);
     }
 
-    private async Task ReactivateAsync(long draftId)
+    private async Task ReactivateAsync(Guid draftId)
     {
         try
         {

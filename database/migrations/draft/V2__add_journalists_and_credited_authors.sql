@@ -48,7 +48,7 @@ ALTER TABLE drafts
 -- Separate concept from the workflow columns above: who gets credited as an author.
 -- "Who did the workflow steps" and "who gets named" are deliberately independent choices.
 CREATE TABLE draft_journalists (
-    draft_id      BIGINT NOT NULL REFERENCES drafts(id) ON DELETE CASCADE,
+    draft_id      UUID NOT NULL REFERENCES drafts(id) ON DELETE CASCADE,
     journalist_id BIGINT NOT NULL REFERENCES journalists(id),
     PRIMARY KEY (draft_id, journalist_id)
 );

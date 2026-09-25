@@ -38,7 +38,7 @@ public class DraftRepository : IDraftRepository
         return drafts;
     }
 
-    public async Task<Draft?> GetByIdAsync(long id)
+    public async Task<Draft?> GetByIdAsync(Guid id)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
@@ -87,7 +87,7 @@ public class DraftRepository : IDraftRepository
         return draft;
     }
 
-    public async Task<Draft?> UpdateContentAsync(long id, EditDraftRequest request)
+    public async Task<Draft?> UpdateContentAsync(Guid id, EditDraftRequest request)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
@@ -131,7 +131,7 @@ public class DraftRepository : IDraftRepository
         return draft;
     }
 
-    public async Task<Draft?> SubmitForApprovalAsync(long id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords)
+    public async Task<Draft?> SubmitForApprovalAsync(Guid id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
@@ -152,7 +152,7 @@ public class DraftRepository : IDraftRepository
         });
     }
 
-    public async Task<Draft?> UpdateStatusAsync(long id, DraftStatus expectedCurrentStatus, DraftStatus newStatus)
+    public async Task<Draft?> UpdateStatusAsync(Guid id, DraftStatus expectedCurrentStatus, DraftStatus newStatus)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
@@ -170,7 +170,7 @@ public class DraftRepository : IDraftRepository
         });
     }
 
-    public async Task<Draft?> ApproveAsync(long id, DraftStatus expectedCurrentStatus, long approvedByJournalistId, string? note)
+    public async Task<Draft?> ApproveAsync(Guid id, DraftStatus expectedCurrentStatus, long approvedByJournalistId, string? note)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
@@ -193,7 +193,7 @@ public class DraftRepository : IDraftRepository
         });
     }
 
-    public async Task<Draft?> RejectAsync(long id, DraftStatus expectedCurrentStatus, string? note)
+    public async Task<Draft?> RejectAsync(Guid id, DraftStatus expectedCurrentStatus, string? note)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
@@ -225,16 +225,17 @@ public class DraftRepository : IDraftRepository
         return journalists.ToList();
     }
 
-    private static async Task ReplaceCreditedJournalistsAsync(NpgsqlConnection connection, long draftId, IReadOnlyList<long> journalistIds)
+    private static async Task ReplaceCreditedJournalistsAsync(NpgsqlConnection connection, Guid draftId, IReadOnlyList<long> journalistIds)
     {
         await connection.ExecuteAsync("delete from draft_journalists where draft_id = @DraftId", new { DraftId = draftId });
 
-        if (journalistIds.Count == 0)
+        var distinctIds = journalistIds.Distinct().ToList();
+        if (distinctIds.Count == 0)
         {
             return;
         }
 
-        var rows = journalistIds.Select(journalistId => new { DraftId = draftId, JournalistId = journalistId });
+        var rows = distinctIds.Select(journalistId => new { DraftId = draftId, JournalistId = journalistId });
         await connection.ExecuteAsync(
             "insert into draft_journalists (draft_id, journalist_id) values (@DraftId, @JournalistId)",
             rows);
@@ -267,7 +268,7 @@ public class DraftRepository : IDraftRepository
 
     private sealed class CreditedJournalistRow
     {
-        public long DraftId { get; set; }
+        public Guid DraftId { get; set; }
         public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }

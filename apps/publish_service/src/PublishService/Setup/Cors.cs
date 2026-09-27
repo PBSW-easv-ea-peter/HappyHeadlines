@@ -1,4 +1,4 @@
-using PublishService.Models.Options;
+using PublishService.Shared.Options;
 
 namespace PublishService.Setup;
 

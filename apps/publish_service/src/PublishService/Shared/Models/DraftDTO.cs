@@ -1,4 +1,4 @@
-namespace PublishService.Models;
+namespace PublishService.Shared.Models;
 
 public class DraftDTO
 {

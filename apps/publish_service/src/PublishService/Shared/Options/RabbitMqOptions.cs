@@ -1,4 +1,4 @@
-namespace PublishService.Models.Options;
+namespace PublishService.Shared.Options;
 
 public sealed class RabbitMqOptions
 {

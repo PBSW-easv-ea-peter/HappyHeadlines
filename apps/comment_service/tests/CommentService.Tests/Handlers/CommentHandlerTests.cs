@@ -41,10 +41,11 @@ public class CommentHandlerTests
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "This is a nice comment" };
 
-        var (comment, status) = await _handler.PostAsync("EU", 1, request);
+        var (comment, status, bannedWords) = await _handler.PostAsync("EU", 1, request);
 
         Assert.Equal(CommentStatus.Approved, status);
         Assert.Equal(CommentStatus.Approved, comment.Status);
+        Assert.Null(bannedWords);
     }
 
     [Fact]
@@ -56,9 +57,10 @@ public class CommentHandlerTests
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "You are an idiot" };
 
-        var (_, status) = await _handler.PostAsync("EU", 1, request);
+        var (_, status, bannedWords) = await _handler.PostAsync("EU", 1, request);
 
         Assert.Equal(CommentStatus.Rejected, status);
+        Assert.Equal(["idiot"], bannedWords);
     }
 
     [Fact]
@@ -70,9 +72,10 @@ public class CommentHandlerTests
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "Doesn't matter" };
 
-        var (_, status) = await _handler.PostAsync("EU", 1, request);
+        var (_, status, bannedWords) = await _handler.PostAsync("EU", 1, request);
 
         Assert.Equal(CommentStatus.PendingProfanityCheck, status);
+        Assert.Null(bannedWords);
     }
 
     [Fact]

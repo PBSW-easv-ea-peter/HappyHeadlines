@@ -4,7 +4,7 @@ CREATE TABLE status (
 );
 
 CREATE TABLE drafts (
-    id                            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     title                         VARCHAR(255) NOT NULL,
     breadtext                     TEXT NOT NULL,
     location                      VARCHAR(2) NOT NULL,

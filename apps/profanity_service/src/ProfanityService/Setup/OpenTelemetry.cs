@@ -1,9 +1,9 @@
-using OpenTelemetry.Logs;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace CommentService.Setup;
+namespace ProfanityService.Setup;
 
 public static class OpenTelemetry
 {

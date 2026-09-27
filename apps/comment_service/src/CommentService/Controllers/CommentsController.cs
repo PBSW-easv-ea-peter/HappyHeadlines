@@ -12,10 +12,14 @@ public class CommentsController : ControllerBase
         new(StringComparer.OrdinalIgnoreCase) { "EU", "NA", "SA", "AU", "AS", "AN", "AF", "GO" };
 
     private readonly ICommentHandler _handler;
+    private readonly ILogger<CommentsController> _logger;
 
-    public CommentsController(ICommentHandler handler)
+    public CommentsController(
+        ICommentHandler handler,
+        ILogger<CommentsController> logger)
     {
         _handler = handler;
+        _logger = logger;
     }
 
     [HttpGet("{location}/{articleId:long}")]
@@ -45,15 +49,16 @@ public class CommentsController : ControllerBase
             return BadRequest("AuthorName and Text must not be empty.");
         }
 
-        var (comment, status) = await _handler.PostAsync(location, articleId, request, ct);
+        var (comment, status, bannedWords) = await _handler.PostAsync(location, articleId, request, ct);
 
-        if (status == Models.CommentStatus.PendingProfanityCheck)
+        return status switch
         {
-            return UnprocessableEntity("Could not verify comment: ProfanityService is unavailable.");
-        }
-
-        // Comment is saved either way (Approved or Rejected) - the caller can tell them
-        // apart via comment.Status in the response body.
-        return CreatedAtAction(nameof(GetForArticle), new { location, articleId }, comment);
+            CommentStatus.Approved => CreatedAtAction(nameof(GetForArticle), new { location, articleId }, comment),
+            CommentStatus.Rejected => UnprocessableEntity(
+                $"Comment contains banned words: {string.Join(", ", bannedWords)}"),
+            CommentStatus.PendingProfanityCheck => UnprocessableEntity(
+                "Could not verify comment: ProfanityService is unavailable."),
+            _ => StatusCode(500, "Unknown comment status.")
+        };
     }
 }

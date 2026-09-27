@@ -1,0 +1,13 @@
+apiVersion: 1
+
+datasources:
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686    # Docker network hostname + Jaeger UI port
+    isDefault: false
+    jsonData:
+      # optional, you can specify default query params
+      # e.g., default service or trace format
+      maxTagValues: 200
+    editable: true

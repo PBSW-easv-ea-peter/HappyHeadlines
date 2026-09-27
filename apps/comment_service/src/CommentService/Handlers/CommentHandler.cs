@@ -25,16 +25,24 @@ public class CommentHandler : ICommentHandler
         return entities.Select(CommentDto.FromEntity);
     }
 
-    public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, long articleId, PostCommentRequest request, CancellationToken ct = default)
+    public async Task<(CommentDto Comment, CommentStatus Status, IReadOnlyList<string>? BannedWords)> PostAsync(string articleLocation, long articleId, PostCommentRequest request, CancellationToken ct = default)
     {
-        var status = await ClassifyAsync(request.Text, ct);
+        var profanityResult = await ClassifyAsync(request.Text, ct);
+        
+        CommentStatus status = profanityResult.Status;
+        IReadOnlyList<string>? bannedWords = profanityResult.BannedWords;
+        
         var entity = await _repository.CreateAsync(articleLocation, articleId, request, status);
-        return (CommentDto.FromEntity(entity), status);
+        return (CommentDto.FromEntity(entity), status, bannedWords);
     }
-
-    private async Task<CommentStatus> ClassifyAsync(string text, CancellationToken cancellationToken)
+    
+    private async Task<(CommentStatus Status, IReadOnlyList<string>? BannedWords)> ClassifyAsync(string text, CancellationToken cancellationToken)
     {
         var result = await _profanityClient.CheckAsync(text, cancellationToken);
+        
+        _logger.LogDebug("Returned output from ProfanityService: {banned_words}, Circuit is open: {circuitIsOpen}", 
+            string.Join(", ", result.BannedWords), 
+            result.CircuitOpen);
 
         if (result.CircuitOpen)
         {
@@ -43,9 +51,11 @@ public class CommentHandler : ICommentHandler
             // accepting comments (design to be disabled + isolate faults) instead of
             // failing the whole request - it just cannot vouch for this one yet.
             _logger.LogWarning("ProfanityService unavailable - comment queued for review instead of being rejected outright.");
-            return CommentStatus.PendingProfanityCheck;
+            return (CommentStatus.PendingProfanityCheck, null);
         }
 
-        return result.IsProfane ? CommentStatus.Rejected : CommentStatus.Approved;
+        return result.IsProfane 
+            ? (CommentStatus.Rejected, result.BannedWords)
+            : (CommentStatus.Approved, null);
     }
 }

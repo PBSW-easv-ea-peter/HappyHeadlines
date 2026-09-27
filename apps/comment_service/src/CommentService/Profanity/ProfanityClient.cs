@@ -8,16 +8,16 @@ public class ProfanityClient : IProfanityClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<ProfanityClient> _logger;
-//    private readonly ResiliencePipeline _pipeline;
+    private readonly ResiliencePipeline _pipeline;
 
     public ProfanityClient(
             HttpClient httpClient,
+            ResiliencePipelineProvider<string> pipelineProvider,
             ILogger<ProfanityClient> logger)
-//            ResiliencePipelineProvider<string> pipelineProvider)
     {
         _httpClient = httpClient;
         _logger = logger;
-//        _pipeline = pipelineProvider.GetPipeline("ProfanityService");
+        _pipeline = pipelineProvider.GetPipeline("ProfanityService");
     }
 
     public async Task<ProfanityCheckResult> CheckAsync(string text, CancellationToken cancellationToken = default)
@@ -27,21 +27,21 @@ public class ProfanityClient : IProfanityClient
 
         try
         {
-            _logger.LogInformation($"Checking for banned words: {text}");
-            var response = await _httpClient.PostAsJsonAsync(
-                    "api/profanity/check",
-                    new { Text = text },
-                    cancellationToken);
-            response.EnsureSuccessStatusCode();
-            bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken)
-                ?? [];
-//            bannedWords = await _pipeline.ExecuteAsync(async ct =>
-//            {
-//                var response = await _httpClient.PostAsJsonAsync("api/profanity/check", new { Text = text }, ct);
-//                response.EnsureSuccessStatusCode();
-//                return await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: ct)
-//                    ?? [];
-//            }, cancellationToken);
+            // _logger.LogInformation($"Checking for banned words in text: '{text}'");
+            // var response = await _httpClient.PostAsJsonAsync(
+            //         "api/profanity/check",
+            //         new { Text = text },
+            //         cancellationToken);
+            // response.EnsureSuccessStatusCode();
+            // bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken)
+            //     ?? [];
+            bannedWords = await _pipeline.ExecuteAsync(async ct =>
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/profanity/check", new { Text = text }, ct);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: ct)
+                    ?? [];
+            }, cancellationToken);
         }
         catch (BrokenCircuitException)
         {
@@ -56,12 +56,7 @@ public class ProfanityClient : IProfanityClient
         {
             _logger.LogWarning("TaskCanceledException was throw.");
         }
-        finally
-        {
-            _logger.LogInformation($"Returned output from ProfanityService: {string.Join(", ", bannedWords)}, {circuitIsOpen}");
         
-        }
-
         return new ProfanityCheckResult(bannedWords, circuitIsOpen);
     }
 }

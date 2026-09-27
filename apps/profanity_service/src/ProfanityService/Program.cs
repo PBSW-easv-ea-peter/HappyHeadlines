@@ -1,5 +1,6 @@
 using ProfanityService.Checking;
 using ProfanityService.Repositories;
+using ProfanityService.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ builder.Services.AddOpenApi();
 // Swagger
 builder.Services.AddSwaggerGen();
 
+// OpenTelemetry
+builder.ConfigureOpenTelemetry();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IProfanityRepository, ProfanityRepository>();

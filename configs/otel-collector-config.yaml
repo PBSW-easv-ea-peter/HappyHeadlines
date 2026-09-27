@@ -15,8 +15,8 @@ exporters:
 
   otlphttp/loki:
     endpoint: http://loki:3100/otlp
-#  otlphttp/jaeger:
-#    endpoint: http://jaeger:4318
+  otlphttp/jaeger:
+    endpoint: http://jaeger:4318
 
 #  prometheus:
 #    endpoint: 0.0.0.0:9464
@@ -29,10 +29,13 @@ service:
       exporters:
         - otlphttp/loki
 #        - debug
-#    traces:
-#      receivers: [otlp]
-#      processors: [batch]
-#      exporters: [otlphttp/jaeger]
+
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters:
+        - otlphttp/jaeger
+
 #    metrics:
 #      receivers: [otlp]
 #      processors: [batch]

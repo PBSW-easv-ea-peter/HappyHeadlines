@@ -27,7 +27,6 @@ public class ProfanityClient : IProfanityClient
 
         try
         {
-            _logger.LogInformation($"Checking for banned words: {text}");
             var response = await _httpClient.PostAsJsonAsync(
                     "api/profanity/check",
                     new { Text = text },
@@ -58,8 +57,10 @@ public class ProfanityClient : IProfanityClient
         }
         finally
         {
-            _logger.LogInformation($"Returned output from ProfanityService: {string.Join(", ", bannedWords)}, {circuitIsOpen}");
-        
+            // Only the count - the banned words themselves must not be logged (docs/logging.md).
+            _logger.LogInformation(
+                "Profanity check finished with {BannedWordCount} banned words",
+                bannedWords.Count);
         }
 
         return new ProfanityCheckResult(bannedWords, circuitIsOpen);

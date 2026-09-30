@@ -1,3 +1,4 @@
+using HappyHeadlines.Observability;
 using PublishService.Setup;
 using PublishService.Shared.Options;
 

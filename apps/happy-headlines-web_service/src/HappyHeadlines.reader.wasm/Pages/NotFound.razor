@@ -1,0 +1,16 @@
+@page "/not-found"
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="min-height: 50vh;">
+    <MudPaper Elevation="0" Class="pa-8 text-center">
+        <MudText Typo="Typo.overline" Color="Color.Error">Breaking news</MudText>
+        <MudText Typo="Typo.h1" Class="mt-2">404</MudText>
+        <MudText Typo="Typo.h5" Class="mt-2">This story has wandered off</MudText>
+        <MudButton Href="./"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Home"
+                   Class="mt-6">
+            Back to the front page
+        </MudButton>
+    </MudPaper>
+</MudContainer>

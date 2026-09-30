@@ -1,0 +1,35 @@
+<MudPaper Elevation="0" Class="section-card" Style="@($"border-top-color:{Color};")">
+    <div class="d-flex align-center justify-space-between mb-2">
+        <MudText Typo="Typo.h6" Style="@($"color:{Color};")">@Name</MudText>
+        <MudLink Href="@Href" Typo="Typo.caption" Underline="Underline.Hover" Style="@($"color:{Color};")">
+            See all &rarr;
+        </MudLink>
+    </div>
+
+    @if (Articles.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="muted">No stories yet.</MudText>
+    }
+
+    @foreach (var article in Articles)
+    {
+        <div class="section-item">
+            <MudText Typo="Typo.subtitle1" Class="section-item-title">@article.Title</MudText>
+            <MudText Typo="Typo.caption" Class="muted">@article.JournalistName &middot; @ArticleDisplay.FormatDate(article)</MudText>
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ArticleDTO> Articles { get; set; } = [];
+
+    // Link that filters the front page to this section.
+    [Parameter, EditorRequired]
+    public string Href { get; set; } = string.Empty;
+
+    private string Color => Sections.ColorOfName(Name);
+}

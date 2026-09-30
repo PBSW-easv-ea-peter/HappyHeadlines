@@ -1,0 +1,32 @@
+<section class="popular-list">
+    <MudText Typo="Typo.h6" Class="block-heading">Most popular</MudText>
+
+    @if (Articles.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="muted">Nothing else to read here yet.</MudText>
+    }
+
+    <ol>
+        @for (var i = 0; i < Articles.Count; i++)
+        {
+            var article = Articles[i];
+            <li class="popular-item">
+                <span class="popular-rank" style="@($"color:{Sections.ColorOfName(article.SectionName)};")">@(i + 1)</span>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="popular-title">@article.Title</MudText>
+                    <div class="article-meta">
+                        <SectionBadge Name="@article.SectionName" />
+                        <span>@ArticleDisplay.FormatDate(article)</span>
+                    </div>
+                </div>
+            </li>
+        }
+    </ol>
+</section>
+
+@code {
+    // "Most popular" is newest-first for now - there is no view/popularity data
+    // in ArticleService yet, so the caller decides the ordering.
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ArticleDTO> Articles { get; set; } = [];
+}

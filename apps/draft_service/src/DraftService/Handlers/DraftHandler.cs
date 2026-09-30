@@ -161,7 +161,7 @@ public class DraftHandler : IDraftHandler
 
     // Every status transition ends here, so it is logged in one place (docs/logging.md).
     // A null result means the optimistic-concurrency check in the repository failed.
-    private DraftActionResult StatusChanged(long id, DraftStatus fromStatus, Draft? updated)
+    private DraftActionResult StatusChanged(Guid id, DraftStatus fromStatus, Draft? updated)
     {
         if (updated is null)
         {

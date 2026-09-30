@@ -1,0 +1,9 @@
+@* Only this assembly is routed - the RCL's journalist pages stay out of the reader site. *@
+<Router
+    AppAssembly="@typeof(App).Assembly"
+    NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(ReaderLayout)"/>
+        <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
+    </Found>
+</Router>

@@ -16,12 +16,12 @@ public static class ArticleCatalog
 
     public static async Task<List<ArticleDTO>> GetAllArticlesAsync(HttpClient http, ILogger logger)
     {
-        var regionResults = await Task.WhenAll(Regions.Select(region => LoadRegionAsync(http, logger, region)));
+        var regionResults = await Task.WhenAll(Regions.Select(region => GetRegionArticlesAsync(http, logger, region)));
 
         return regionResults.SelectMany(articles => articles).ToList();
     }
 
-    private static async Task<List<ArticleDTO>> LoadRegionAsync(HttpClient http, ILogger logger, string region)
+    public static async Task<List<ArticleDTO>> GetRegionArticlesAsync(HttpClient http, ILogger logger, string region)
     {
         var regionCode = region.ToUpper();
 

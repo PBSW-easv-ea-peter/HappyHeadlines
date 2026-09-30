@@ -1,0 +1,19 @@
+<article class="hero-article" style="@($"border-top-color:{Sections.ColorOfName(Article.SectionName)};")">
+    <MudText Typo="Typo.overline" Class="hero-kicker">Today's highlight</MudText>
+
+    <MudText Typo="Typo.h3" HtmlTag="h1" Class="hero-title">@Article.Title</MudText>
+
+    <div class="article-meta">
+        <SectionBadge Name="@Article.SectionName" />
+        <span>By @Article.JournalistName</span>
+        <span>&middot;</span>
+        <span>@ArticleDisplay.FormatDate(Article)</span>
+    </div>
+
+    <MudText Typo="Typo.body1" Class="hero-excerpt">@ArticleDisplay.Excerpt(Article.BreadText, 400)</MudText>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public ArticleDTO Article { get; set; } = default!;
+}

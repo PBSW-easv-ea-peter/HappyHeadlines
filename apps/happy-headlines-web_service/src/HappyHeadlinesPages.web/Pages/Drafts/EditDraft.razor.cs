@@ -11,7 +11,7 @@ public partial class EditDraft : ComponentBase
     private const string DraftServiceBaseUrl = "http://localhost:8083";
 
     [Parameter]
-    public long Id { get; set; }
+    public Guid Id { get; set; }
 
     private Draft? _draft;
     private bool isLoading = true;

@@ -18,15 +18,15 @@ public class ArticleWriteRepository : IArticleWriteRepository
     {
         await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(location));
         const string sql = """
-            insert into articles (journalist_id, title, breadtext, publish_date, location, section_id)
-            values (@JournalistId, @Title, @Breadtext, @PublishDate, @Location, @SectionId)
-            returning id, journalist_id as JournalistId, title, breadtext, created_date as CreatedDate,
+            insert into articles (byline, title, breadtext, publish_date, location, section_id)
+            values (@Byline, @Title, @Breadtext, @PublishDate, @Location, @SectionId)
+            returning id, byline as Byline, title, breadtext, created_date as CreatedDate,
                       publish_date as PublishDate, location, section_id as SectionId
             """;
 
         return await connection.QuerySingleAsync<Article>(sql, new
         {
-            request.JournalistId,
+            request.Byline,
             request.Title,
             request.Breadtext,
             request.PublishDate,
@@ -40,7 +40,7 @@ public class ArticleWriteRepository : IArticleWriteRepository
         await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(location));
         const string sql = """
             update articles
-            set journalist_id = @JournalistId,
+            set byline = @Byline,
                 title = @Title,
                 breadtext = @Breadtext,
                 publish_date = @PublishDate,
@@ -50,7 +50,7 @@ public class ArticleWriteRepository : IArticleWriteRepository
 
         var rowsAffected = await connection.ExecuteAsync(sql, new
         {
-            request.JournalistId,
+            request.Byline,
             request.Title,
             request.Breadtext,
             request.PublishDate,

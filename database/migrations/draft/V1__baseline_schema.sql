@@ -23,10 +23,16 @@ CREATE TABLE drafts (
         FOREIGN KEY (status)
         REFERENCES status (id),
 
-    -- journalist_id and section_id are NOT foreign keys: journalists/sections live in
-    -- ArticleService's own database, and DraftService intentionally doesn't reach across
-    -- service boundaries to enforce that (see CommentService's comments table for the same
-    -- pattern with article_id/article_location).
+    -- As of V1, created_by_journalist_id/last_edited_by_journalist_id/approved_by_journalist_id
+    -- are plain BIGINT, not FKs: journalist data still lives in ArticleService's database at
+    -- this point. V2 changes this once journalist ownership moves into DraftService.
     CONSTRAINT check_draft_location
         CHECK (location IN ('EU', 'NA', 'SA', 'AU', 'AS', 'AN', 'AF', 'GO'))
 );
+
+INSERT INTO status (id, name) VALUES
+    (0, 'WorkInProgress'),
+    (1, 'PendingApproval'),
+    (2, 'Approved'),
+    (3, 'Published'),
+    (4, 'Archived');

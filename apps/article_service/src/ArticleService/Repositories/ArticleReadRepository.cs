@@ -22,7 +22,7 @@ public class ArticleReadRepository : IArticleReadRepository
         const string sql = """
             select
                 a.id,
-                j.name as JournalistName,
+                a.byline as Byline,
                 a.title,
                 a.breadtext,
                 a.created_date as CreatedDate,
@@ -30,7 +30,6 @@ public class ArticleReadRepository : IArticleReadRepository
                 a.location,
                 s.name as SectionName
             from articles a
-            inner join journalists j on j.id = a.journalist_id
             inner join sections s on s.id = a.section_id
             """;
 
@@ -45,7 +44,7 @@ public class ArticleReadRepository : IArticleReadRepository
         const string sql = """
             select
                 a.id,
-                j.name as JournalistName,
+                a.byline as Byline,
                 a.title,
                 a.breadtext,
                 a.created_date as CreatedDate,
@@ -53,7 +52,6 @@ public class ArticleReadRepository : IArticleReadRepository
                 a.location,
                 s.name as SectionName
             from articles a
-            inner join journalists j on j.id = a.journalist_id
             inner join sections s on s.id = a.section_id
             where a.id = @Id
             """;

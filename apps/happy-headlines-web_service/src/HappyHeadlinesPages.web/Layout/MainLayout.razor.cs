@@ -15,6 +15,11 @@ public partial class MainLayout
         _theme = CustomMudTheme.Theme;
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await JournalistState.EnsureLoadedAsync();
+    }
+
     private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;

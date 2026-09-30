@@ -1,6 +1,7 @@
 using DraftService.Handlers;
 using DraftService.Profanity;
 using DraftService.Repositories;
+using HappyHeadlines.Observability;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 
@@ -11,6 +12,8 @@ builder.Services.AddOpenApi();
 
 // Swagger
 builder.Services.AddSwaggerGen();
+
+builder.AddObservability();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IDraftRepository, DraftRepository>();
@@ -40,8 +43,13 @@ builder.Services
         client.Timeout = TimeSpan.FromSeconds(2);
     })
     .SetHandlerLifetime(TimeSpan.FromMinutes(5))
-    .AddResilienceHandler("ProfanityService", pipeline =>
+    .AddResilienceHandler("ProfanityService", (pipeline, context) =>
     {
+        // Circuit state changes go through ILogger so they reach Loki (docs/logging.md).
+        var logger = context.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("ProfanityService.CircuitBreaker");
+
         pipeline.AddRetry(new HttpRetryStrategyOptions
         {
             ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
@@ -67,25 +75,24 @@ builder.Services
 
             OnOpened = args =>
             {
-                Console.WriteLine(
-                    $"Circuit opened! Reason: " +
-                    $"{args.Outcome.Exception?.Message}");
+                // Exception type only - the message can contain URLs or payload details.
+                logger.LogWarning(
+                    "Circuit {Pipeline} opened. Reason: {Reason}",
+                    "ProfanityService", args.Outcome.Exception?.GetType().Name);
 
                 return ValueTask.CompletedTask;
             },
 
             OnClosed = args =>
             {
-                Console.WriteLine(
-                    "Circuit closed. Calls to ProfanityService will resume.");
+                logger.LogInformation("Circuit {Pipeline} closed. Calls will resume.", "ProfanityService");
 
                 return ValueTask.CompletedTask;
             },
 
             OnHalfOpened = args =>
             {
-                Console.WriteLine(
-                    "Circuit half-open. Next request is a trial.");
+                logger.LogInformation("Circuit {Pipeline} half-open. Next request is a trial.", "ProfanityService");
 
                 return ValueTask.CompletedTask;
             }

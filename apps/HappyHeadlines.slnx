@@ -37,4 +37,7 @@
   <Folder Name="/publish_service/src/">
     <Project Path="publish_service/src/PublishService/PublishService.csproj" />
   </Folder>
+  <Folder Name="/shared/">
+    <Project Path="shared/HappyHeadlines.Observability/HappyHeadlines.Observability.csproj" />
+  </Folder>
 </Solution>

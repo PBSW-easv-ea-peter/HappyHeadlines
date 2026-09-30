@@ -36,6 +36,7 @@ public class DraftHandler : IDraftHandler
         }
 
         var draft = await _repository.CreateAsync(request);
+        _logger.LogInformation("Draft {DraftId} created in {Location}", draft.Id, draft.Location);
         return DraftActionResult.Success(draft);
     }
 
@@ -58,9 +59,13 @@ public class DraftHandler : IDraftHandler
         }
 
         var updated = await _repository.UpdateContentAsync(id, request);
-        return updated is null
-            ? DraftActionResult.ConcurrentChange()
-            : DraftActionResult.Success(updated);
+        if (updated is null)
+        {
+            _logger.LogWarning("Draft {DraftId} was changed concurrently while in {Status}", id, draft.Status);
+            return DraftActionResult.ConcurrentChange();
+        }
+
+        return DraftActionResult.Success(updated);
     }
 
     public async Task<DraftActionResult> SubmitForApprovalAsync(long id, CancellationToken cancellationToken = default)
@@ -76,6 +81,9 @@ public class DraftHandler : IDraftHandler
             return DraftActionResult.IllegalTransition($"Cannot submit for approval a draft in {draft.Status} status.");
         }
 
+        // Known deviation from the architecture handout: the profanity check before publishing
+        // belongs to PublisherService. It lives here until PublisherService is built, and nothing
+        // new should be built on top of it (see docs/logging.md, open question 8).
         var profanityResult = await _profanityClient.CheckAsync(draft.Breadtext, cancellationToken);
 
         // Fault isolation, same principle as CommentService: if ProfanityService can't be
@@ -91,9 +99,7 @@ public class DraftHandler : IDraftHandler
             : profanityResult.BannedWords.ToArray();
 
         var updated = await _repository.SubmitForApprovalAsync(id, draft.Status, flaggedWords);
-        return updated is null
-            ? DraftActionResult.ConcurrentChange()
-            : DraftActionResult.Success(updated);
+        return StatusChanged(id, draft.Status, updated);
     }
 
     public async Task<DraftActionResult> ApproveAsync(long id, ApproveDraftRequest request)
@@ -110,9 +116,7 @@ public class DraftHandler : IDraftHandler
         }
 
         var updated = await _repository.ApproveAsync(id, draft.Status, request.JournalistId, request.Note);
-        return updated is null
-            ? DraftActionResult.ConcurrentChange()
-            : DraftActionResult.Success(updated);
+        return StatusChanged(id, draft.Status, updated);
     }
 
     public async Task<DraftActionResult> RejectAsync(long id, RejectDraftRequest request)
@@ -129,9 +133,7 @@ public class DraftHandler : IDraftHandler
         }
 
         var updated = await _repository.RejectAsync(id, draft.Status, request.Note);
-        return updated is null
-            ? DraftActionResult.ConcurrentChange()
-            : DraftActionResult.Success(updated);
+        return StatusChanged(id, draft.Status, updated);
     }
 
     public Task<DraftActionResult> PublishAsync(long id) => TransitionAsync(id, DraftAction.Publish);
@@ -154,9 +156,23 @@ public class DraftHandler : IDraftHandler
         }
 
         var updated = await _repository.UpdateStatusAsync(id, draft.Status, newStatus);
-        return updated is null
-            ? DraftActionResult.ConcurrentChange()
-            : DraftActionResult.Success(updated);
+        return StatusChanged(id, draft.Status, updated);
+    }
+
+    // Every status transition ends here, so it is logged in one place (docs/logging.md).
+    // A null result means the optimistic-concurrency check in the repository failed.
+    private DraftActionResult StatusChanged(long id, DraftStatus fromStatus, Draft? updated)
+    {
+        if (updated is null)
+        {
+            _logger.LogWarning("Draft {DraftId} was changed concurrently while in {Status}", id, fromStatus);
+            return DraftActionResult.ConcurrentChange();
+        }
+
+        _logger.LogInformation(
+            "Draft {DraftId} changed status from {FromStatus} to {ToStatus}",
+            id, fromStatus, updated.Status);
+        return DraftActionResult.Success(updated);
     }
 
     private static string DescribeAction(DraftAction action) => action switch

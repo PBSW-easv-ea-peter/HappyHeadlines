@@ -15,6 +15,15 @@ services:
 #      - "9464:9464"   # Prometheus scrape endpoint
     depends_on:
       - loki
+      - tempo
+
+  tempo:
+    image: grafana/tempo:latest
+#    ports:
+#      - "3200:3200"
+    command: -config.file=/etc/tempo/config.yaml
+    volumes:
+      - ./configs/tempo-config.yaml:/etc/tempo/config.yaml:ro
 
   loki:
     image: grafana/loki:latest
@@ -182,7 +191,8 @@ services:
 
   profanityservice:
     build:
-      context: ./apps/profanity_service/
+      context: ./apps/
+      dockerfile: profanity_service/Dockerfile
     image: happyheadlines/profanity_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
@@ -192,7 +202,8 @@ services:
 
   commentservice:
     build:
-      context: ./apps/comment_service/
+      context: ./apps/
+      dockerfile: comment_service/Dockerfile
     image: happyheadlines/comment_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
@@ -218,7 +229,8 @@ services:
 
   draftservice:
     build:
-      context: ./apps/draft_service/
+      context: ./apps/
+      dockerfile: draft_service/Dockerfile
     image: happyheadlines/draft_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development

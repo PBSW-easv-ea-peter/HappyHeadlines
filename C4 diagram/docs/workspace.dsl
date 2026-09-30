@@ -10,92 +10,27 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // Software system
         happyHeadlines = softwareSystem "Happy Headlines" "Positive news platform." {
-
             // Applications
+
+            // Article
+            !include model/article.dsl
+
             // Webapp and Website are one Blazor app in code (apps/happy-headlines-web_service),
             // kept as two containers to follow the architecture handout.
             webapp = container "Webapp" "Editorial application used by publishers. Implemented: draft dashboard, create/edit, submit/approve/reject. Missing: publishing via PublisherService. Shares codebase with Website." "Web Application (Blazor)" "Partial"
-            website = container "Website" "Public website for readers. Implemented: articles per region with comments. Missing: newsletter subscription. Shares codebase with Webapp." "Web Application (Blazor)" "Partial"
+            website = container "Website" "Public website for readers. Implemented: articles per region with comments. Missing: newsletter subscription. Shares codebase with Webapp." "Blazor (wasm) hosted on NGINX" "Partial"
 
-            // Swimlanes (fault isolation): each implemented service is grouped with its own
-            // database, so a failure in one lane cannot take down another lane's data.
-            group "Draft" {
-                draftService = container "DraftService" "Manages article drafts and their editorial workflow." "Service" "Implemented" {
-                    draftsController = component "DraftsController" "Exposes REST endpoints for drafts and workflow actions (submit, approve, reject, publish, archive, reactivate)." "ASP.NET Core Controller"
-                    draftHandler = component "DraftHandler" "Orchestrates draft business rules, profanity pre-check on submit, and persistence. Logs every status transition (docs/logging.md)." "Component"
-                    draftStatusTransitions = component "DraftStatusTransitions" "Single source of truth for legal draft status transitions." "Component"
-                    draftRepository = component "DraftRepository" "Reads and writes drafts via Dapper." "Repository"
-                    draftProfanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker. Fallback: submission succeeds without flagged words." "Component"
-                    draftObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
+            // Draft
+            !include model/draft.dsl
 
-                    draftsController -> draftHandler "Delegates requests to"
-                    draftHandler -> draftStatusTransitions "Validates status transitions via"
-                    draftHandler -> draftProfanityClient "Pre-flags words on submit via"
-                    draftHandler -> draftRepository "Persists and reads drafts via"
-                }
-                draftDb = container "DraftDatabase" "Stores article drafts." "PostgreSQL" "Database,Implemented"
-            }
+            // Comment
+            !include model/comment.dsl
 
-            group "Article" {
-                articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas via Docker Swarm, docker-compose.yaml)" "Service" "Implemented" {
-                    articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
-                    articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
-                    articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
-                    articleShardResolver = component "ArticleShardResolver" "Resolves a location code to the correct shard connection string." "Component"
-                    articleQueueConsumer = component "ArticleQueueConsumer" "Will consume ArticleQueue for Create/Update once wired up. Currently idle." "Background Service"
-                    articleCache = component "ArticleCache" "Implements IArticleCache: reads and writes cached articles (keys per location and per article) in Redis, with a 14-day expiry." "Component"
-                    cacheRefreshService = component "CacheRefreshService" "Refills the cache every hour. Currently only location GO (global)." "Background Service"
+            // Profanity
+            !include model/profanity.dsl
 
-                    articlesController -> articleCache "Reads articles from cache first, invalidates on update/delete via"
-                    articlesController -> articleReadRepository "Falls back to on cache miss"
-                    articlesController -> articleWriteRepository "Delegates Create/Update/Delete REST stand-ins to"
-                    articleReadRepository -> articleShardResolver "Resolves shard via"
-                    articleWriteRepository -> articleShardResolver "Resolves shard via"
-                    articleQueueConsumer -> articleWriteRepository "Will persist consumed messages via (not yet wired)"
-                    cacheRefreshService -> articleCache "Refreshes every hour via"
-                    articleCache -> articleReadRepository "Loads articles for refresh via"
-                }
-                articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "PostgreSQL" "Database,Implemented"
-                articleCacheDb = container "ArticleCache" "Offline cache of articles from the last 14 days, refilled every hour. A miss reads the database but does not fill the cache. Shared by all ArticleService replicas." "Redis" "Database,Implemented"
-            }
-
-            group "Comment" {
-                commentService = container "CommentService" "Manages comments." "Service" "Implemented" {
-                    commentsController = component "CommentsController" "Exposes REST endpoints for posting and retrieving comments, scoped by article location." "ASP.NET Core Controller"
-                    commentHandler = component "CommentHandler" "Classifies comment text via ProfanityService (Approved / Rejected / PendingProfanityCheck) and orchestrates persistence." "Component"
-                    commentRepository = component "CommentRepository" "Reads and writes comments (incl. article_id/article_location) via Dapper." "Repository"
-                    profanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker. Fallback: comment is stored as PendingProfanityCheck." "Component"
-                    commentObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
-
-                    commentsController -> commentHandler "Delegates classification and persistence to"
-                    commentHandler -> profanityClient "Checks comment text via"
-                    commentHandler -> commentRepository "Persists and reads comments via"
-                }
-                commentDb = container "CommentDatabase" "Stores comments." "PostgreSQL" "Database,Implemented"
-                commentCache = container "CommentCache" "Cache-aside: filled on a miss, keeps comments for the 30 most recently used articles (LRU). The service falls back to the database if it is down." "Redis" "Database,Implemented"
-            }
-
-            group "Profanity" {
-                profanityService = container "ProfanityService" "Filters inappropriate language." "Service" "Implemented" {
-                    profanityController = component "ProfanityController" "Exposes REST endpoint POST /api/profanity/check that takes a text and returns the banned words found in it." "ASP.NET Core Controller"
-                    profanityChecker = component "ProfanityChecker" "Splits the text into distinct words (case-insensitive) and delegates the lookup." "Component"
-                    profanityRepository = component "ProfanityRepository" "Looks up all words in banned_words in one query via Dapper." "Repository"
-                    profanityObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
-
-                    profanityController -> profanityChecker "Delegates the check to"
-                    profanityChecker -> profanityRepository "Looks up words via"
-                }
-                profanityDb = container "ProfanityDatabase" "Stores prohibited words." "PostgreSQL" "Database,Implemented"
-            }
-
-            // Central logging and tracing (week 38). Runs in docker-compose.dev.yaml only;
-            // services send telemetry asynchronously, so an outage here never stops a service.
-            group "Observability" {
-                otelCollector = container "OTel Collector" "Receives logs and traces over OTLP and routes them to Loki and Tempo." "OpenTelemetry Collector" "Implemented"
-                loki = container "Loki" "Stores logs, incl. trace_id per log line." "Grafana Loki" "Database,Implemented"
-                tempo = container "Tempo" "Stores distributed traces." "Grafana Tempo" "Database,Implemented"
-                grafana = container "Grafana" "UI for searching logs and traces; links a log line to its trace." "Grafana" "Implemented"
-            }
+            // Observability
+            !include model/observability.dsl
 
             // Services (not yet implemented)
             publisherService = container "PublisherService" "Publishes approved articles." "Service"
@@ -104,7 +39,7 @@ workspace "Happy Headlines" "Positive news platform" {
             newsletterService = container "NewsletterService" "Sends newsletters." "Service"
 
             // Suggested - not part of the original design (see L4/README.md)
-            userService = container "UserService" "Manages users: User, Journalist, Publisher." "Service" "Suggested"
+//            userService = container "UserService" "Manages users: User, Journalist, Publisher." "Service" "Suggested"
 
             // Databases (not yet implemented)
             subscriberDb = container "SubscriberDatabase" "Stores subscriber information." "Database" "Database"
@@ -182,78 +117,29 @@ workspace "Happy Headlines" "Positive news platform" {
 
 
         // Suggested UserService
-        articleService -> userService "Looks up journalists (suggested)"
-        draftService -> userService "Looks up journalists (suggested)"
+        //articleService -> userService "Looks up journalists (suggested)"
+        //draftService -> userService "Looks up journalists (suggested)"
 
 
         // Observability (week 38). Component-level relations imply the container-level
         // DraftService/CommentService/ProfanityService -> OTel Collector relations.
-        draftObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
-        commentObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
-        profanityObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
-        otelCollector -> loki "Forwards logs to" "OTLP/HTTP"
-        otelCollector -> tempo "Forwards traces to" "OTLP/gRPC"
+        draftObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
+        commentObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
+        articleObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
+        profanityObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
+
+        otelCollector-eu -> loki "Forwards logs to" "OTLP/HTTP"
+        otelCollector-eu -> tempo "Forwards traces to" "OTLP/gRPC"
         grafana -> loki "Queries logs from"
         grafana -> tempo "Queries traces from"
         developer -> grafana "Searches logs and follows traces in"
 
+        // Shared deployment variables
+        //routingMesh = infrastructureNode "Swarm routing mesh" "Built-in ingress load balancing across service replicas"
 
-        deploymentEnvironment "Production" {
-
-            deploymentNode "Load Balancer" "Docker Swarm routing mesh" {
-                loadBalancer = containerInstance articleServiceLB
-            }
-
-            deploymentNode "Website" "Docker container" {
-                websiteInstance = containerInstance website
-            }
-            deploymentNode "NewsletterService" "Docker container" {
-                newsletterServiceInstance = containerInstance newsletterService
-            }
-            deploymentNode "ArticleQueue" "Docker container" {
-                articleQueueInstance = containerInstance articleQueue
-            }
-            deploymentNode "ArticleCache" "Docker container" {
-                articleCacheInstance = containerInstance articleCacheDb
-            }
-
-            deploymentNode "ArticleService Instance 1" "Docker container" {
-                articleServiceInstance1 = containerInstance articleService
-            }
-            deploymentNode "ArticleService Instance 2" "Docker container" {
-                articleServiceInstance2 = containerInstance articleService
-            }
-            deploymentNode "ArticleService Instance 3" "Docker container" {
-                articleServiceInstance3 = containerInstance articleService
-            }
-
-            deploymentNode "Africa" "PostgreSQL 18" {
-                africaDb = containerInstance articleDb
-            }
-            deploymentNode "Asia" "PostgreSQL 18" {
-                asiaDb = containerInstance articleDb
-            }
-            deploymentNode "Europe" "PostgreSQL 18" {
-                europeDb = containerInstance articleDb
-            }
-            deploymentNode "North America" "PostgreSQL 18" {
-                northAmericaDb = containerInstance articleDb
-            }
-            deploymentNode "South America" "PostgreSQL 18" {
-                southAmericaDb = containerInstance articleDb
-            }
-            deploymentNode "Australia" "PostgreSQL 18" {
-                australiaDb = containerInstance articleDb
-            }
-            deploymentNode "Antarctica" "PostgreSQL 18" {
-                antarcticaDb = containerInstance articleDb
-            }
-            deploymentNode "Global" "PostgreSQL 18" {
-                globalDb = containerInstance articleDb
-            }
-        }
+        // Deployments: Production
+        !include deployment/production.dsl
     }
-
 
     views {
 
@@ -272,7 +158,7 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // C4 Level 2 - Observability only (week 38), so it does not drown in "Containers"
         container happyHeadlines "Observability" {
-            include draftService commentService profanityService otelCollector loki tempo grafana developer
+            include draftService commentService profanityService otelCollector-eu loki tempo grafana developer
             autolayout lr
         }
 
@@ -299,14 +185,14 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // C4 Level 5 - Deployment diagram
         deployment happyHeadlines "Production" "ArticleServiceDeployment" {
-            include websiteInstance newsletterServiceInstance loadBalancer articleServiceInstance1 articleServiceInstance2 articleServiceInstance3 articleCacheInstance
-            autolayout lr
+            include euSite
+            autolayout tb
         }
 
-        deployment happyHeadlines "Production" "ArticleDatabaseDeployment" {
-            include articleServiceInstance1 articleQueueInstance africaDb asiaDb europeDb northAmericaDb southAmericaDb australiaDb antarcticaDb globalDb
-            autolayout lr
-        }
+ //       deployment happyHeadlines "Production" "ArticleDatabaseDeployment" {
+ //           include articleServiceInstance articleQueueInstance africaDb asiaDb europeDb northAmericaDb southAmericaDb australiaDb antarcticaDb globalDb
+ //           autolayout lr
+ //       }
 
         styles {
             element "Implemented" {

@@ -14,7 +14,20 @@ public partial class NewDraft : ComponentBase
     private string breadtext = string.Empty;
     private string location = Locations.All[0].Code;
     private long sectionId = Sections.All[0].Id;
+    private IReadOnlyCollection<long> creditedJournalistIds = [];
+    private string byline = string.Empty;
     private bool isSaving;
+
+    private void RegenerateByline()
+    {
+        byline = BylineFormatter.Generate(
+            JournalistState.All.Where(j => creditedJournalistIds.Contains(j.Id)));
+    }
+
+    private void SetCreditedJournalistIds(IReadOnlyCollection<long> ids)
+    {
+        creditedJournalistIds = ids.ToHashSet();
+    }
 
     private async Task CreateAsync()
     {
@@ -36,7 +49,9 @@ public partial class NewDraft : ComponentBase
                     Title = title,
                     Breadtext = breadtext,
                     Location = location,
-                    SectionId = sectionId
+                    SectionId = sectionId,
+                    CreditedJournalistIds = creditedJournalistIds.ToList(),
+                    Byline = string.IsNullOrWhiteSpace(byline) ? null : byline
                 });
 
             if (!response.IsSuccessStatusCode)

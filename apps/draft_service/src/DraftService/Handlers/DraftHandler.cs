@@ -14,12 +14,18 @@ public class DraftHandler : IDraftHandler
         new(StringComparer.OrdinalIgnoreCase) { "EU", "NA", "SA", "AU", "AS", "AN", "AF", "GO" };
 
     private readonly IDraftRepository _repository;
+    private readonly IJournalistRepository _journalistRepository;
     private readonly IProfanityClient _profanityClient;
     private readonly ILogger<DraftHandler> _logger;
 
-    public DraftHandler(IDraftRepository repository, IProfanityClient profanityClient, ILogger<DraftHandler> logger)
+    public DraftHandler(
+        IDraftRepository repository,
+        IJournalistRepository journalistRepository,
+        IProfanityClient profanityClient,
+        ILogger<DraftHandler> logger)
     {
         _repository = repository;
+        _journalistRepository = journalistRepository;
         _profanityClient = profanityClient;
         _logger = logger;
     }
@@ -35,6 +41,12 @@ public class DraftHandler : IDraftHandler
             return DraftActionResult.ValidationFailed($"Unknown location '{request.Location}'.");
         }
 
+        var creditedJournalistsError = await ValidateCreditedJournalistsAsync(request.CreditedJournalistIds);
+        if (creditedJournalistsError is not null)
+        {
+            return DraftActionResult.ValidationFailed(creditedJournalistsError);
+        }
+
         var draft = await _repository.CreateAsync(request);
         _logger.LogInformation("Draft {DraftId} created in {Location}", draft.Id, draft.Location);
         return DraftActionResult.Success(draft);
@@ -45,6 +57,12 @@ public class DraftHandler : IDraftHandler
         if (!ValidLocations.Contains(request.Location))
         {
             return DraftActionResult.ValidationFailed($"Unknown location '{request.Location}'.");
+        }
+
+        var creditedJournalistsError = await ValidateCreditedJournalistsAsync(request.CreditedJournalistIds);
+        if (creditedJournalistsError is not null)
+        {
+            return DraftActionResult.ValidationFailed(creditedJournalistsError);
         }
 
         var draft = await _repository.GetByIdAsync(id);
@@ -173,6 +191,22 @@ public class DraftHandler : IDraftHandler
             "Draft {DraftId} changed status from {FromStatus} to {ToStatus}",
             id, fromStatus, updated.Status);
         return DraftActionResult.Success(updated);
+    }
+
+    private async Task<string?> ValidateCreditedJournalistsAsync(IReadOnlyCollection<long> creditedJournalistIds)
+    {
+        var distinctIds = creditedJournalistIds.Distinct().ToList();
+        if (distinctIds.Count == 0)
+        {
+            return null;
+        }
+
+        var existingIds = await _journalistRepository.FindExistingIdsAsync(distinctIds);
+        var missingIds = distinctIds.Except(existingIds).ToList();
+
+        return missingIds.Count == 0
+            ? null
+            : $"Unknown journalist id(s): {string.Join(", ", missingIds)}.";
     }
 
     private static string DescribeAction(DraftAction action) => action switch

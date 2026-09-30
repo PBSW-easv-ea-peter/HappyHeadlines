@@ -74,6 +74,25 @@
 
             <MudTextField T="string" Label="Body" @bind-Value="breadtext" Lines="10" Class="mb-6" Disabled="@IsReadOnly" />
 
+            <MudSelect T="long" Label="Credited authors" MultiSelection="true"
+                       @bind-SelectedValues:get="creditedJournalistIds"
+                       @bind-SelectedValues:set="SetCreditedJournalistIds"
+                       Disabled="@IsReadOnly"
+                       Class="mb-4">
+                @foreach (var journalist in JournalistState.All)
+                {
+                    <MudSelectItem T="long" Value="@journalist.Id">@journalist.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField T="string" Label="Byline" @bind-Value="byline" Class="mb-2" Disabled="@IsReadOnly" HelperText="Auto-generated from credited authors, or edit it yourself." />
+            @if (!IsReadOnly)
+            {
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="RegenerateByline" Class="mb-6">
+                    Regenerate byline
+                </MudButton>
+            }
+
             @if (_draft.Status == DraftStatus.PendingApproval)
             {
                 <MudTextField T="string" Label="Note for the author (optional)" @bind-Value="reviewNote" Lines="3" Class="mb-6" />

@@ -29,8 +29,8 @@ public partial class Drafts : ComponentBase
     // Article responses don't carry a journalist id, only the name.
     private IEnumerable<ArticleDTO> MyPublishedArticles =>
         _allArticles.Where(a => string.Equals(
-            a.JournalistName,
-            Journalists.NameOf(SelectedJournalistId),
+            a.Byline,
+            JournalistState.NameOf(SelectedJournalistId),
             StringComparison.OrdinalIgnoreCase));
 
     private IEnumerable<Draft> PendingApprovalDrafts =>
@@ -49,7 +49,7 @@ public partial class Drafts : ComponentBase
     {
         get
         {
-            var firstName = Journalists.NameOf(SelectedJournalistId).Split(' ')[0];
+            var firstName = JournalistState.NameOf(SelectedJournalistId).Split(' ')[0];
             return $"Good {Greetings.TimeOfDay()}, {firstName}";
         }
     }

@@ -94,7 +94,7 @@
                 <MudText Typo="Typo.h3" Class="mb-3">@FeaturedArticle.Title</MudText>
 
                 <MudText Typo="Typo.body2" Class="mb-4">
-                    By @FeaturedArticle.JournalistName &middot; @FeaturedArticle.CreatedDate.ToLocalTime().ToString("d MMM yyyy")
+                    By @FeaturedArticle.Byline &middot; @FeaturedArticle.CreatedDate.ToLocalTime().ToString("d MMM yyyy")
                 </MudText>
 
                 <MudText Typo="Typo.body1">@FeaturedArticle.BreadText</MudText>
@@ -121,7 +121,7 @@
                             </div>
 
                             <MudText Typo="Typo.subtitle1" Class="mb-1">@article.Title</MudText>
-                            <MudText Typo="Typo.caption">By @article.JournalistName</MudText>
+                            <MudText Typo="Typo.caption">By @article.Byline</MudText>
                         </MudPaper>
                     </MudItem>
                 }

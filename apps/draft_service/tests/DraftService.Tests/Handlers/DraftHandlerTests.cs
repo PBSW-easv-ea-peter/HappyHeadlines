@@ -10,15 +10,26 @@ namespace DraftService.Tests.Handlers;
 
 public class DraftHandlerTests
 {
-    private static readonly Guid DraftId = Guid.NewGuid();
+    private static readonly Guid DraftId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     private readonly Mock<IDraftRepository> _repository = new();
+    private readonly Mock<IJournalistRepository> _journalistRepository = new();
     private readonly Mock<IProfanityClient> _profanityClient = new();
     private readonly DraftHandler _handler;
 
     public DraftHandlerTests()
     {
-        _handler = new DraftHandler(_repository.Object, _profanityClient.Object, Mock.Of<ILogger<DraftHandler>>());
+        // Default: every requested id "exists", matching the common case tests exercise.
+        // Tests that want to exercise the unknown-id path override this per-call.
+        _journalistRepository
+            .Setup(x => x.FindExistingIdsAsync(It.IsAny<IReadOnlyCollection<long>>()))
+            .ReturnsAsync((IReadOnlyCollection<long> ids) => ids);
+
+        _handler = new DraftHandler(
+            _repository.Object,
+            _journalistRepository.Object,
+            _profanityClient.Object,
+            Mock.Of<ILogger<DraftHandler>>());
     }
 
     private static Draft MakeDraft(Guid id, DraftStatus status, string breadtext = "Body") => new()
@@ -55,6 +66,28 @@ public class DraftHandlerTests
 
         Assert.Equal(DraftActionOutcome.Success, result.Outcome);
         Assert.Same(draft, result.Draft);
+    }
+
+    [Fact]
+    public async Task CreateAsync_UnknownCreditedJournalistId_ReturnsValidationFailed()
+    {
+        var request = new CreateDraftRequest
+        {
+            JournalistId = 1,
+            Title = "T",
+            Breadtext = "B",
+            Location = "EU",
+            SectionId = 1,
+            CreditedJournalistIds = [1, 99]
+        };
+        _journalistRepository
+            .Setup(x => x.FindExistingIdsAsync(It.IsAny<IReadOnlyCollection<long>>()))
+            .ReturnsAsync([1]);
+
+        var result = await _handler.CreateAsync(request);
+
+        Assert.Equal(DraftActionOutcome.ValidationFailed, result.Outcome);
+        _repository.Verify(r => r.CreateAsync(It.IsAny<CreateDraftRequest>()), Times.Never);
     }
 
     [Fact]

@@ -9,7 +9,7 @@ namespace DraftService.Tests.Controllers;
 
 public class DraftsControllerTests
 {
-    private static readonly Guid DraftId = Guid.NewGuid();
+    private static readonly Guid DraftId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     private readonly Mock<IDraftHandler> _handler = new();
     private readonly DraftsController _controller;

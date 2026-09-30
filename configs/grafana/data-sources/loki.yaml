@@ -1,3 +1,5 @@
+apiVersion: 1
+
 datasources:
   - name: loki
     type: loki
@@ -11,3 +13,10 @@ datasources:
       tlsAuth: false
       tlsAuthWithCACert: false
       tlsSkipVerify: true
+      # OTLP logs carry trace_id as structured metadata; link it to the trace in Tempo.
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: tempo
+          url: "$${__value.raw}"

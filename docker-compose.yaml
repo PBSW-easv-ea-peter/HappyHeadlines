@@ -222,8 +222,8 @@ services:
       ASPNETCORE_URLS: http://+:8080
     ports:
       - "8080:8080"
-#    deploy:
-#      replicas: 3
+    deploy:
+      replicas: 3
     # NOTE: this stack is deployed via `docker stack deploy` (Swarm), which ignores
     # depends_on entirely - this gating is only reliable under plain `docker compose up`
     # (see docker-compose.dev.yaml). Kept here for documentation/local-testing purposes.
@@ -271,7 +271,8 @@ services:
 
   profanityservice:
     build:
-      context: ./apps/profanity_service/
+      context: ./apps/
+      dockerfile: profanity_service/Dockerfile
     image: happyheadlines/profanity_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -281,7 +282,8 @@ services:
 
   commentservice:
     build:
-      context: ./apps/comment_service/
+      context: ./apps/
+      dockerfile: comment_service/Dockerfile
     image: happyheadlines/comment_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -322,7 +324,8 @@ services:
 
   draftservice:
     build:
-      context: ./apps/draft_service/
+      context: ./apps/
+      dockerfile: draft_service/Dockerfile
     image: happyheadlines/draft_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production

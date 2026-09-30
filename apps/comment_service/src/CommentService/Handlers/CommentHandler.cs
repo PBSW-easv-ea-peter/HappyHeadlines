@@ -29,6 +29,9 @@ public class CommentHandler : ICommentHandler
     {
         var status = await ClassifyAsync(request.Text, ct);
         var entity = await _repository.CreateAsync(articleLocation, articleId, request, status);
+        _logger.LogInformation(
+            "Comment {CommentId} on article {ArticleId} created with status {Status}",
+            entity.Id, articleId, status);
         return (CommentDto.FromEntity(entity), status);
     }
 

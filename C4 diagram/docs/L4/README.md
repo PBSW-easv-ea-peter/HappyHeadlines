@@ -10,6 +10,9 @@ repositories are already covered by the L3 component views.
 | CommentService | [comment.md](comment.md) | `CommentServiceComponents` |
 | DraftService | [draft.md](draft.md) | `DraftServiceComponents` |
 | ProfanityService | – (see below) | `ProfanityServiceComponents` |
+| Observability (shared library) | [observability.md](observability.md) | `Observability` component in the three views above, plus the L2 view `Observability` |
+
+The shared library has no model layer, so its L4 shows the one extension method and what it configures.
 
 ## Stereotypes
 

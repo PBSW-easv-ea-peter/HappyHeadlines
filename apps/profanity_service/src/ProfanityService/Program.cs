@@ -1,3 +1,4 @@
+using HappyHeadlines.Observability;
 using ProfanityService.Checking;
 using ProfanityService.Repositories;
 
@@ -8,6 +9,8 @@ builder.Services.AddOpenApi();
 
 // Swagger
 builder.Services.AddSwaggerGen();
+
+builder.AddObservability();
 
 
 builder.Services.AddControllers();

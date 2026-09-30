@@ -103,17 +103,17 @@ services:
       ASPNETCORE_URLS: http://+:8080
     ports:
       - "8080:8080"
-#    deploy:
-#      replicas: 3
-#    depends_on:
-#      - articledb-eu
-#      - articledb-na
-#      - articledb-sa
-#      - articledb-au
-#      - articledb-as
-#      - articledb-an
-#      - articledb-af
-#      - articledb-global
+    deploy:
+      replicas: 3
+    depends_on:
+      - articledb-eu
+      - articledb-na
+      - articledb-sa
+      - articledb-au
+      - articledb-as
+      - articledb-an
+      - articledb-af
+      - articledb-global
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Comments 
@@ -141,7 +141,8 @@ services:
 
   profanityservice:
     build:
-      context: ./apps/profanity_service/
+      context: ./apps/
+      dockerfile: profanity_service/Dockerfile
     image: happyheadlines/profanity_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -151,7 +152,8 @@ services:
 
   commentservice:
     build:
-      context: ./apps/comment_service/
+      context: ./apps/
+      dockerfile: comment_service/Dockerfile
     image: happyheadlines/comment_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -175,7 +177,8 @@ services:
 
   draftservice:
     build:
-      context: ./apps/draft_service/
+      context: ./apps/
+      dockerfile: draft_service/Dockerfile
     image: happyheadlines/draft_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production

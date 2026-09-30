@@ -5,24 +5,28 @@ workspace "Happy Headlines" "Positive news platform" {
         // People
         publisher = person "Publisher" "Writes and publishes articles."
         reader = person "Reader" "Reads articles, comments, and subscribes to newsletters."
+        developer = person "Developer" "Builds and operates Happy Headlines; follows logs and traces across services."
 
 
         // Software system
         happyHeadlines = softwareSystem "Happy Headlines" "Positive news platform." {
 
             // Applications
-            webapp = container "Webapp" "Editorial application used by publishers." "Web Application"
-            website = container "Website" "Public website for readers." "Web Application"
+            // Webapp and Website are one Blazor app in code (apps/happy-headlines-web_service),
+            // kept as two containers to follow the architecture handout.
+            webapp = container "Webapp" "Editorial application used by publishers. Implemented: draft dashboard, create/edit, submit/approve/reject. Missing: publishing via PublisherService. Shares codebase with Website." "Web Application (Blazor)" "Partial"
+            website = container "Website" "Public website for readers. Implemented: articles per region with comments. Missing: newsletter subscription. Shares codebase with Webapp." "Web Application (Blazor)" "Partial"
 
             // Swimlanes (fault isolation): each implemented service is grouped with its own
             // database, so a failure in one lane cannot take down another lane's data.
             group "Draft" {
                 draftService = container "DraftService" "Manages article drafts and their editorial workflow." "Service" "Implemented" {
                     draftsController = component "DraftsController" "Exposes REST endpoints for drafts and workflow actions (submit, approve, reject, publish, archive, reactivate)." "ASP.NET Core Controller"
-                    draftHandler = component "DraftHandler" "Orchestrates draft business rules, profanity pre-check on submit, and persistence." "Component"
+                    draftHandler = component "DraftHandler" "Orchestrates draft business rules, profanity pre-check on submit, and persistence. Logs every status transition (docs/logging.md)." "Component"
                     draftStatusTransitions = component "DraftStatusTransitions" "Single source of truth for legal draft status transitions." "Component"
                     draftRepository = component "DraftRepository" "Reads and writes drafts via Dapper." "Repository"
                     draftProfanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker. Fallback: submission succeeds without flagged words." "Component"
+                    draftObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     draftsController -> draftHandler "Delegates requests to"
                     draftHandler -> draftStatusTransitions "Validates status transitions via"
@@ -33,7 +37,7 @@ workspace "Happy Headlines" "Positive news platform" {
             }
 
             group "Article" {
-                articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas)" "Service" "Implemented" {
+                articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas via Docker Swarm, docker-compose.yaml)" "Service" "Implemented" {
                     articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
                     articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
                     articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
@@ -52,12 +56,13 @@ workspace "Happy Headlines" "Positive news platform" {
             group "Comment" {
                 commentService = container "CommentService" "Manages comments." "Service" "Implemented" {
                     commentsController = component "CommentsController" "Exposes REST endpoints for posting and retrieving comments, scoped by article location." "ASP.NET Core Controller"
-                    commentHandler = component "CommentHandler" "Classifies comment text word-by-word via ProfanityService and orchestrates persistence." "Component"
+                    commentHandler = component "CommentHandler" "Classifies comment text via ProfanityService (Approved / Rejected / PendingProfanityCheck) and orchestrates persistence." "Component"
                     commentRepository = component "CommentRepository" "Reads and writes comments (incl. article_id/article_location) via Dapper." "Repository"
                     profanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker. Fallback: comment is stored as PendingProfanityCheck." "Component"
+                    commentObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     commentsController -> commentHandler "Delegates classification and persistence to"
-                    commentHandler -> profanityClient "Checks each word via"
+                    commentHandler -> profanityClient "Checks comment text via"
                     commentHandler -> commentRepository "Persists and reads comments via"
                 }
                 commentDb = container "CommentDatabase" "Stores comments." "PostgreSQL" "Database,Implemented"
@@ -65,14 +70,24 @@ workspace "Happy Headlines" "Positive news platform" {
 
             group "Profanity" {
                 profanityService = container "ProfanityService" "Filters inappropriate language." "Service" "Implemented" {
-                    profanityController = component "ProfanityController" "Exposes REST endpoint to check a single word against the banned list." "ASP.NET Core Controller"
-                    profanityChecker = component "ProfanityChecker" "Normalizes and delegates word lookups." "Component"
-                    profanityRepository = component "ProfanityRepository" "Looks up words in banned_words via Dapper." "Repository"
+                    profanityController = component "ProfanityController" "Exposes REST endpoint POST /api/profanity/check that takes a text and returns the banned words found in it." "ASP.NET Core Controller"
+                    profanityChecker = component "ProfanityChecker" "Splits the text into distinct words (case-insensitive) and delegates the lookup." "Component"
+                    profanityRepository = component "ProfanityRepository" "Looks up all words in banned_words in one query via Dapper." "Repository"
+                    profanityObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
-                    profanityController -> profanityChecker "Delegates word lookup to"
-                    profanityChecker -> profanityRepository "Looks up word via"
+                    profanityController -> profanityChecker "Delegates the check to"
+                    profanityChecker -> profanityRepository "Looks up words via"
                 }
                 profanityDb = container "ProfanityDatabase" "Stores prohibited words." "PostgreSQL" "Database,Implemented"
+            }
+
+            // Central logging and tracing (week 38). Runs in docker-compose.dev.yaml only;
+            // services send telemetry asynchronously, so an outage here never stops a service.
+            group "Observability" {
+                otelCollector = container "OTel Collector" "Receives logs and traces over OTLP and routes them to Loki and Tempo." "OpenTelemetry Collector" "Implemented"
+                loki = container "Loki" "Stores logs, incl. trace_id per log line." "Grafana Loki" "Database,Implemented"
+                tempo = container "Tempo" "Stores distributed traces." "Grafana Tempo" "Database,Implemented"
+                grafana = container "Grafana" "UI for searching logs and traces; links a log line to its trace." "Grafana" "Implemented"
             }
 
             // Services (not yet implemented)
@@ -100,7 +115,12 @@ workspace "Happy Headlines" "Positive news platform" {
         // Webapp -> DraftService, DraftService -> DraftDatabase/ProfanityService)
         webapp -> draftsController "Saves and retrieves drafts"
         draftRepository -> draftDb "Reads and writes drafts in"
-        draftProfanityClient -> profanityService "Checks draft text via HTTP POST /api/profanity/check"
+        // Known deviation: per the handout, PublisherService owns the profanity check before
+        // publishing. Kept here until PublisherService exists (docs/logging.md, open question 8).
+        // Declared at container level first: implied relationships do not copy tags, so without
+        // this line the L2 view would not show the Deviation style.
+        draftService -> profanityService "Checks draft text (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
+        draftProfanityClient -> profanityService "Checks draft text via HTTP POST /api/profanity/check (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
 
         webapp -> publisherService "Publishes article"
 
@@ -132,7 +152,7 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // CommentService component-level relations (imply the CommentService container-level
         // relations to ProfanityService/CommentDatabase, so no separate container-level ones here)
-        profanityClient -> profanityService "Checks word via HTTP POST /api/profanity/check"
+        profanityClient -> profanityService "Checks comment text via HTTP POST /api/profanity/check"
         commentRepository -> commentDb "Reads and writes comments in"
 
 
@@ -155,6 +175,18 @@ workspace "Happy Headlines" "Positive news platform" {
         // Suggested UserService
         articleService -> userService "Looks up journalists (suggested)"
         draftService -> userService "Looks up journalists (suggested)"
+
+
+        // Observability (week 38). Component-level relations imply the container-level
+        // DraftService/CommentService/ProfanityService -> OTel Collector relations.
+        draftObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        commentObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        profanityObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        otelCollector -> loki "Forwards logs to" "OTLP/HTTP"
+        otelCollector -> tempo "Forwards traces to" "OTLP/gRPC"
+        grafana -> loki "Queries logs from"
+        grafana -> tempo "Queries traces from"
+        developer -> grafana "Searches logs and follows traces in"
 
 
         deploymentEnvironment "Production" {
@@ -226,6 +258,12 @@ workspace "Happy Headlines" "Positive news platform" {
             autolayout lr
         }
 
+        // C4 Level 2 - Observability only (week 38), so it does not drown in "Containers"
+        container happyHeadlines "Observability" {
+            include draftService commentService profanityService otelCollector loki tempo grafana developer
+            autolayout lr
+        }
+
         // C4 Level 3 - Component diagram
         component articleService "ArticleServiceComponents" {
             include *
@@ -273,6 +311,14 @@ workspace "Happy Headlines" "Positive news platform" {
                 background "#9E9E9E"
                 color "#ffffff"
                 border dashed
+            }
+            element "Partial" {
+                background "#F2B705"
+                color "#000000"
+            }
+            relationship "Deviation" {
+                color "#E8710A"
+                dashed true
             }
         }
 

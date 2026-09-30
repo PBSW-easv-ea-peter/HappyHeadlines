@@ -9,5 +9,5 @@ public partial class ArchivedList : ComponentBase
     public IEnumerable<Draft> Drafts { get; set; } = [];
 
     [Parameter]
-    public EventCallback<long> OnReactivate { get; set; }
+    public EventCallback<Guid> OnReactivate { get; set; }
 }

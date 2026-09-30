@@ -32,6 +32,21 @@
 
         <MudTextField T="string" Label="Body" @bind-Value="breadtext" Lines="10" Class="mb-6" />
 
+        <MudSelect T="long" Label="Credited authors" MultiSelection="true"
+                   @bind-SelectedValues:get="creditedJournalistIds"
+                   @bind-SelectedValues:set="SetCreditedJournalistIds"
+                   Class="mb-4">
+            @foreach (var journalist in JournalistState.All)
+            {
+                <MudSelectItem T="long" Value="@journalist.Id">@journalist.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudTextField T="string" Label="Byline" @bind-Value="byline" Class="mb-2" HelperText="Auto-generated from credited authors, or edit it yourself." />
+        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="RegenerateByline" Class="mb-6">
+            Regenerate byline
+        </MudButton>
+
         <MudStack Row="true" Spacing="2">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateAsync" Disabled="@isSaving">
                 Create Draft

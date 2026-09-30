@@ -11,7 +11,7 @@ public enum DraftStatus
 
 public class Draft
 {
-    public long Id { get; set; }
+    public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
@@ -25,6 +25,8 @@ public class Draft
     public string[] FlaggedWords { get; set; } = [];
     public DraftStatus Status { get; set; }
     public string? ReviewNote { get; set; }
+    public List<Journalist> CreditedJournalists { get; set; } = [];
+    public string Byline { get; set; } = string.Empty;
 }
 
 public class ApproveDraftRequest
@@ -45,6 +47,8 @@ public class CreateDraftRequest
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public long SectionId { get; set; }
+    public List<long> CreditedJournalistIds { get; set; } = [];
+    public string? Byline { get; set; }
 }
 
 public class EditDraftRequest
@@ -54,4 +58,6 @@ public class EditDraftRequest
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public long SectionId { get; set; }
+    public List<long> CreditedJournalistIds { get; set; } = [];
+    public string? Byline { get; set; }
 }

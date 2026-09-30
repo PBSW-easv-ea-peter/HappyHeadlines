@@ -1,6 +1,7 @@
 using PublishService.Setup;
 using PublishService.Endpoints;
 using PublishService.Models.Options;
+using HappyHeadlines.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,8 @@ builder.ConfigureOpenApi();
 // RabbitMQ
 builder.ConfigureRabbitMq();
 
-// Telemetry
-builder.ConfigureOpenTelemetry();
+// Observability
+builder.AddObservability();
 
 // Cors
 builder.ConfigureCors();

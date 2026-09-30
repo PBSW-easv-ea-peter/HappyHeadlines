@@ -1,3 +1,4 @@
+Caches: Redis
 ArticleCache:
 - Refresh at midnight
 - Batch-refresh

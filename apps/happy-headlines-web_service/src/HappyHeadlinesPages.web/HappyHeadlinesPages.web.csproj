@@ -10,6 +10,17 @@
         <SupportedPlatform Include="browser" />
     </ItemGroup>
 
+    <!-- Build time baked into this assembly (read by BuildInfo.cs) and shown in
+         the reader footer and the journalist nav drawer, so it is visible when
+         the browser is still running an old cached build. Both app images build
+         this project themselves, so the stamp is each image's own build time. -->
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+            <_Parameter1>BuildTimeUtc</_Parameter1>
+            <_Parameter2>$([System.DateTime]::UtcNow.ToString("o"))</_Parameter2>
+        </AssemblyAttribute>
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.7" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />

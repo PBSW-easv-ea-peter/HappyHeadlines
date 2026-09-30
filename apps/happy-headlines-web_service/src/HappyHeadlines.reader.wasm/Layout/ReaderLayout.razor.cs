@@ -37,7 +37,16 @@ public partial class ReaderLayout : IDisposable
 
     private void OnRegionChanged(string region)
     {
-        // Keep the reader on the current page/section, just switch edition.
+        // An article id only exists in its own shard, so switching edition on an
+        // article page goes to that edition's front page instead.
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0];
+        if (path.StartsWith("article/", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"./?region={region}");
+            return;
+        }
+
+        // On the front page keep the section filter, just switch edition.
         Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("region", region));
     }
 

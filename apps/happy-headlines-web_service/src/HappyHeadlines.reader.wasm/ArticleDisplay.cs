@@ -8,6 +8,11 @@ public static class ArticleDisplay
     public static DateTimeOffset PublishedAt(ArticleDTO article) =>
         article.PublishDate ?? article.CreatedDate;
 
+    // Relative, so it resolves against <base href="/">. The region is the
+    // article's own shard, since ids are only unique within one.
+    public static string Href(ArticleDTO article) =>
+        $"article/{article.Id}?region={article.Location}";
+
     public static string FormatDate(ArticleDTO article) =>
         PublishedAt(article).ToLocalTime().ToString("d MMM yyyy");
 

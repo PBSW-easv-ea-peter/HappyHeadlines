@@ -52,15 +52,26 @@ body {
 .reader-brand {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 20px;
     color: inherit;
     text-decoration: none;
 }
 
 .reader-logo {
-    width: 64px;
-    height: 64px;
+    width: 112px;
+    height: 112px;
     object-fit: contain;
+}
+
+@media (max-width: 600px) {
+    .reader-brand {
+        gap: 12px;
+    }
+
+    .reader-logo {
+        width: 72px;
+        height: 72px;
+    }
 }
 
 .reader-wordmark {
@@ -89,6 +100,41 @@ body {
 }
 
 /* shared article bits */
+/* A whole article card is one link: visibly a card, lifts on hover. */
+.card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    background-color: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.card-link:hover {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.card-link:hover .card-link-title {
+    text-decoration: underline;
+}
+
+.card-link:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card-link,
+    .card-link:hover {
+        transition: none;
+        transform: none;
+    }
+}
+
 .article-meta {
     display: flex;
     flex-wrap: wrap;
@@ -114,6 +160,11 @@ body {
     padding-top: 16px;
 }
 
+/* The hero on the front page is a card; on the article page it is plain. */
+.card-link.hero-article {
+    padding: 20px 24px 24px;
+}
+
 .hero-kicker {
     color: var(--mud-palette-text-secondary);
 }
@@ -136,15 +187,14 @@ body {
     padding: 0;
 }
 
+.popular-list ol {
+    display: grid;
+    gap: 10px;
+}
+
 .popular-item {
     display: flex;
     gap: 14px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--mud-palette-lines-default);
-}
-
-.popular-item:last-child {
-    border-bottom: none;
 }
 
 .popular-rank {
@@ -162,16 +212,17 @@ body {
 }
 
 /* sections */
+/* Muted panel so the article cards inside it read as separate, clickable cards. */
 .section-card {
     height: 100%;
     padding: 16px;
     border-top: 4px solid;
-    background-color: var(--mud-palette-surface) !important;
+    border-radius: 10px !important;
+    background-color: var(--mud-palette-background-gray) !important;
 }
 
-.section-item {
-    padding: 8px 0;
-    border-top: 1px solid var(--mud-palette-lines-default);
+.section-item + .section-item {
+    margin-top: 8px;
 }
 
 .section-item-title {
@@ -179,7 +230,42 @@ body {
     line-height: 1.3 !important;
 }
 
+/* article page */
+.article-page {
+    max-width: 720px;
+}
+
+.article-back {
+    display: inline-block;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mud-palette-text-secondary);
+    text-decoration: none;
+}
+
+.article-back:hover {
+    color: var(--mud-palette-text-primary);
+}
+
+.article-body p {
+    font-size: 1.15rem;
+    line-height: 1.75;
+    margin: 0 0 1.1em;
+}
+
+.comment-item {
+    padding: 12px 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
 /* footer */
+.build-stamp {
+    margin-left: 4px;
+    opacity: 0.75;
+}
+
 .reader-footer {
     border-top: 1px solid var(--mud-palette-lines-default);
     padding: 16px 0;

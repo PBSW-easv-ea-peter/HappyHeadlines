@@ -13,10 +13,10 @@
 
     @foreach (var article in Articles)
     {
-        <div class="section-item">
-            <MudText Typo="Typo.subtitle1" Class="section-item-title">@article.Title</MudText>
+        <a href="@ArticleDisplay.Href(article)" class="card-link section-item">
+            <MudText Typo="Typo.subtitle1" Class="section-item-title card-link-title">@article.Title</MudText>
             <MudText Typo="Typo.caption" Class="muted">@article.Byline &middot; @ArticleDisplay.FormatDate(article)</MudText>
-        </div>
+        </a>
     }
 </MudPaper>
 

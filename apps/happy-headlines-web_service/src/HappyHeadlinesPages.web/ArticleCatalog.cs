@@ -38,4 +38,22 @@ public static class ArticleCatalog
             return [];
         }
     }
+
+    // Ids are only unique within a shard, so the region is part of the key.
+    // Returns null both for a 404 and for a failed call - callers show "not found".
+    public static async Task<ArticleDTO?> GetArticleAsync(HttpClient http, ILogger logger, string region, long id)
+    {
+        var regionCode = region.ToUpper();
+
+        try
+        {
+            return await http.GetFromJsonAsync<ArticleDTO>(
+                $"http://localhost:8080/api/articles/{regionCode}/{id}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to load article {ArticleId} for region {Region}", id, regionCode);
+            return null;
+        }
+    }
 }

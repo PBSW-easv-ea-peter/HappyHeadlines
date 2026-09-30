@@ -15,6 +15,7 @@
         <MudNavLink Href="@PageRoutes.Home" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">Home</MudNavLink>
         <MudNavLink Href="@PageRoutes.Articles" Icon="@Icons.Material.Filled.Article" IconColor="Color.Success">Articles</MudNavLink>
         <MudNavLink Href="@PageRoutes.Drafts" Icon="@Icons.Material.Filled.EditNote" IconColor="Color.Warning">Drafts</MudNavLink>
+        <MudNavLink Href="@SiteUrls.ReaderSite" Target="_blank" Icon="@Icons.Material.Filled.OpenInNew" IconColor="Color.Info">Official site</MudNavLink>
     </MudNavMenu>
 
     <MudSpacer />
@@ -33,6 +34,10 @@
                 <MudSelectItem T="long" Value="@journalist.Id">@journalist.Name</MudSelectItem>
             }
         </MudSelect>
+
+        <MudText Typo="Typo.caption" Class="d-block mt-3" Style="opacity:0.6;" title="@BuildInfo.BuiltAt?.ToString("o")">
+            Build @BuildInfo.Display
+        </MudText>
     </div>
 </div>
 

@@ -10,15 +10,17 @@
         @for (var i = 0; i < Articles.Count; i++)
         {
             var article = Articles[i];
-            <li class="popular-item">
-                <span class="popular-rank" style="@($"color:{Sections.ColorOfName(article.SectionName)};")">@(i + 1)</span>
-                <div>
-                    <MudText Typo="Typo.subtitle1" Class="popular-title">@article.Title</MudText>
-                    <div class="article-meta">
-                        <SectionBadge Name="@article.SectionName" />
-                        <span>@ArticleDisplay.FormatDate(article)</span>
+            <li>
+                <a href="@ArticleDisplay.Href(article)" class="card-link popular-item">
+                    <span class="popular-rank" style="@($"color:{Sections.ColorOfName(article.SectionName)};")">@(i + 1)</span>
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="popular-title card-link-title">@article.Title</MudText>
+                        <div class="article-meta">
+                            <SectionBadge Name="@article.SectionName" />
+                            <span>@ArticleDisplay.FormatDate(article)</span>
+                        </div>
                     </div>
-                </div>
+                </a>
             </li>
         }
     </ol>

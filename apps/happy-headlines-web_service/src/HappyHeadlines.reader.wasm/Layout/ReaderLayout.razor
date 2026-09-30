@@ -51,7 +51,19 @@
 </main>
 
 <footer class="reader-footer">
-    <MudContainer MaxWidth="MaxWidth.Large">
-        <MudText Typo="Typo.caption">&copy; @DateTime.Now.Year Happy Headlines</MudText>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex align-center justify-space-between">
+        <MudText Typo="Typo.caption">
+            &copy; @DateTime.Now.Year Happy Headlines
+            <span class="build-stamp" title="@BuildInfo.BuiltAt?.ToString("o")">&middot; Build @BuildInfo.Display</span>
+        </MudText>
+
+        @* TODO: backstage should sit behind a login page - skipped for now. *@
+        <MudButton Href="@SiteUrls.Backstage"
+                   Variant="Variant.Outlined"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Login"
+                   Color="Color.Default">
+            Backstage
+        </MudButton>
     </MudContainer>
 </footer>

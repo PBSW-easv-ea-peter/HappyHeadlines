@@ -1,7 +1,7 @@
-<article class="hero-article" style="@($"border-top-color:{Sections.ColorOfName(Article.SectionName)};")">
+<a href="@ArticleDisplay.Href(Article)" class="card-link hero-article" style="@($"border-top-color:{Sections.ColorOfName(Article.SectionName)};")">
     <MudText Typo="Typo.overline" Class="hero-kicker">Today's highlight</MudText>
 
-    <MudText Typo="Typo.h3" HtmlTag="h1" Class="hero-title">@Article.Title</MudText>
+    <MudText Typo="Typo.h3" HtmlTag="h1" Class="hero-title card-link-title">@Article.Title</MudText>
 
     <div class="article-meta">
         <SectionBadge Name="@Article.SectionName" />
@@ -11,7 +11,7 @@
     </div>
 
     <MudText Typo="Typo.body1" Class="hero-excerpt">@ArticleDisplay.Excerpt(Article.BreadText, 400)</MudText>
-</article>
+</a>
 
 @code {
     [Parameter, EditorRequired]

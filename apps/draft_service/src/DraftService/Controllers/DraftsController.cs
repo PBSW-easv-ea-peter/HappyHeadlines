@@ -21,11 +21,34 @@ public class DraftsController : ControllerBase
         return Ok(await _handler.GetAllAsync(createdBy));
     }
 
-    [HttpGet("{id:long}")]
-    public async Task<ActionResult<Draft>> GetById(long id)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<Draft>> GetById(Guid id)
     {
         var draft = await _handler.GetByIdAsync(id);
         return draft is null ? NotFound() : Ok(draft);
+    }
+    
+    
+    [HttpGet("filled-in-draft/{id:guid}")]
+    public async Task<ActionResult<FilledInDraft>> GetFilledInDraftById(Guid id)
+    {
+        var draft = await _handler.GetByIdAsync(id);
+        
+        if (draft is null)
+            return NotFound();
+
+        FilledInDraft filledInDraft = new()
+        {
+            Id = draft.Id,
+            Title = draft.Title,
+            Location = draft.Location,
+            CreatedDate = draft.CreatedDate.DateTime,
+            BreadText = draft.Breadtext,
+            JournalistName = "Unknown",
+            SectionName = "Unknown"
+        };
+        
+        return Ok(filledInDraft);
     }
 
     [HttpPost]
@@ -38,31 +61,31 @@ public class DraftsController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
-    public async Task<ActionResult<Draft>> Update(long id, EditDraftRequest request) =>
+    public async Task<ActionResult<Draft>> Update(Guid id, EditDraftRequest request) =>
         ToActionResult(await _handler.UpdateContentAsync(id, request));
 
     [HttpPost("{id:long}/submit-for-approval")]
-    public async Task<ActionResult<Draft>> SubmitForApproval(long id, CancellationToken cancellationToken) =>
+    public async Task<ActionResult<Draft>> SubmitForApproval(Guid id, CancellationToken cancellationToken) =>
         ToActionResult(await _handler.SubmitForApprovalAsync(id, cancellationToken));
 
     [HttpPost("{id:long}/approve")]
-    public async Task<ActionResult<Draft>> Approve(long id, ApproveDraftRequest request) =>
+    public async Task<ActionResult<Draft>> Approve(Guid id, ApproveDraftRequest request) =>
         ToActionResult(await _handler.ApproveAsync(id, request));
 
     [HttpPost("{id:long}/reject")]
-    public async Task<ActionResult<Draft>> Reject(long id, RejectDraftRequest request) =>
+    public async Task<ActionResult<Draft>> Reject(Guid id, RejectDraftRequest request) =>
         ToActionResult(await _handler.RejectAsync(id, request));
 
     [HttpPost("{id:long}/publish")]
-    public async Task<ActionResult<Draft>> Publish(long id) =>
+    public async Task<ActionResult<Draft>> Publish(Guid id) =>
         ToActionResult(await _handler.PublishAsync(id));
 
     [HttpPost("{id:long}/archive")]
-    public async Task<ActionResult<Draft>> Archive(long id) =>
+    public async Task<ActionResult<Draft>> Archive(Guid id) =>
         ToActionResult(await _handler.ArchiveAsync(id));
 
     [HttpPost("{id:long}/reactivate")]
-    public async Task<ActionResult<Draft>> Reactivate(long id) =>
+    public async Task<ActionResult<Draft>> Reactivate(Guid id) =>
         ToActionResult(await _handler.ReactivateAsync(id));
 
     private ActionResult<Draft> ToActionResult(DraftActionResult result) => result.Outcome switch

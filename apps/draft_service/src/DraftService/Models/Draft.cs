@@ -9,9 +9,26 @@ public enum DraftStatus
     Archived = 4
 }
 
+public class FilledInDraft
+{
+    public required Guid Id { get; init; }
+
+    public required string JournalistName { get; init; }
+
+    public required string SectionName { get; init; }
+
+    public required string Title { get; init; }
+
+    public required string Location { get; init; }
+
+    public required DateTime CreatedDate { get; init; }
+
+    public required string BreadText { get; init; }
+}
+
 public class Draft
 {
-    public long Id { get; set; }
+    public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Breadtext { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;

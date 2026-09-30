@@ -26,6 +26,8 @@ public class ArticleQueueConsumer : BackgroundService
     // Owned by ArticleService, not the Messaging lib - the queue is this consumer's concern.
     public const string QueueName = "article_service.published_articles";
 
+    private static readonly TimeSpan CircuitOpenRequeueDelay = TimeSpan.FromSeconds(5);
+
     private readonly ConnectionFactory _connectionFactory;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ResiliencePipelineProvider<string> _pipelines;
@@ -119,6 +121,11 @@ public class ArticleQueueConsumer : BackgroundService
             // Shard is known to be down - requeue without touching it. Debug only: the circuit
             // opening is already logged once by ShardResilience.
             _logger.LogDebug("Circuit open - requeueing message {DeliveryTag}", delivery.DeliveryTag);
+
+            // Without a pause the requeued message is redelivered immediately (~250/s in test 6).
+            // Trade-off: the consumer handles one message at a time, so this also delays messages
+            // for the other shards. A TTL retry queue would avoid that (see the test plan).
+            await Task.Delay(CircuitOpenRequeueDelay);
             await channel.BasicNackAsync(delivery.DeliveryTag, multiple: false, requeue: true);
         }
         catch (Exception ex) when (ex is JsonException or ArgumentException)

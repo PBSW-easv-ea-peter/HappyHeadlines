@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using Npgsql;
 using Polly;
 using Polly.CircuitBreaker;
@@ -26,59 +27,70 @@ public static class ShardResilience
                     .GetRequiredService<ILoggerFactory>()
                     .CreateLogger("ArticleShard.CircuitBreaker");
 
-                // Only connection-level problems are worth retrying; e.g. a constraint
-                // violation is also an NpgsqlException but will never succeed.
-                var shouldHandle = new PredicateBuilder().Handle<NpgsqlException>(ex => ex.IsTransient);
-
-                pipeline.AddRetry(new RetryStrategyOptions
-                {
-                    ShouldHandle = shouldHandle,
-
-                    // Kept short: the consumer handles one message at a time, so retries
-                    // here delay messages for the other shards too.
-                    MaxRetryAttempts = 2,
-                    Delay = TimeSpan.FromMilliseconds(200),
-                    BackoffType = DelayBackoffType.Exponential
-                });
-
-                pipeline.AddCircuitBreaker(new CircuitBreakerStrategyOptions
-                {
-                    // Two failed operations out of two -> open circuit.
-                    FailureRatio = 1.0,
-                    MinimumThroughput = 2,
-
-                    SamplingDuration = TimeSpan.FromSeconds(30),
-                    BreakDuration = TimeSpan.FromSeconds(30),
-
-                    ShouldHandle = shouldHandle,
-
-                    OnOpened = args =>
-                    {
-                        // Exception type only - the message can contain connection details.
-                        logger.LogWarning(
-                            "Circuit {Pipeline} opened. Reason: {Reason}",
-                            key, args.Outcome.Exception?.GetType().Name);
-
-                        return ValueTask.CompletedTask;
-                    },
-
-                    OnClosed = args =>
-                    {
-                        logger.LogInformation("Circuit {Pipeline} closed. Writes will resume.", key);
-
-                        return ValueTask.CompletedTask;
-                    },
-
-                    OnHalfOpened = args =>
-                    {
-                        logger.LogInformation("Circuit {Pipeline} half-open. Next write is a trial.", key);
-
-                        return ValueTask.CompletedTask;
-                    }
-                });
+                Configure(pipeline, key, logger);
             });
         }
 
         return builder;
+    }
+
+    // Internal so ArticleService.Tests can verify which failures open the circuit.
+    internal static void Configure(ResiliencePipelineBuilder pipeline, string key, ILogger logger)
+    {
+        // Only "shard unreachable" failures are worth retrying; e.g. a constraint
+        // violation is also an NpgsqlException but will never succeed.
+        // SocketException: Npgsql does not wrap DNS failures, which is what a stopped
+        // shard container gives in Docker.
+        var shouldHandle = new PredicateBuilder()
+            .Handle<NpgsqlException>(ex => ex.IsTransient)
+            .Handle<SocketException>()
+            .Handle<TimeoutException>();
+
+        pipeline.AddRetry(new RetryStrategyOptions
+        {
+            ShouldHandle = shouldHandle,
+
+            // Kept short: the consumer handles one message at a time, so retries
+            // here delay messages for the other shards too.
+            MaxRetryAttempts = 2,
+            Delay = TimeSpan.FromMilliseconds(200),
+            BackoffType = DelayBackoffType.Exponential
+        });
+
+        pipeline.AddCircuitBreaker(new CircuitBreakerStrategyOptions
+        {
+            // Two failed operations out of two -> open circuit.
+            FailureRatio = 1.0,
+            MinimumThroughput = 2,
+
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            BreakDuration = TimeSpan.FromSeconds(30),
+
+            ShouldHandle = shouldHandle,
+
+            OnOpened = args =>
+            {
+                // Exception type only - the message can contain connection details.
+                logger.LogWarning(
+                    "Circuit {Pipeline} opened. Reason: {Reason}",
+                    key, args.Outcome.Exception?.GetType().Name);
+
+                return ValueTask.CompletedTask;
+            },
+
+            OnClosed = args =>
+            {
+                logger.LogInformation("Circuit {Pipeline} closed. Writes will resume.", key);
+
+                return ValueTask.CompletedTask;
+            },
+
+            OnHalfOpened = args =>
+            {
+                logger.LogInformation("Circuit {Pipeline} half-open. Next write is a trial.", key);
+
+                return ValueTask.CompletedTask;
+            }
+        });
     }
 }

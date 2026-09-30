@@ -27,6 +27,29 @@ public class DraftsController : ControllerBase
         var draft = await _handler.GetByIdAsync(id);
         return draft is null ? NotFound() : Ok(draft);
     }
+    
+    
+    [HttpGet("filled-in-draft/{id:guid}")]
+    public async Task<ActionResult<FilledInDraft>> GetFilledInDraftById(Guid id)
+    {
+        var draft = await _handler.GetByIdAsync(id);
+        
+        if (draft is null)
+            return NotFound();
+
+        FilledInDraft filledInDraft = new()
+        {
+            Id = draft.Id,
+            Title = draft.Title,
+            Location = draft.Location,
+            CreatedDate = draft.CreatedDate.DateTime,
+            BreadText = draft.Breadtext,
+            JournalistName = "Unknown",
+            SectionName = "Unknown"
+        };
+        
+        return Ok(filledInDraft);
+    }
 
     [HttpPost]
     public async Task<ActionResult<Draft>> Create(CreateDraftRequest request)

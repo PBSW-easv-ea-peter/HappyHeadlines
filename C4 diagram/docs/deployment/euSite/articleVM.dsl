@@ -55,7 +55,7 @@ articleVM = deploymentNode "Article VM" "Virtual Machine" "Alpine" {
         }
 
         // Website
-        deploymentNode "happyheadlines" "Docker container" {
+        deploymentNode "website" "Docker container" {
             websiteInstance = containerInstance website
         }
     }

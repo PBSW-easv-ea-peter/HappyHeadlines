@@ -1,4 +1,4 @@
-editingVM = deploymentNode "Comment and profanity VM" "Virtual Machine" "Alpine" {
+editingVM = deploymentNode "Editing VM" "Virtual Machine" "Alpine" {
 
     deploymentNode "Docker Swarm Cluster" "Happy Headlines runtime" "Docker Swarm" {
 
@@ -26,7 +26,7 @@ editingVM = deploymentNode "Comment and profanity VM" "Virtual Machine" "Alpine"
         }
 
         // WebApp
-        deploymentNode "happyheadlines" "Docker container" {
+        deploymentNode "webapp" "Docker container" {
             webappInstance = containerInstance webapp
         }
 

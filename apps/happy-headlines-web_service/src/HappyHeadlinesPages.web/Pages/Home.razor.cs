@@ -24,7 +24,7 @@ public partial class Home : ComponentBase
     private IEnumerable<ArticleDTO> OtherArticles => _recentArticles.Skip(1);
 
     private string FirstName =>
-        Journalists.NameOf(JournalistState.JournalistId).Split(' ')[0];
+        JournalistState.NameOf(JournalistState.JournalistId).Split(' ')[0];
 
     private static string HeroBackgroundStyle =>
         $"background: linear-gradient(120deg, {string.Join(", ", RainbowColors.Select(c => c + "1A"))});";

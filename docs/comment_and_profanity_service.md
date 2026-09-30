@@ -123,8 +123,8 @@ ArticleService selv, konsolidering er ude af scope.
 | CommentService | POST | `/api/comments/{location}/{articleId}` | Post en kommentar på en artikel |
 | ProfanityService | POST | `/api/profanity/check` | Tjek en hel tekst; returnerer listen af matchede forbudte ord (tom liste = ren tekst) |
 
-Ingen DELETE-endpoint: hverken opgaveteksten (`docs/Tredje uge.md`) eller underviserens
-eget diagram (`docs/week37-fault-isolation-diagram.png`) kræver sletning af kommentarer —
+Ingen DELETE-endpoint: hverken opgaveteksten (`docs/handouts/Tredje uge.md`) eller underviserens
+eget diagram (`docs/diagrams/week37-fault-isolation-diagram.png`) kræver sletning af kommentarer —
 kun "posting" og "requesting".
 
 **Hvorfor POST og ikke GET eller PUT på ProfanityService?** Kaldet er en

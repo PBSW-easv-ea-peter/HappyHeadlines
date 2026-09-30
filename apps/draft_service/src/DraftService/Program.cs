@@ -17,6 +17,7 @@ builder.AddObservability();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IDraftRepository, DraftRepository>();
+builder.Services.AddScoped<IJournalistRepository, JournalistRepository>();
 builder.Services.AddScoped<IDraftHandler, DraftHandler>();
 
 var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]

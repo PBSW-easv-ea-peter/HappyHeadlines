@@ -15,7 +15,7 @@ public static class Cors
     private static WebApplicationBuilder AddClientPolicy(
         this WebApplicationBuilder builder)
     {
-        var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"] 
+        var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
                             ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
 
         builder.Services.AddCors(options =>
@@ -28,7 +28,7 @@ public static class Cors
                     .AllowAnyMethod();
             });
         });
-        
+
         return builder;
     }
 }

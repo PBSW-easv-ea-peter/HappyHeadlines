@@ -14,19 +14,25 @@ public class DraftHandler : IDraftHandler
         new(StringComparer.OrdinalIgnoreCase) { "EU", "NA", "SA", "AU", "AS", "AN", "AF", "GO" };
 
     private readonly IDraftRepository _repository;
+    private readonly IJournalistRepository _journalistRepository;
     private readonly IProfanityClient _profanityClient;
     private readonly ILogger<DraftHandler> _logger;
 
-    public DraftHandler(IDraftRepository repository, IProfanityClient profanityClient, ILogger<DraftHandler> logger)
+    public DraftHandler(
+        IDraftRepository repository,
+        IJournalistRepository journalistRepository,
+        IProfanityClient profanityClient,
+        ILogger<DraftHandler> logger)
     {
         _repository = repository;
+        _journalistRepository = journalistRepository;
         _profanityClient = profanityClient;
         _logger = logger;
     }
 
     public Task<IEnumerable<Draft>> GetAllAsync(long? createdBy) => _repository.GetAllAsync(createdBy);
 
-    public Task<Draft?> GetByIdAsync(long id) => _repository.GetByIdAsync(id);
+    public Task<Draft?> GetByIdAsync(Guid id) => _repository.GetByIdAsync(id);
 
     public async Task<DraftActionResult> CreateAsync(CreateDraftRequest request)
     {
@@ -35,16 +41,28 @@ public class DraftHandler : IDraftHandler
             return DraftActionResult.ValidationFailed($"Unknown location '{request.Location}'.");
         }
 
+        var creditedJournalistsError = await ValidateCreditedJournalistsAsync(request.CreditedJournalistIds);
+        if (creditedJournalistsError is not null)
+        {
+            return DraftActionResult.ValidationFailed(creditedJournalistsError);
+        }
+
         var draft = await _repository.CreateAsync(request);
         _logger.LogInformation("Draft {DraftId} created in {Location}", draft.Id, draft.Location);
         return DraftActionResult.Success(draft);
     }
 
-    public async Task<DraftActionResult> UpdateContentAsync(long id, EditDraftRequest request)
+    public async Task<DraftActionResult> UpdateContentAsync(Guid id, EditDraftRequest request)
     {
         if (!ValidLocations.Contains(request.Location))
         {
             return DraftActionResult.ValidationFailed($"Unknown location '{request.Location}'.");
+        }
+
+        var creditedJournalistsError = await ValidateCreditedJournalistsAsync(request.CreditedJournalistIds);
+        if (creditedJournalistsError is not null)
+        {
+            return DraftActionResult.ValidationFailed(creditedJournalistsError);
         }
 
         var draft = await _repository.GetByIdAsync(id);
@@ -68,7 +86,7 @@ public class DraftHandler : IDraftHandler
         return DraftActionResult.Success(updated);
     }
 
-    public async Task<DraftActionResult> SubmitForApprovalAsync(long id, CancellationToken cancellationToken = default)
+    public async Task<DraftActionResult> SubmitForApprovalAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -102,7 +120,7 @@ public class DraftHandler : IDraftHandler
         return StatusChanged(id, draft.Status, updated);
     }
 
-    public async Task<DraftActionResult> ApproveAsync(long id, ApproveDraftRequest request)
+    public async Task<DraftActionResult> ApproveAsync(Guid id, ApproveDraftRequest request)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -119,7 +137,7 @@ public class DraftHandler : IDraftHandler
         return StatusChanged(id, draft.Status, updated);
     }
 
-    public async Task<DraftActionResult> RejectAsync(long id, RejectDraftRequest request)
+    public async Task<DraftActionResult> RejectAsync(Guid id, RejectDraftRequest request)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -136,13 +154,13 @@ public class DraftHandler : IDraftHandler
         return StatusChanged(id, draft.Status, updated);
     }
 
-    public Task<DraftActionResult> PublishAsync(long id) => TransitionAsync(id, DraftAction.Publish);
+    public Task<DraftActionResult> PublishAsync(Guid id) => TransitionAsync(id, DraftAction.Publish);
 
-    public Task<DraftActionResult> ArchiveAsync(long id) => TransitionAsync(id, DraftAction.Archive);
+    public Task<DraftActionResult> ArchiveAsync(Guid id) => TransitionAsync(id, DraftAction.Archive);
 
-    public Task<DraftActionResult> ReactivateAsync(long id) => TransitionAsync(id, DraftAction.Reactivate);
+    public Task<DraftActionResult> ReactivateAsync(Guid id) => TransitionAsync(id, DraftAction.Reactivate);
 
-    private async Task<DraftActionResult> TransitionAsync(long id, DraftAction action)
+    private async Task<DraftActionResult> TransitionAsync(Guid id, DraftAction action)
     {
         var draft = await _repository.GetByIdAsync(id);
         if (draft is null)
@@ -161,7 +179,7 @@ public class DraftHandler : IDraftHandler
 
     // Every status transition ends here, so it is logged in one place (docs/logging.md).
     // A null result means the optimistic-concurrency check in the repository failed.
-    private DraftActionResult StatusChanged(long id, DraftStatus fromStatus, Draft? updated)
+    private DraftActionResult StatusChanged(Guid id, DraftStatus fromStatus, Draft? updated)
     {
         if (updated is null)
         {
@@ -173,6 +191,22 @@ public class DraftHandler : IDraftHandler
             "Draft {DraftId} changed status from {FromStatus} to {ToStatus}",
             id, fromStatus, updated.Status);
         return DraftActionResult.Success(updated);
+    }
+
+    private async Task<string?> ValidateCreditedJournalistsAsync(IReadOnlyCollection<long> creditedJournalistIds)
+    {
+        var distinctIds = creditedJournalistIds.Distinct().ToList();
+        if (distinctIds.Count == 0)
+        {
+            return null;
+        }
+
+        var existingIds = await _journalistRepository.FindExistingIdsAsync(distinctIds);
+        var missingIds = distinctIds.Except(existingIds).ToList();
+
+        return missingIds.Count == 0
+            ? null
+            : $"Unknown journalist id(s): {string.Join(", ", missingIds)}.";
     }
 
     private static string DescribeAction(DraftAction action) => action switch

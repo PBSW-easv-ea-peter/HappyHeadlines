@@ -66,9 +66,9 @@ public class ArticleSeeder : IHostedService
         {
             const string sql = """
                 insert into articles
-                    (journalist_id, title, breadtext, publish_date, location, section_id)
+                    (byline, title, breadtext, publish_date, location, section_id)
                 select
-                    @JournalistId,
+                    @Byline,
                     @Title,
                     @Breadtext,
                     @PublishDate,
@@ -87,7 +87,7 @@ public class ArticleSeeder : IHostedService
                     sql,
                     new
                     {
-                        article.JournalistId,
+                        article.Byline,
                         article.Title,
                         article.Breadtext,
                         article.PublishDate,
@@ -110,7 +110,7 @@ public class ArticleSeeder : IHostedService
         => Task.CompletedTask;
 
     private sealed record SeedArticle(
-        int JournalistId,
+        string Byline,
         string Title,
         string Breadtext,
         DateOnly PublishDate,
@@ -120,7 +120,7 @@ public class ArticleSeeder : IHostedService
     private static readonly SeedArticle[] Articles =
     [
         new(
-            1,
+            "Emma Johnson",
             "Global Climate Summit 2026: Key Takeaways",
             "World leaders gathered to discuss urgent climate actions. Agreements were made to reduce carbon emissions by 50% by 2035.",
             new DateOnly(2026, 9, 10),
@@ -128,7 +128,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            2,
+            "Liam Chen",
             "AI in 2026: The Next Frontier",
             "Artificial intelligence continues to transform industries. Experts predict AI will replace 30% of repetitive jobs within a decade.",
             new DateOnly(2026, 9, 11),
@@ -136,7 +136,7 @@ public class ArticleSeeder : IHostedService
             2),
 
         new(
-            3,
+            "Sophia Garcia",
             "Pandemic Preparedness: Lessons Learned",
             "Countries are investing in healthcare infrastructure to prevent future pandemics. Vaccine development has accelerated.",
             new DateOnly(2026, 9, 12),
@@ -144,7 +144,7 @@ public class ArticleSeeder : IHostedService
             4),
 
         new(
-            4,
+            "Noah Wilson",
             "EU Energy Crisis: Solutions and Challenges",
             "Europe faces an energy crisis as it transitions to renewable sources. Governments are debating nuclear energy as a temporary solution.",
             new DateOnly(2026, 9, 1),
@@ -152,7 +152,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            5,
+            "Olivia Brown",
             "The Rise of Remote Work in Europe",
             "Remote work is becoming the norm in Europe. Companies are adopting hybrid models to attract talent.",
             new DateOnly(2026, 9, 2),
@@ -160,7 +160,7 @@ public class ArticleSeeder : IHostedService
             2),
 
         new(
-            6,
+            "James Lee",
             "Brexit Aftermath: Economic Impact on EU",
             "The UK's exit from the EU continues to shape trade and immigration policies. Businesses adapt to new regulations.",
             new DateOnly(2026, 9, 3),
@@ -168,7 +168,7 @@ public class ArticleSeeder : IHostedService
             1),
 
         new(
-            7,
+            "Ava Martinez",
             "US Election 2026: Early Predictions",
             "Analysts predict a highly polarized election. Key issues include healthcare, immigration, and climate change.",
             new DateOnly(2026, 9, 4),
@@ -176,7 +176,7 @@ public class ArticleSeeder : IHostedService
             1),
 
         new(
-            8,
+            "Ethan Davis",
             "Canada's Wildfire Crisis: A Climate Warning",
             "Wildfires in Canada have destroyed millions of acres. Experts link the fires to rising global temperatures.",
             new DateOnly(2026, 9, 5),
@@ -184,7 +184,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            1,
+            "Emma Johnson",
             "Tech Giants and Antitrust Laws in the US",
             "The US government is tightening regulations on tech monopolies. Lawsuits against major corporations are on the rise.",
             new DateOnly(2026, 9, 6),
@@ -192,7 +192,7 @@ public class ArticleSeeder : IHostedService
             2),
 
         new(
-            2,
+            "Liam Chen",
             "Amazon Rainforest: Deforestation at a Record Low",
             "Brazil reports a 40% reduction in deforestation due to stricter environmental laws and international pressure.",
             new DateOnly(2026, 9, 7),
@@ -200,7 +200,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            3,
+            "Sophia Garcia",
             "Argentina's Economic Recovery: A New Era",
             "Argentina's economy shows signs of recovery after years of inflation. New policies aim to stabilize the currency.",
             new DateOnly(2026, 9, 8),
@@ -208,7 +208,7 @@ public class ArticleSeeder : IHostedService
             1),
 
         new(
-            4,
+            "Noah Wilson",
             "The Cultural Renaissance of Peru",
             "Peru is experiencing a cultural revival, with indigenous traditions gaining global recognition.",
             new DateOnly(2026, 9, 9),
@@ -216,7 +216,7 @@ public class ArticleSeeder : IHostedService
             5),
 
         new(
-            5,
+            "Olivia Brown",
             "Australia's Great Barrier Reef: A Conservation Success",
             "Efforts to restore the Great Barrier Reef are showing positive results. Coral coverage has increased by 20%.",
             new DateOnly(2026, 9, 10),
@@ -224,7 +224,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            6,
+            "James Lee",
             "New Zealand's Tourism Boom Post-Pandemic",
             "New Zealand is seeing a surge in tourism as travelers return. The government promotes sustainable tourism.",
             new DateOnly(2026, 9, 11),
@@ -232,7 +232,7 @@ public class ArticleSeeder : IHostedService
             5),
 
         new(
-            7,
+            "Ava Martinez",
             "The Indigenous Rights Movement in Australia",
             "Indigenous communities in Australia are gaining more recognition and rights. Land acknowledgments are now common.",
             new DateOnly(2026, 9, 12),
@@ -240,7 +240,7 @@ public class ArticleSeeder : IHostedService
             1),
 
         new(
-            8,
+            "Ethan Davis",
             "China's Tech Dominance: A Global Concern",
             "China's advancements in AI and 5G are raising concerns about global tech dominance. Countries debate bans on Chinese tech.",
             new DateOnly(2026, 9, 1),
@@ -248,7 +248,7 @@ public class ArticleSeeder : IHostedService
             2),
 
         new(
-            1,
+            "Emma Johnson",
             "India's Space Mission: A New Milestone",
             "India successfully launched its first manned space mission, marking a significant achievement in space exploration.",
             new DateOnly(2026, 9, 2),
@@ -256,7 +256,7 @@ public class ArticleSeeder : IHostedService
             2),
 
         new(
-            2,
+            "Liam Chen",
             "Japan's Aging Population: Solutions and Innovations",
             "Japan is tackling its aging population with robotics and AI. The government encourages immigration to boost the workforce.",
             new DateOnly(2026, 9, 3),
@@ -264,7 +264,7 @@ public class ArticleSeeder : IHostedService
             4),
 
         new(
-            3,
+            "Sophia Garcia",
             "Africa's Green Energy Revolution",
             "African countries are leading in renewable energy adoption. Solar and wind projects are expanding rapidly.",
             new DateOnly(2026, 9, 4),
@@ -272,7 +272,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            4,
+            "Noah Wilson",
             "South Africa's Economic Reforms: A Path to Growth",
             "South Africa is implementing economic reforms to attract foreign investment and reduce unemployment.",
             new DateOnly(2026, 9, 5),
@@ -280,7 +280,7 @@ public class ArticleSeeder : IHostedService
             1),
 
         new(
-            5,
+            "Olivia Brown",
             "The Rise of Afrofuturism in Pop Culture",
             "Afrofuturism is gaining popularity in music, film, and literature. Artists are reimagining Africa's future.",
             new DateOnly(2026, 9, 6),
@@ -288,7 +288,7 @@ public class ArticleSeeder : IHostedService
             5),
 
         new(
-            6,
+            "James Lee",
             "Antarctica's Melting Ice: A Climate Emergency",
             "Scientists report record ice melt in Antarctica. Rising sea levels threaten coastal cities worldwide.",
             new DateOnly(2026, 9, 7),
@@ -296,7 +296,7 @@ public class ArticleSeeder : IHostedService
             3),
 
         new(
-            7,
+            "Ava Martinez",
             "Research in Antarctica: Discovering New Species",
             "New species of marine life have been discovered in Antarctica's icy waters. Researchers study their adaptations.",
             new DateOnly(2026, 9, 8),
@@ -304,7 +304,7 @@ public class ArticleSeeder : IHostedService
             2),
 
         new(
-            8,
+            "Ethan Davis",
             "The Geopolitics of Antarctica: Who Owns the Ice?",
             "Countries are staking claims in Antarctica for its resources. International treaties aim to prevent conflicts.",
             new DateOnly(2026, 9, 9),

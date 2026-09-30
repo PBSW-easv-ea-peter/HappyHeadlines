@@ -1,0 +1,11 @@
+<a href="@ArticleDisplay.Href(Article)" class="card-link article-card" style="@($"border-top-color:{Sections.ColorOfName(Article.SectionName)};")">
+    <SectionBadge Name="@Article.SectionName" />
+    <MudText Typo="Typo.subtitle1" Class="article-card-title card-link-title">@Article.Title</MudText>
+    <MudText Typo="Typo.body2" Class="muted article-card-excerpt">@ArticleDisplay.Excerpt(Article.BreadText, 110)</MudText>
+    <MudText Typo="Typo.caption" Class="muted">@Article.Byline &middot; @ArticleDisplay.FormatDate(Article)</MudText>
+</a>
+
+@code {
+    [Parameter, EditorRequired]
+    public ArticleDTO Article { get; set; } = default!;
+}

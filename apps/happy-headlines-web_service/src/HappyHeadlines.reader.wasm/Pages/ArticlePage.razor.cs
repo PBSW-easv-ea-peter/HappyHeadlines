@@ -20,8 +20,11 @@ public partial class ArticlePage : ComponentBase
     [SupplyParameterFromQuery(Name = "region")]
     public string? Region { get; set; }
 
+    private const int MoreNewsCount = 4;
+
     private ArticleDTO? _article;
     private List<Comment> _comments = [];
+    private List<ArticleDTO> _moreNews = [];
     private string? _loadedKey;
     private bool _isLoading = true;
 
@@ -46,7 +49,8 @@ public partial class ArticlePage : ComponentBase
 
         var articleTask = ArticleCatalog.GetArticleAsync(Http, Logger, region, Id);
         var commentsTask = CommentCatalog.GetApprovedAsync(Http, Logger, region, Id);
-        await Task.WhenAll(articleTask, commentsTask);
+        var regionTask = ArticleCatalog.GetRegionArticlesAsync(Http, Logger, region);
+        await Task.WhenAll(articleTask, commentsTask, regionTask);
 
         // The reader may have navigated to another article while this was loading.
         if (key != _loadedKey)
@@ -54,6 +58,18 @@ public partial class ArticlePage : ComponentBase
 
         _article = articleTask.Result;
         _comments = commentsTask.Result.OrderBy(c => c.CreatedDate).ToList();
+        _moreNews = PickMoreNews(regionTask.Result, _article);
         _isLoading = false;
     }
+
+    // Same edition, same section first, then the newest of the rest - so the
+    // reader always has something to continue with.
+    private List<ArticleDTO> PickMoreNews(List<ArticleDTO> regionArticles, ArticleDTO? current) =>
+        regionArticles
+            .Where(a => a.Id != Id)
+            .OrderByDescending(a => current is not null
+                && string.Equals(a.SectionName, current.SectionName, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(ArticleDisplay.PublishedAt)
+            .Take(MoreNewsCount)
+            .ToList();
 }

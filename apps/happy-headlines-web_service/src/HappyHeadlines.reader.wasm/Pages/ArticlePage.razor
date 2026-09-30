@@ -38,6 +38,19 @@
                 </div>
             </article>
 
+            @if (_moreNews.Count > 0)
+            {
+                <section class="mt-10">
+                    <MudText Typo="Typo.h6" Class="block-heading">More good news</MudText>
+                    <div class="more-news-grid">
+                        @foreach (var other in _moreNews)
+                        {
+                            <ArticleCard Article="other" />
+                        }
+                    </div>
+                </section>
+            }
+
             <section class="mt-10">
                 <MudText Typo="Typo.h6" Class="block-heading">Comments (@_comments.Count)</MudText>
 

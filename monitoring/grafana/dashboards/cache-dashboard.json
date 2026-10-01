@@ -1,0 +1,142 @@
+{
+  "uid": "cache-hit-ratio",
+  "title": "Cache hit ratio",
+  "tags": ["redis", "cache"],
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Exporter connected to Redis",
+      "description": "redis_up from redis_exporter. Down means the exporter runs but cannot reach its cache.",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "redis_up", "legendFormat": "{{cache}}" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": {
+              "0": { "text": "Down", "color": "red" },
+              "1": { "text": "Up", "color": "green" }
+            } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "value": null, "color": "red" },
+            { "value": 1, "color": "green" }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Hit ratio (last 5m)",
+      "gridPos": { "x": 6, "y": 0, "w": 9, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (cache) (rate(redis_keyspace_hits_total[5m])) / (sum by (cache) (rate(redis_keyspace_hits_total[5m])) + sum by (cache) (rate(redis_keyspace_misses_total[5m])))",
+          "legendFormat": "{{cache}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "value": null, "color": "red" },
+            { "value": 0.5, "color": "orange" },
+            { "value": 0.8, "color": "green" }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "id": 3,
+      "type": "piechart",
+      "title": "Keys per cache",
+      "description": "Placeholder for 'cache status' until the group has defined it.",
+      "gridPos": { "x": 15, "y": 0, "w": 9, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (cache) (redis_db_keys)", "legendFormat": "{{cache}}" }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "pieType": "pie",
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Hit ratio over time",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 10 },
+      "interval": "1m",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (cache) (rate(redis_keyspace_hits_total[$__rate_interval])) / (sum by (cache) (rate(redis_keyspace_hits_total[$__rate_interval])) + sum by (cache) (rate(redis_keyspace_misses_total[$__rate_interval])))",
+          "legendFormat": "{{cache}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "drawStyle": "bars", "fillOpacity": 80, "barAlignment": 0, "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Hits and misses per second",
+      "description": "Raw traffic behind the ratio - a 100% ratio on 1 request means little.",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (cache) (rate(redis_keyspace_hits_total[$__rate_interval]))", "legendFormat": "{{cache}} hits" },
+        { "refId": "B", "expr": "sum by (cache) (rate(redis_keyspace_misses_total[$__rate_interval]))", "legendFormat": "{{cache}} misses" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      }
+    }
+  ]
+}

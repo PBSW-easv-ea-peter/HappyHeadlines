@@ -6,4 +6,6 @@ euSite = deploymentNode "Data Center: EU" {
     !include observabilityVM.dsl
 
     !include editingVM.dsl
+
+    !include clientVM.dsl
 }

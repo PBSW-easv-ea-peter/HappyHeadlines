@@ -4,7 +4,7 @@ group "Article" {
         articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
         articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
         articleShardResolver = component "ArticleShardResolver" "Resolves a location code to the correct shard connection string." "Component"
-        articleQueueConsumer = component "ArticleQueueConsumer" "Will consume ArticleQueue for Create/Update once wired up. Currently idle." "Background Service"
+        articleQueueConsumer = component "ArticleQueueConsumer" "Will consume RabbitMQ for Create/Update once wired up. Currently idle." "Background Service"
         articleObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
         articlesController -> articleReadRepository "Delegates GET requests to"

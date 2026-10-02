@@ -5,7 +5,7 @@ observabilityVM = deploymentNode "Observability VM" "Virtual Machine" "Alpine" {
         // Otel Collector
         deploymentNode "otel-collector" "" "Docker" {
             instances 2
-            otelCollectorInstance-eu = containerInstance otelCollector-eu
+            otelCollectorInstance-eu = containerInstance otelCollector
         }
 
         // Loki

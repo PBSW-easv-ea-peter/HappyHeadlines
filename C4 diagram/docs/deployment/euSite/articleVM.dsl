@@ -54,9 +54,8 @@ articleVM = deploymentNode "Article VM" "Virtual Machine" "Alpine" {
             commentDbInstance = containerInstance commentDb
         }
 
-        // Website
-        deploymentNode "website" "Docker container" {
-            websiteInstance = containerInstance website
-        }
+        !include otelForwarder.dsl
+        // UI - Blazor WASM running in browser (served by webServer)
+        // deploymentNode for webServer would be separate if needed
     }
 }

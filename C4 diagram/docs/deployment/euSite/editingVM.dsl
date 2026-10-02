@@ -25,14 +25,13 @@ editingVM = deploymentNode "Editing VM" "Virtual Machine" "Alpine" {
             publisherServiceInstance = containerInstance publisherService
         }
 
-        // WebApp
-        deploymentNode "webapp" "Docker container" {
-            webappInstance = containerInstance webapp
-        }
+        // UI - Blazor WASM running in browser
+        // (webServer serves the files, but the UI runs in browser and has the relations)
+        // deploymentNode for webServer would be separate if needed
 
         // Quees
-        deploymentNode "Published Articles Exchange" "Message Broker" "RabbitMQ" {
-            publishedArticlesExchange = containerInstance articleQueue
+        deploymentNode "RabbitMQ message broker" "Message Broker" "RabbitMQ" {
+            rabbitmqInstance = containerInstance rabbitmq
         }
 
     }

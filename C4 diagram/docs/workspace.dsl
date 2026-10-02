@@ -7,34 +7,30 @@ workspace "Happy Headlines" "Positive news platform" {
         reader = person "Reader" "Reads articles, comments, and subscribes to newsletters."
         developer = person "Developer" "Builds and operates Happy Headlines; follows logs and traces across services."
 
-
         // Software system
         happyHeadlines = softwareSystem "Happy Headlines" "Positive news platform." {
-            // Applications
 
             // Article
-            !include model/article.dsl
+            !include models/services/article.dsl
 
-            // Webapp and Website are one Blazor app in code (apps/happy-headlines-web_service),
-            // kept as two containers to follow the architecture handout.
-            webapp = container "Webapp" "Editorial application used by publishers. Implemented: draft dashboard, create/edit, submit/approve/reject. Missing: publishing via PublisherService. Shares codebase with Website." "Web Application (Blazor)" "Partial"
-            website = container "Website" "Public website for readers. Implemented: articles per region with comments. Missing: newsletter subscription. Shares codebase with Webapp." "Blazor (wasm) hosted on NGINX" "Partial"
+            // UI and Web Server - Separated to show that the UI in browser has relations, but the web server does not
+            ui = container "UI" "Blazor WASM UI running in browser. Editorial interface for publishers and reading interface for readers." "Blazor WASM" "Partial"
+            webServer = container "Web Server" "Serves Blazor WASM files to browsers." "NGINX" "Partial"
 
             // Draft
-            !include model/draft.dsl
+            !include models/services/draft.dsl
 
             // Comment
-            !include model/comment.dsl
+            !include models/services/comment.dsl
 
             // Profanity
-            !include model/profanity.dsl
+            !include models/services/profanity.dsl
 
             // Observability
-            !include model/observability.dsl
+            !include models/observability.dsl
 
             // Services (not yet implemented)
             publisherService = container "PublisherService" "Publishes approved articles." "Service"
-            articleServiceLB = container "ArticleService Load Balancer" "Docker Swarm's built-in routing mesh distributes requests across the ArticleService replicas. Not a separate container." "Docker Swarm routing mesh"
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
             newsletterService = container "NewsletterService" "Sends newsletters." "Service"
 
@@ -45,17 +41,21 @@ workspace "Happy Headlines" "Positive news platform" {
             subscriberDb = container "SubscriberDatabase" "Stores subscriber information." "Database" "Database"
 
             // Queues
-            articleQueue = container "ArticleQueue" "Queue for newly published articles." "Queue" "Queue"
+            !include models/rabbitmq.dsl
             subscriberQueue = container "SubscriberQueue" "Queue for new newsletter subscriptions." "Queue" "Queue"
         }
 
+        // Relations
+
+        // Article
+        !include relations/article.dsl
 
         // Publisher workflow
-        publisher -> webapp "Creates drafts and publishes articles"
+        publisher -> ui "Creates drafts and publishes articles"
 
         // DraftService component-level relations (imply the container-level relations
-        // Webapp -> DraftService, DraftService -> DraftDatabase/ProfanityService)
-        webapp -> draftsController "Saves and retrieves drafts"
+        // UI -> DraftService, DraftService -> DraftDatabase/ProfanityService)
+        ui -> draftsController "Saves and retrieves drafts"
         draftRepository -> draftDb "Reads and writes drafts in"
         // Known deviation: per the handout, PublisherService owns the profanity check before
         // publishing. Kept here until PublisherService exists (docs/logging.md, open question 8).
@@ -64,19 +64,11 @@ workspace "Happy Headlines" "Positive news platform" {
         draftService -> profanityService "Checks draft text (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
         draftProfanityClient -> profanityService "Checks draft text via HTTP POST /api/profanity/check (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
 
-        webapp -> publisherService "Publishes article"
+        ui -> publisherService "Publishes article"
 
         publisherService -> profanityService "Checks article content"
 
-        publisherService -> articleQueue "Publishes approved article"
-
-        // ArticleService component-level relations (imply the ArticleService container-level
-        // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
-        articleServiceLB -> articlesController "Routes requests to"
-        articleReadRepository -> articleDb "Reads articles from"
-        articleWriteRepository -> articleDb "Writes articles to"
-        articleQueueConsumer -> articleQueue "Subscribes to (idle - not wired up yet)"
-        articleCache -> articleCacheDb "Reads and writes cached articles in" "Redis"
+        publisherService -> publishedArticlesExchange "Publishes approved article"
 
         // ProfanityService component-level relations (imply the ProfanityService
         // container-level relation to ProfanityDatabase, so no separate one here)
@@ -84,14 +76,14 @@ workspace "Happy Headlines" "Positive news platform" {
 
 
         // Reader - articles
-        reader -> website "Reads articles"
-        // website -> articleService "Requests articles"
-        website -> articleServiceLB "Requests articles"
+        reader -> ui "Reads articles"
+        // ui -> articleService "Requests articles"
+        ui -> articleService "Requests articles"
         // articleServiceLB -> articleService is implied by articleServiceLB -> articlesController above
 
         // Reader - comments
-        reader -> website "Posts comments"
-        website -> commentService "Creates and retrieves comments"
+        reader -> ui "Posts comments"
+        ui -> commentService "Creates and retrieves comments"
 
         // CommentService component-level relations (imply the CommentService container-level
         // relations to ProfanityService/CommentDatabase, so no separate container-level ones here)
@@ -101,20 +93,15 @@ workspace "Happy Headlines" "Positive news platform" {
 
 
         // Reader - newsletter subscription
-        reader -> website "Subscribes to newsletter"
-        website -> subscriberService "Registers subscriber"
+        reader -> ui "Subscribes to newsletter"
+        ui -> subscriberService "Registers subscriber"
 
         subscriberService -> subscriberDb "Reads and writes subscriber data"
         subscriberService -> subscriberQueue "Queues new subscribers"
 
 
         // Newsletter
-        // newsletterService -> articleService "Retrieves articles"
-        newsletterService -> articleServiceLB "Retrieves articles"
-        newsletterService -> subscriberService "Retrieves subscribers"
-        newsletterService -> subscriberQueue "Consumes new subscribers"
-        newsletterService -> reader "Sends daily newsletter"
-
+        !include relations/newsletter.dsl
 
         // Suggested UserService
         //articleService -> userService "Looks up journalists (suggested)"
@@ -123,101 +110,55 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // Observability (week 38). Component-level relations imply the container-level
         // DraftService/CommentService/ProfanityService -> OTel Collector relations.
-        draftObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
-        commentObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
-        articleObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
-        profanityObservability -> otelCollector-eu "Exports logs and traces via" "OTLP/HTTP"
+        draftObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        commentObservability -> otelForwarder "Exports logs and traces via" "OTLP/HTTP"
+        otelForwarder -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
 
-        otelCollector-eu -> loki "Forwards logs to" "OTLP/HTTP"
-        otelCollector-eu -> tempo "Forwards traces to" "OTLP/gRPC"
-        grafana -> loki "Queries logs from"
-        grafana -> tempo "Queries traces from"
-        developer -> grafana "Searches logs and follows traces in"
+        profanityObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+
+        // Observability
+        !include relations/observability.dsl
 
         // Shared deployment variables
         //routingMesh = infrastructureNode "Swarm routing mesh" "Built-in ingress load balancing across service replicas"
 
         // Deployments: Production
-        !include deployment/production.dsl
+        deploymentEnvironment "Production" {
+            !include deployment/euSite/eu.dsl
+        }
     }
 
     views {
 
-        // C4 Level 1 - System Context
+        // Level 1 - System Context
         systemContext happyHeadlines "SystemContext" {
             include *
             autolayout lr
         }
 
-
-        // C4 Level 2 - Container diagram
+        // Level 2 - Container diagram
         container happyHeadlines "Containers" {
             include *
             autolayout lr
         }
 
-        // C4 Level 2 - Observability only (week 38), so it does not drown in "Containers"
+        // Observability
         container happyHeadlines "Observability" {
-            include draftService commentService profanityService otelCollector-eu loki tempo grafana developer
+            include draftService commentService profanityService otelCollector loki tempo grafana developer
             autolayout lr
         }
 
-        // C4 Level 3 - Component diagram
-        component articleService "ArticleServiceComponents" {
-            include *
-            autolayout lr
-        }
+        // Level 3 - Component
+        !include views/level_3.dsl
 
-        component commentService "CommentServiceComponents" {
-            include *
-            autolayout lr
-        }
+        // Level 4 - Code
 
-        component profanityService "ProfanityServiceComponents" {
-            include *
-            autolayout lr
-        }
+        // Level 5 - Deployment diagram
+        !include views/level_5.dsl
 
-        component draftService "DraftServiceComponents" {
-            include *
-            autolayout lr
-        }
+        // Styles
+        !include styles.dsl
 
-        // C4 Level 5 - Deployment diagram
-        deployment happyHeadlines "Production" "ArticleServiceDeployment" {
-            include euSite
-            autolayout tb
-        }
-
- //       deployment happyHeadlines "Production" "ArticleDatabaseDeployment" {
- //           include articleServiceInstance articleQueueInstance africaDb asiaDb europeDb northAmericaDb southAmericaDb australiaDb antarcticaDb globalDb
- //           autolayout lr
- //       }
-
-        styles {
-            element "Implemented" {
-                background "#1BA86B"
-                color "#ffffff"
-            }
-            element "Database" {
-                shape Cylinder
-            }
-            element "Queue" {
-                shape Pipe
-            }
-            element "Suggested" {
-                background "#9E9E9E"
-                color "#ffffff"
-                border dashed
-            }
-            element "Partial" {
-                background "#F2B705"
-                color "#000000"
-            }
-            relationship "Deviation" {
-                color "#E8710A"
-                dashed true
-            }
-        }
+        theme default
     }
 }

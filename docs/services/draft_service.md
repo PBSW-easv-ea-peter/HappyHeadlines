@@ -29,7 +29,7 @@ Base-URL (lokalt): `http://localhost:8083`
 | REST | GET    | /api/drafts/filled-in-draft/{id}          | Draft i format til PublishService (byline, sektionsnavn, status). 422 ved ukendt sektion |
 | REST | POST   | /api/drafts                               | Opret draft |
 | REST | PUT    | /api/drafts/{id}                          | Redigér indhold (kun WorkInProgress) |
-| REST | POST   | /api/drafts/{id}/submit-for-approval      | WorkInProgress → PendingApproval (+ profanity-tjek) |
+| REST | POST   | /api/drafts/{id}/submit-for-approval      | WorkInProgress → PendingApproval (+ profanity-tjek). Svarer ProfanityService ikke, sættes `profanityCheckSkipped`, og editoren får en advarsel i stedet for "no issues found" |
 | REST | POST   | /api/drafts/{id}/approve                  | PendingApproval → Approved |
 | REST | POST   | /api/drafts/{id}/reject                   | PendingApproval → WorkInProgress |
 | REST | POST   | /api/drafts/{id}/publish                  | Approved → Published |

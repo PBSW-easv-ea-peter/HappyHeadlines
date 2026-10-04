@@ -23,6 +23,9 @@ public class Draft
     public long? ApprovedByJournalistId { get; set; }
     public DateTimeOffset? ApprovedDate { get; set; }
     public string[] FlaggedWords { get; set; } = [];
+
+    // ProfanityService couldn't be asked at submit time - an empty FlaggedWords is then unchecked, not clean.
+    public bool ProfanityCheckSkipped { get; set; }
     public DraftStatus Status { get; set; }
     public string? ReviewNote { get; set; }
     public List<Journalist> CreditedJournalists { get; set; } = [];

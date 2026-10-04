@@ -144,7 +144,7 @@ public class DraftHandlerTests
         _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, DraftStatus.WorkInProgress, "A perfectly clean sentence."));
         _profanityClient.Setup(c => c.CheckAsync("A perfectly clean sentence.", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: false));
-        _repository.Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.Count == 0)))
+        _repository.Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.Count == 0), false))
             .ReturnsAsync(MakeDraft(DraftId, DraftStatus.PendingApproval));
 
         var result = await _handler.SubmitForApprovalAsync(DraftId);
@@ -159,31 +159,35 @@ public class DraftHandlerTests
         _profanityClient.Setup(c => c.CheckAsync("You are stupid.", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["stupid"], Unavailable: false));
         _repository
-            .Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" }))))
+            .Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" })), false))
             .ReturnsAsync(MakeDraft(DraftId, DraftStatus.PendingApproval));
 
         var result = await _handler.SubmitForApprovalAsync(DraftId);
 
         Assert.Equal(DraftActionOutcome.Success, result.Outcome);
         _repository.Verify(
-            r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" }))),
+            r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" })), false),
             Times.Once);
     }
 
     [Fact]
-    public async Task SubmitForApprovalAsync_ProfanityServiceUnavailable_StillSubmitsWithNoFlaggedWords()
+    public async Task SubmitForApprovalAsync_ProfanityServiceUnavailable_StillSubmitsMarkedAsNotChecked()
     {
         // Fault isolation: ProfanityService being unreachable must not block the author
         // from submitting - see the same principle in CommentHandler.
         _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, DraftStatus.WorkInProgress));
         _profanityClient.Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: true));
-        _repository.Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.Count == 0)))
+        _repository.Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.Count == 0), true))
             .ReturnsAsync(MakeDraft(DraftId, DraftStatus.PendingApproval));
 
         var result = await _handler.SubmitForApprovalAsync(DraftId);
 
         Assert.Equal(DraftActionOutcome.Success, result.Outcome);
+        // Marked as not checked, so the editor isn't told "no issues found".
+        _repository.Verify(
+            r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.IsAny<IReadOnlyList<string>>(), true),
+            Times.Once);
     }
 
     [Fact]

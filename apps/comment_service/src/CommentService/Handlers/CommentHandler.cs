@@ -39,10 +39,10 @@ public class CommentHandler : ICommentHandler
     {
         var result = await _profanityClient.CheckAsync(text, cancellationToken);
 
-        if (result.CircuitOpen)
+        if (result.Unavailable)
         {
-            // Fault isolation in practice: ProfanityService is unavailable and the
-            // circuit breaker has tripped. CommentService itself stays up and keeps
+            // Fault isolation in practice: ProfanityService gave no answer (circuit open,
+            // unreachable, timed out or erroring). CommentService itself stays up and keeps
             // accepting comments (design to be disabled + isolate faults) instead of
             // failing the whole request - it just cannot vouch for this one yet.
             _logger.LogWarning("ProfanityService unavailable - comment queued for review instead of being rejected outright.");

@@ -1,5 +1,3 @@
-using Polly;
-using Polly.Registry;
 using Polly.CircuitBreaker;
 
 namespace CommentService.Profanity;
@@ -8,23 +6,17 @@ public class ProfanityClient : IProfanityClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<ProfanityClient> _logger;
-//    private readonly ResiliencePipeline _pipeline;
 
-    public ProfanityClient(
-            HttpClient httpClient,
-            ILogger<ProfanityClient> logger)
-//            ResiliencePipelineProvider<string> pipelineProvider)
+    public ProfanityClient(HttpClient httpClient, ILogger<ProfanityClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
-//        _pipeline = pipelineProvider.GetPipeline("ProfanityService");
     }
 
+    // Fails closed: anything other than a successful answer from ProfanityService is
+    // reported as Unavailable, never as "no banned words".
     public async Task<ProfanityCheckResult> CheckAsync(string text, CancellationToken cancellationToken = default)
     {
-        List<string> bannedWords = [];
-        bool circuitIsOpen = false;
-
         try
         {
             var response = await _httpClient.PostAsJsonAsync(
@@ -32,37 +24,30 @@ public class ProfanityClient : IProfanityClient
                     new { Text = text },
                     cancellationToken);
             response.EnsureSuccessStatusCode();
-            bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken)
-                ?? [];
-//            bannedWords = await _pipeline.ExecuteAsync(async ct =>
-//            {
-//                var response = await _httpClient.PostAsJsonAsync("api/profanity/check", new { Text = text }, ct);
-//                response.EnsureSuccessStatusCode();
-//                return await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: ct)
-//                    ?? [];
-//            }, cancellationToken);
+
+            var bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken);
+            if (bannedWords is null)
+            {
+                _logger.LogWarning("ProfanityService returned an empty response - treating the text as not checked");
+                return ProfanityCheckResult.NotChecked;
+            }
+
+            // Only the count - the banned words themselves must not be logged (docs/logging.md).
+            _logger.LogInformation("Profanity check finished with {BannedWordCount} banned words", bannedWords.Count);
+            return new ProfanityCheckResult(bannedWords, Unavailable: false);
         }
         catch (BrokenCircuitException)
         {
             _logger.LogWarning("ProfanityService circuit is open - skipping profanity check");
-            circuitIsOpen = true;
+            return ProfanityCheckResult.NotChecked;
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogWarning("ProfanityService got a HttpRequestException");
+            // Unreachable, timed out (TaskCanceledException from HttpClient.Timeout), error
+            // status or unreadable body. Exception type only - the message can contain URLs.
+            _logger.LogWarning("ProfanityService call failed ({ExceptionType}) - treating the text as not checked",
+                ex.GetType().Name);
+            return ProfanityCheckResult.NotChecked;
         }
-        catch (TaskCanceledException)
-        {
-            _logger.LogWarning("TaskCanceledException was throw.");
-        }
-        finally
-        {
-            // Only the count - the banned words themselves must not be logged (docs/logging.md).
-            _logger.LogInformation(
-                "Profanity check finished with {BannedWordCount} banned words",
-                bannedWords.Count);
-        }
-
-        return new ProfanityCheckResult(bannedWords, circuitIsOpen);
     }
 }

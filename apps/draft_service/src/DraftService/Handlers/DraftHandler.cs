@@ -107,12 +107,12 @@ public class DraftHandler : IDraftHandler
         // Fault isolation, same principle as CommentService: if ProfanityService can't be
         // reached, submission still succeeds - the editor just won't get a pre-flagged word
         // list for this pass and has to read the draft themselves.
-        if (profanityResult.CircuitOpen)
+        if (profanityResult.Unavailable)
         {
             _logger.LogWarning("ProfanityService unavailable - submitting draft {DraftId} without flagged words.", id);
         }
 
-        var flaggedWords = profanityResult.CircuitOpen
+        var flaggedWords = profanityResult.Unavailable
             ? Array.Empty<string>()
             : profanityResult.BannedWords.ToArray();
 

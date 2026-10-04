@@ -121,7 +121,7 @@ public class DraftHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, DraftStatus.WorkInProgress, "A perfectly clean sentence."));
         _profanityClient.Setup(c => c.CheckAsync("A perfectly clean sentence.", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: false));
         _repository.Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.Count == 0)))
             .ReturnsAsync(MakeDraft(DraftId, DraftStatus.PendingApproval));
 
@@ -135,7 +135,7 @@ public class DraftHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, DraftStatus.WorkInProgress, "You are stupid."));
         _profanityClient.Setup(c => c.CheckAsync("You are stupid.", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["stupid"], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["stupid"], Unavailable: false));
         _repository
             .Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" }))))
             .ReturnsAsync(MakeDraft(DraftId, DraftStatus.PendingApproval));
@@ -149,13 +149,13 @@ public class DraftHandlerTests
     }
 
     [Fact]
-    public async Task SubmitForApprovalAsync_ProfanityServiceCircuitOpen_StillSubmitsWithNoFlaggedWords()
+    public async Task SubmitForApprovalAsync_ProfanityServiceUnavailable_StillSubmitsWithNoFlaggedWords()
     {
         // Fault isolation: ProfanityService being unreachable must not block the author
         // from submitting - see the same principle in CommentHandler.
         _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, DraftStatus.WorkInProgress));
         _profanityClient.Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], CircuitOpen: true));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: true));
         _repository.Setup(r => r.SubmitForApprovalAsync(DraftId, DraftStatus.WorkInProgress, It.Is<IReadOnlyList<string>>(w => w.Count == 0)))
             .ReturnsAsync(MakeDraft(DraftId, DraftStatus.PendingApproval));
 

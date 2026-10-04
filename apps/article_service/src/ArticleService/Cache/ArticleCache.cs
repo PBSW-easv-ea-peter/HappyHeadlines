@@ -13,8 +13,10 @@ public class ArticleCache : IArticleCache
 
     private const string ArticlesKeyPrefix = "articles:";
     private const string ArticleKeyPrefix = "article:";
+    // Only articles published within this window are cached (the assignment's "latest 14 days").
+    private static readonly TimeSpan CacheWindow = TimeSpan.FromDays(14);
     private static readonly TimeSpan CacheDuration = TimeSpan.FromDays(14);
-    
+
     public ArticleCache(
         IConnectionMultiplexer redis,
         IArticleReadRepository readRepository,
@@ -75,7 +77,8 @@ public class ArticleCache : IArticleCache
         {
             try
             {
-                IList<Article> articles = [.. await _readRepository.GetAllAsync(location)];
+                DateTimeOffset since = DateTimeOffset.UtcNow - CacheWindow;
+                IList<Article> articles = [.. await _readRepository.GetPublishedSinceAsync(location, since)];
                 
                 IDatabase db = _redis.GetDatabase();
                 string articlesKey = $"{ArticlesKeyPrefix}{location}";

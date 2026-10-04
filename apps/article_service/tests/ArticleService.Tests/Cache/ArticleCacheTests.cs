@@ -14,13 +14,14 @@ namespace ArticleService.Tests.Cache;
 public class ArticleCacheTests
 {
     private readonly Mock<IDatabase> _db = new();
+    private readonly Mock<IArticleReadRepository> _readRepository = new();
     private readonly ArticleCache _cache;
 
     public ArticleCacheTests()
     {
         var redis = new Mock<IConnectionMultiplexer>();
         redis.Setup(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(_db.Object);
-        _cache = new ArticleCache(redis.Object, Mock.Of<IArticleReadRepository>(), Mock.Of<ILogger<ArticleCache>>());
+        _cache = new ArticleCache(redis.Object, _readRepository.Object, Mock.Of<ILogger<ArticleCache>>());
     }
 
     private void RedisThrows(Exception ex) =>
@@ -63,5 +64,25 @@ public class ArticleCacheTests
         var articles = await _cache.GetArticlesAsync("GO");
 
         Assert.Equal("Cached story", Assert.Single(articles).Title);
+    }
+
+    [Fact]
+    public async Task RefreshCacheAsync_FillsCacheWithArticlesFromTheLatest14Days()
+    {
+        DateTimeOffset? since = null;
+        _readRepository
+            .Setup(r => r.GetPublishedSinceAsync("GO", It.IsAny<DateTimeOffset>()))
+            .Callback<string, DateTimeOffset>((_, s) => since = s)
+            .ReturnsAsync([new Article { Title = "Recent story" }]);
+
+        await _cache.RefreshCacheAsync("GO");
+
+        Assert.NotNull(since);
+        Assert.InRange(since.Value, DateTimeOffset.UtcNow.AddDays(-14).AddMinutes(-1), DateTimeOffset.UtcNow.AddDays(-14));
+        _readRepository.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Never);
+        // Checked via Invocations so the test doesn't depend on which StringSetAsync overload is used.
+        var listWrite = Assert.Single(_db.Invocations, i =>
+            i.Method.Name == nameof(IDatabase.StringSetAsync) && (RedisKey)i.Arguments[0] == "articles:GO");
+        Assert.Contains("Recent story", ((RedisValue)listWrite.Arguments[1]).ToString());
     }
 }

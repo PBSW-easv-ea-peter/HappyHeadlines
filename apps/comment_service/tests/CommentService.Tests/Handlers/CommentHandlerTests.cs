@@ -151,7 +151,7 @@ public class CommentHandlerTests
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: false));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "This is a nice comment" };
 
@@ -163,11 +163,11 @@ public class CommentHandlerTests
     [Theory]
     [InlineData(false, "idiot")] // rejected
     [InlineData(true)]           // pending profanity check
-    public async Task PostAsync_NotApproved_IsNotCached(bool circuitOpen, params string[] bannedWords)
+    public async Task PostAsync_NotApproved_IsNotCached(bool unavailable, params string[] bannedWords)
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: bannedWords, CircuitOpen: circuitOpen));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: bannedWords, Unavailable: unavailable));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "You are an idiot" };
 

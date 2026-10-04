@@ -1,0 +1,116 @@
+
+volumes:
+  article-db-eu:
+  article-db-global:
+  article-db-af:
+  article-db-as:
+
+secrets:
+  pg_password:
+    external: true
+
+configs:
+  article_appsettings:
+    external: true
+
+networks:
+  happy-headlines:
+    external: true
+
+  traefik-public: # For article-service
+    external: true
+
+# ──────────────────────────────────────────────────────────────────────────────
+#         Article database configuration
+# ──────────────────────────────────────────────────────────────────────────────
+x-article-db-common: &article-db-common
+  image: postgres:18-trixie
+
+  environment:
+    POSTGRES_DB: articles
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+
+  secrets:
+    - pg_password
+
+  deploy:
+    replicas: 1
+    endpoint_mode: dnsrr
+    placement:
+      constraints:
+        - node.labels.pg == true
+
+  networks:
+    - happy-headlines
+
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U postgres -d articles"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+
+# ──────────────────────────────────────────────────────────────────────────────
+#         Services
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  article-service:
+    image: article_service:1.0.0
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+    configs:
+      - source: article_appsettings
+        target: /app/appsettings.Production.json
+
+    networks:
+      - happy-headlines
+      - traefik-public
+
+    deploy:
+      replicas: 3
+      endpoint_mode: dnsrr
+
+      labels:
+        # Expose the service through traefik.
+        - "traefik.enable=true"
+
+        # Tell Traefik what requests should be routed to article-service.
+        - "traefik.http.routers.article-service.rule=PathPrefix(`/api/articles/`)"
+
+        # What port is exposed on Treafik for article-service.
+        - "traefik.http.routers.article-service.entrypoints=web"
+
+        # What port should Traefik send requests too.
+        - "traefik.http.services.article-service.loadbalancer.server.port=8080"
+
+        # Tell Traefik what network to use since article_service is attached to happy-headlines.
+        - "traefik.docker.network=traefik-public"
+
+# ──────────────────────────────────────────────────────────────────────────────
+#         Databases
+# ──────────────────────────────────────────────────────────────────────────────
+
+  db-eu:
+    <<: *article-db-common
+    volumes:
+      - article-db-eu:/var/lib/postgresql/18/docker
+
+  db-global:
+    <<: *article-db-common
+    volumes:
+      - article-db-global:/var/lib/postgresql/18/docker
+
+  db-af:
+    <<: *article-db-common
+    volumes:
+      - article-db-af:/var/lib/postgresql/18/docker
+
+  db-as:
+    <<: *article-db-common
+    volumes:
+      - article-db-as:/var/lib/postgresql/18/docker
+

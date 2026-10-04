@@ -1,0 +1,5 @@
+// Happy Headlines
+docker network create --driver overlay --attachable happy-headlines
+
+// Traefik Public
+docker network create --driver overlay --attachable traefik-public

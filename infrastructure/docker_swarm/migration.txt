@@ -1,0 +1,12 @@
+
+// Rember to change host
+docker run --rm -it \
+  --network happy-headlines \
+  -v "$(pwd)/migrations/article:/flyway/sql:ro" \
+  -e FLYWAY_URL="jdbc:postgresql://article-stack_db-global:5432/articles" \
+  -e FLYWAY_USER="postgres" \
+  -e FLYWAY_PASSWORD="easv2026" \
+  -e FLYWAY_LOCATIONS="filesystem:/flyway/sql" \
+  -e FLYWAY_CONNECT_RETRIES="10" \
+  flyway/flyway:10-alpine \
+  migrate

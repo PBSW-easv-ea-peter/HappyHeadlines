@@ -1,14 +1,13 @@
 using HappyHeadlinesPages.web;
 using HappyHeadlinesPages.web.Models;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
 
 namespace HappyHeadlines.reader.wasm.Pages;
 
 public partial class ArticlePage : ComponentBase
 {
     [Inject]
-    private HttpClient Http { get; set; } = default!;
+    private IHttpClientFactory HttpClientFactory { get; set; } = default!;
 
     [Inject]
     private ILogger<ArticlePage> Logger { get; set; } = default!;
@@ -47,9 +46,9 @@ public partial class ArticlePage : ComponentBase
         _loadedKey = key;
         _isLoading = true;
 
-        var articleTask = ArticleCatalog.GetArticleAsync(Http, Logger, region, Id);
-        var commentsTask = CommentCatalog.GetApprovedAsync(Http, Logger, region, Id);
-        var regionTask = ArticleCatalog.GetRegionArticlesAsync(Http, Logger, region);
+        var articleTask = ArticleCatalog.GetArticleAsync(HttpClientFactory, Logger, region, Id);
+        var commentsTask = CommentCatalog.GetApprovedAsync(HttpClientFactory, Logger, region, Id);
+        var regionTask = ArticleCatalog.GetRegionArticlesAsync(HttpClientFactory, Logger, region);
         await Task.WhenAll(articleTask, commentsTask, regionTask);
 
         // The reader may have navigated to another article while this was loading.

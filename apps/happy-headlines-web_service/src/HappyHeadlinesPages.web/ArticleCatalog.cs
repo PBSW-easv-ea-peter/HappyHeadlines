@@ -14,21 +14,22 @@ public static class ArticleCatalog
         "eu", "na", "sa", "as", "af", "au", "an", "go"
     ];
 
-    public static async Task<List<ArticleDTO>> GetAllArticlesAsync(HttpClient http, ILogger logger)
+    public static async Task<List<ArticleDTO>> GetAllArticlesAsync(IHttpClientFactory httpClientFactory, ILogger logger)
     {
-        var regionResults = await Task.WhenAll(Regions.Select(region => GetRegionArticlesAsync(http, logger, region)));
+        var regionResults = await Task.WhenAll(Regions.Select(region => GetRegionArticlesAsync(httpClientFactory, logger, region)));
 
         return regionResults.SelectMany(articles => articles).ToList();
     }
 
-    public static async Task<List<ArticleDTO>> GetRegionArticlesAsync(HttpClient http, ILogger logger, string region)
+    public static async Task<List<ArticleDTO>> GetRegionArticlesAsync(IHttpClientFactory httpClientFactory, ILogger logger, string region)
     {
         var regionCode = region.ToUpper();
 
         try
         {
-            var articles = await http.GetFromJsonAsync<List<ArticleDTO>>(
-                $"http://localhost:8080/api/articles/{regionCode}");
+            var client = httpClientFactory.CreateClient("ArticleService");
+            var articles = await client.GetFromJsonAsync<List<ArticleDTO>>(
+                $"/api/articles/{regionCode}");
 
             return articles ?? [];
         }
@@ -41,14 +42,15 @@ public static class ArticleCatalog
 
     // Ids are only unique within a shard, so the region is part of the key.
     // Returns null both for a 404 and for a failed call - callers show "not found".
-    public static async Task<ArticleDTO?> GetArticleAsync(HttpClient http, ILogger logger, string region, Guid id)
+    public static async Task<ArticleDTO?> GetArticleAsync(IHttpClientFactory httpClientFactory, ILogger logger, string region, Guid id)
     {
         var regionCode = region.ToUpper();
 
         try
         {
-            return await http.GetFromJsonAsync<ArticleDTO>(
-                $"http://localhost:8080/api/articles/{regionCode}/{id}");
+            var client = httpClientFactory.CreateClient("ArticleService");
+            return await client.GetFromJsonAsync<ArticleDTO>(
+                $"/api/articles/{regionCode}/{id}");
         }
         catch (Exception ex)
         {

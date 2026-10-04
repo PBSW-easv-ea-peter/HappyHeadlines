@@ -8,7 +8,7 @@ namespace HappyHeadlinesPages.web.Pages.Drafts;
 
 public partial class NewDraft : ComponentBase
 {
-    private const string DraftServiceBaseUrl = "http://localhost:8083";
+
 
     private string title = string.Empty;
     private string breadtext = string.Empty;
@@ -41,8 +41,9 @@ public partial class NewDraft : ComponentBase
 
         try
         {
-            var response = await Http.PostAsJsonAsync(
-                $"{DraftServiceBaseUrl}/api/drafts",
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PostAsJsonAsync(
+                "/api/drafts",
                 new CreateDraftRequest
                 {
                     JournalistId = JournalistState.JournalistId,

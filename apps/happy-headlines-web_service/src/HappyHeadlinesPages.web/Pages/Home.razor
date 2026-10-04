@@ -1,10 +1,8 @@
 @page "/"
 
 @using HappyHeadlinesPages.web.Models
-@using HappyHeadlinesPages.web.Layout
-@using System.Net.Http.Json
 @using Microsoft.Extensions.Logging
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
 @inject ILogger<Home> Logger
 @inject CurrentJournalistState JournalistState

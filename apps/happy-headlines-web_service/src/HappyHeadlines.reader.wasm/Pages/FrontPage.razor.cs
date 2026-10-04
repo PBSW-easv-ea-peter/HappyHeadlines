@@ -11,7 +11,7 @@ public partial class FrontPage : ComponentBase
     private const int SectionCardCount = 3;
 
     [Inject]
-    private HttpClient Http { get; set; } = default!;
+    private IHttpClientFactory HttpClientFactory { get; set; } = default!;
 
     [Inject]
     private ILogger<FrontPage> Logger { get; set; } = default!;
@@ -55,7 +55,7 @@ public partial class FrontPage : ComponentBase
         _loadedRegion = region;
         _isLoading = true;
 
-        var articles = await ArticleCatalog.GetRegionArticlesAsync(Http, Logger, region);
+        var articles = await ArticleCatalog.GetRegionArticlesAsync(HttpClientFactory, Logger, region);
 
         // The reader may have switched edition again while this was loading.
         if (region != _loadedRegion)

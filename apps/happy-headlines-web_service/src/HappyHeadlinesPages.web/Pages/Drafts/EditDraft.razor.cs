@@ -9,8 +9,7 @@ namespace HappyHeadlinesPages.web.Pages.Drafts;
 
 public partial class EditDraft : ComponentBase
 {
-    private const string DraftServiceBaseUrl = "http://localhost:8083";
-    private const string PublishServiceBaseUrl = "http://localhost:8084";
+
 
     [Parameter]
     public Guid Id { get; set; }
@@ -62,7 +61,8 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            _draft = await Http.GetFromJsonAsync<Draft>($"{DraftServiceBaseUrl}/api/drafts/{Id}");
+            var client = HttpClientFactory.CreateClient("DraftService");
+            _draft = await client.GetFromJsonAsync<Draft>($"/api/drafts/{Id}");
 
             if (_draft is not null)
             {
@@ -89,8 +89,9 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            var response = await Http.PutAsJsonAsync(
-                $"{DraftServiceBaseUrl}/api/drafts/{Id}",
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PutAsJsonAsync(
+                $"/api/drafts/{Id}",
                 new EditDraftRequest
                 {
                     JournalistId = JournalistState.JournalistId,
@@ -133,7 +134,8 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            var response = await Http.PostAsync($"{DraftServiceBaseUrl}/api/drafts/{Id}/submit-for-approval", null);
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PostAsync($"/api/drafts/{Id}/submit-for-approval", null);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -161,8 +163,9 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            var response = await Http.PostAsJsonAsync(
-                $"{DraftServiceBaseUrl}/api/drafts/{Id}/approve",
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PostAsJsonAsync(
+                $"/api/drafts/{Id}/approve",
                 new ApproveDraftRequest { JournalistId = JournalistState.JournalistId, Note = reviewNote });
 
             if (!response.IsSuccessStatusCode)
@@ -191,8 +194,9 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            var response = await Http.PostAsJsonAsync(
-                $"{DraftServiceBaseUrl}/api/drafts/{Id}/reject",
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PostAsJsonAsync(
+                $"/api/drafts/{Id}/reject",
                 new RejectDraftRequest { Note = reviewNote });
 
             if (!response.IsSuccessStatusCode)
@@ -223,7 +227,8 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            var response = await Http.PostAsync($"{PublishServiceBaseUrl}/api/v1/publish-draft/{Id}", null);
+            var client = HttpClientFactory.CreateClient("PublishService");
+            var response = await client.PostAsync($"/api/v1/publish-draft/{Id}", null);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -270,7 +275,8 @@ public partial class EditDraft : ComponentBase
 
         try
         {
-            var response = await Http.PostAsync($"{DraftServiceBaseUrl}/api/drafts/{Id}/reactivate", null);
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PostAsync($"/api/drafts/{Id}/reactivate", null);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -24,18 +24,17 @@ public static class CommentCatalog
     public const int MaxAuthorNameLength = 25;
     public const int MaxTextLength = 500;
 
-    private const string CommentServiceBaseUrl = "http://localhost:8082";
-
     // CommentService only returns approved comments from this endpoint, so the
     // result is safe to show to readers as-is.
-    public static async Task<List<Comment>> GetApprovedAsync(HttpClient http, ILogger logger, string region, Guid articleId)
+    public static async Task<List<Comment>> GetApprovedAsync(IHttpClientFactory httpClientFactory, ILogger logger, string region, Guid articleId)
     {
+        var client = httpClientFactory.CreateClient("CommentService");
         var regionCode = region.ToUpper();
 
         try
         {
-            var comments = await http.GetFromJsonAsync<List<Comment>>(
-                $"{CommentServiceBaseUrl}/api/comments/{regionCode}/{articleId}");
+            var comments = await client.GetFromJsonAsync<List<Comment>>(
+                $"/api/comments/{regionCode}/{articleId}");
 
             return comments ?? [];
         }
@@ -49,14 +48,15 @@ public static class CommentCatalog
     // The profanity check runs synchronously inside the POST, so the outcome is
     // known as soon as the call returns (see docs/comment_and_profanity_service.md).
     public static async Task<CommentPostResult> PostAsync(
-        HttpClient http, ILogger logger, string region, Guid articleId, string authorName, string text)
+        IHttpClientFactory httpClientFactory, ILogger logger, string region, Guid articleId, string authorName, string text)
     {
+        var client = httpClientFactory.CreateClient("CommentService");
         var regionCode = region.ToUpper();
 
         try
         {
-            var response = await http.PostAsJsonAsync(
-                $"{CommentServiceBaseUrl}/api/comments/{regionCode}/{articleId}",
+            var response = await client.PostAsJsonAsync(
+                $"/api/comments/{regionCode}/{articleId}",
                 new { AuthorName = authorName, Text = text });
 
             if (response.StatusCode == HttpStatusCode.UnprocessableEntity)

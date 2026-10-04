@@ -39,7 +39,7 @@ public partial class Home : ComponentBase
 
         isLoading = true;
 
-        var articles = await ArticleCatalog.GetAllArticlesAsync(Http, Logger);
+        var articles = await ArticleCatalog.GetAllArticlesAsync(HttpClientFactory, Logger);
 
         _recentArticles = articles
             .OrderByDescending(a => a.CreatedDate)

@@ -5,7 +5,7 @@
 @using HappyHeadlinesPages.web.Layout
 @using System.Net.Http.Json
 @using Microsoft.Extensions.Logging
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject ILogger<Drafts> Logger
 @inject CurrentJournalistState JournalistState
 @implements IDisposable

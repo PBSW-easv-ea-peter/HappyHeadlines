@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 namespace HappyHeadlinesPages.web;
 
 // The journalist app (backstage) and the reader site are separate WASM apps on
@@ -5,6 +7,13 @@ namespace HappyHeadlinesPages.web;
 // localhost convention as the service base URLs.
 public static class SiteUrls
 {
-    public const string Backstage = "http://localhost:8000";
-    public const string ReaderSite = "http://localhost:8001";
+    private static IConfiguration? _configuration;
+
+    public static void Initialize(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public static string Backstage => _configuration?["SiteUrls:Backstage"] ?? "http://localhost:8000";
+    public static string ReaderSite => _configuration?["SiteUrls:ReaderSite"] ?? "http://localhost:8001";
 }

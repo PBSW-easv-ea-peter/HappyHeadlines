@@ -7,7 +7,7 @@ namespace HappyHeadlinesPages.web.Pages.Drafts;
 
 public partial class Drafts : ComponentBase
 {
-    private const string DraftServiceBaseUrl = "http://localhost:8083";
+
 
     private List<Draft> _allDrafts = [];
     private List<ArticleDTO> _allArticles = [];
@@ -73,7 +73,8 @@ public partial class Drafts : ComponentBase
 
         try
         {
-            var drafts = await Http.GetFromJsonAsync<List<Draft>>($"{DraftServiceBaseUrl}/api/drafts");
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var drafts = await client.GetFromJsonAsync<List<Draft>>("/api/drafts");
             _allDrafts = drafts ?? [];
         }
         catch (Exception ex)
@@ -87,14 +88,15 @@ public partial class Drafts : ComponentBase
 
     private async Task LoadArticlesAsync()
     {
-        _allArticles = await ArticleCatalog.GetAllArticlesAsync(Http, Logger);
+        _allArticles = await ArticleCatalog.GetAllArticlesAsync(HttpClientFactory, Logger);
     }
 
     private async Task ReactivateAsync(Guid draftId)
     {
         try
         {
-            var response = await Http.PostAsync($"{DraftServiceBaseUrl}/api/drafts/{draftId}/reactivate", null);
+            var client = HttpClientFactory.CreateClient("DraftService");
+            var response = await client.PostAsync($"/api/drafts/{draftId}/reactivate", null);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)

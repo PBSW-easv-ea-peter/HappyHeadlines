@@ -63,9 +63,10 @@ public partial class Articles : ComponentBase
 
         try
         {
+            var articleClient = HttpClientFactory.CreateClient("ArticleService");
             var articleDtos =
-                await Http.GetFromJsonAsync<IEnumerable<ArticleDTO>>(
-                    $"http://localhost:8080/api/articles/{regionCode}");
+                await articleClient.GetFromJsonAsync<IEnumerable<ArticleDTO>>(
+                    $"/api/articles/{regionCode}");
 
             if (articleDtos is null)
                 return [];
@@ -75,8 +76,9 @@ public partial class Articles : ComponentBase
             {
                 try
                 {
-                    return await Http.GetFromJsonAsync<IEnumerable<Comment>>(
-                        $"http://localhost:8082/api/comments/{regionCode}/{articleDto.Id}")
+                    var commentClient = HttpClientFactory.CreateClient("CommentService");
+                    return await commentClient.GetFromJsonAsync<IEnumerable<Comment>>(
+                        $"/api/comments/{regionCode}/{articleDto.Id}")
                         ?? [];
                 }
                 catch (Exception ex)

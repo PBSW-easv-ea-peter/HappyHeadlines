@@ -1,4 +1,4 @@
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject ILogger<CommentForm> Logger
 
 <div class="comment-form">
@@ -69,7 +69,7 @@
         _isPosting = true;
         _message = null;
 
-        var result = await CommentCatalog.PostAsync(Http, Logger, Region, ArticleId, _authorName.Trim(), _text.Trim());
+        var result = await CommentCatalog.PostAsync(HttpClientFactory, Logger, Region, ArticleId, _authorName.Trim(), _text.Trim());
 
         _isPosting = false;
 

@@ -10,14 +10,12 @@ namespace HappyHeadlinesPages.web;
 // real roster once and defaults to the first entry.
 public class CurrentJournalistState
 {
-    private const string DraftServiceBaseUrl = "http://localhost:8083";
-
-    private readonly HttpClient _http;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<CurrentJournalistState> _logger;
 
-    public CurrentJournalistState(HttpClient http, ILogger<CurrentJournalistState> logger)
+    public CurrentJournalistState(IHttpClientFactory httpClientFactory, ILogger<CurrentJournalistState> logger)
     {
-        _http = http;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -36,8 +34,9 @@ public class CurrentJournalistState
 
         try
         {
-            var journalists = await _http.GetFromJsonAsync<List<Journalist>>(
-                $"{DraftServiceBaseUrl}/api/journalists");
+            var client = _httpClientFactory.CreateClient("DraftService");
+            var journalists = await client.GetFromJsonAsync<List<Journalist>>(
+                "/api/journalists");
 
             All = (journalists ?? [])
                 .OrderBy(j => LastName(j.Name))

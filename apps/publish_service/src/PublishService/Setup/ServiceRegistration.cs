@@ -15,16 +15,16 @@ public static class ServiceRegistration
         builder.Services.AddScoped<IPublishDraftHandler, PublishDraftHandler>();
         
         // HttpClients
-        // builder.Services.AddHttpClient<IHttpDraftClient, DraftClient>(client =>
-        // {
-        //     var baseUrl = builder.Configuration["DraftService:BaseUrl"]
-        //                   ?? throw new InvalidOperationException(
-        //                       "DraftService:BaseUrl is not configured.");
-        //
-        //     client.BaseAddress = new Uri(baseUrl);
-        // });
-        builder.Services.AddScoped<IHttpDraftClient, FakeDraftClient>();
-        
+        builder.Services.AddHttpClient<IHttpDraftClient, HttpDraftClient>(client =>
+        {
+            var baseUrl = builder.Configuration["DraftService:BaseUrl"]
+                          ?? throw new InvalidOperationException(
+                              "DraftService:BaseUrl is not configured.");
+
+            client.BaseAddress = new Uri(baseUrl);
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
+
     }
     
     // Add endpoints

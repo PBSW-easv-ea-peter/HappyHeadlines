@@ -16,7 +16,7 @@ service: DraftService
 - **Queries:** Alle drafts (evt. filtreret på `createdBy`), én draft, "filled-in" draft til publicering, alle journalister.
 - **Publicerer:** –
 - **Afhænger af:** ProfanityService (`POST /api/profanity/check`) ved submit-for-approval → markerede ord. Fortsætter uden, hvis circuit er åben.
-- **Afvigelse:** Profanity-tjek ligger her i stedet for i PublishService. `/publish` skifter kun status – PublishService kalder den ikke. `filled-in-draft` returnerer `"Unknown"` som journalist- og sektionsnavn.
+- **Afvigelse:** Profanity-tjek ligger her i stedet for i PublishService. Sektionsnavne er hardkodet i `Models/Sections.cs` og skal matche ArticleServices `sections`-tabel.
 
 ## Endpoint-map
 
@@ -26,7 +26,7 @@ Base-URL (lokalt): `http://localhost:8083`
 |------|--------|-------------------------------------------|-------------|
 | REST | GET    | /api/drafts?createdBy={id}                | Alle drafts (filter valgfrit) |
 | REST | GET    | /api/drafts/{id}                          | Én draft |
-| REST | GET    | /api/drafts/filled-in-draft/{id}          | Draft i format til PublishService |
+| REST | GET    | /api/drafts/filled-in-draft/{id}          | Draft i format til PublishService (byline, sektionsnavn, status). 422 ved ukendt sektion |
 | REST | POST   | /api/drafts                               | Opret draft |
 | REST | PUT    | /api/drafts/{id}                          | Redigér indhold (kun WorkInProgress) |
 | REST | POST   | /api/drafts/{id}/submit-for-approval      | WorkInProgress → PendingApproval (+ profanity-tjek) |

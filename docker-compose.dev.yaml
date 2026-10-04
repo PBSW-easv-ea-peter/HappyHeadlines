@@ -405,6 +405,28 @@ services:
         condition: service_completed_successfully
 
 # ──────────────────────────────────────────────────────────────────────────────
+#        Publishing
+# ──────────────────────────────────────────────────────────────────────────────
+
+  publishservice:
+    build:
+      context: ./apps/
+      dockerfile: publish_service/Dockerfile
+    image: happyheadlines/publish_service:dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8084
+      # appsettings.Development.jsonc targets a locally run service - point it at the containers.
+      RabbitMQ__HostName: rabbitmq
+      DraftService__BaseUrl: http://draftservice:8083
+      OpenTelemetry__Endpoint: http://otel-collector:4318
+    ports:
+      - "8084:8084"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+# ──────────────────────────────────────────────────────────────────────────────
 #        Clients
 # ──────────────────────────────────────────────────────────────────────────────
 

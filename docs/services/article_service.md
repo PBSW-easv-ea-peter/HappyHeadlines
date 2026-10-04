@@ -21,7 +21,7 @@ service: ArticleService
 
 ## Endpoint-map
 
-Base-URL (lokalt): `http://localhost:8080` · `{location}` ∈ `EU|NA|SA|AU|AS|AN|AF|GO`
+Base-URL (lokalt): `http://localhost:8080` · `{location}` ∈ `EU|NA|SA|AU|AS|AN|AF|GO` · `{id}` er et GUID (`articles.id UUID`)
 
 | Type  | Metode   | Route / Emne                            | Beskrivelse |
 |-------|----------|-----------------------------------------|-------------|

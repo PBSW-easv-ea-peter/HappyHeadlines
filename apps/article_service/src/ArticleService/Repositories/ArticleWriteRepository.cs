@@ -66,7 +66,7 @@ public class ArticleWriteRepository : IArticleWriteRepository
         return rowsAffected > 0;
     }
 
-    public async Task<bool> UpdateAsync(string location, long id, UpsertArticleRequest request)
+    public async Task<bool> UpdateAsync(string location, Guid id, UpsertArticleRequest request)
     {
         await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(location));
         const string sql = """
@@ -92,7 +92,7 @@ public class ArticleWriteRepository : IArticleWriteRepository
         return rowsAffected > 0;
     }
 
-    public async Task<bool> DeleteAsync(string location, long id)
+    public async Task<bool> DeleteAsync(string location, Guid id)
     {
         await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(location));
         const string sql = "delete from articles where id = @Id";

@@ -36,7 +36,7 @@ public class ArticleReadRepository : IArticleReadRepository
         return await connection.QueryAsync<Article>(sql);
     }
 
-    public async Task<Article?> GetByIdAsync(string location, long id)
+    public async Task<Article?> GetByIdAsync(string location, Guid id)
     {
         await using var connection = new NpgsqlConnection(
             _shardResolver.GetConnectionString(location));

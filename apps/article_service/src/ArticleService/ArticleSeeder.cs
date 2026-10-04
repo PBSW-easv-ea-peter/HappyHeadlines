@@ -64,10 +64,13 @@ public partial class ArticleSeeder : IHostedService
 
         foreach (var article in AllArticles.Where(x => x.Location == location))
         {
+            // The id is derived from location + title instead of generated, so seed data in
+            // other databases can refer to a seeded article - see database/queries/comment/seed_comments.sql.
             const string sql = """
                 insert into articles
-                    (byline, title, breadtext, publish_date, location, section_id)
+                    (id, byline, title, breadtext, publish_date, location, section_id)
                 select
+                    md5(@Location || ':' || @Title)::uuid,
                     @Byline,
                     @Title,
                     @Breadtext,

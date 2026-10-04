@@ -99,6 +99,32 @@ at. Verified by seeding 8 throwaway containers identically (script succeeds),
 then adding one extra journalist to a single shard (script catches it, names the
 shard, shows the diff, and refuses to proceed).
 
+## Article ids to UUID (article `V5`)
+
+`articles.id` changes from a per-shard `BIGINT` identity to a `UUID`. This one is
+deliberately **not** split into expand/contract: the id is part of every article URL
+(`/api/articles/{location}/{id}`, `/api/comments/{location}/{articleId}`, the reader's
+`/article/{id}`), so an old client can't talk to a new service or vice versa - there's
+no window in which both shapes are useful. Ship it as one release:
+
+1. Stop ArticleService, CommentService and both web clients.
+2. Run article `V5__article_id_to_uuid.sql` on every shard (the `articledb-*-migrate`
+   containers do this).
+3. Existing comment database only: run
+   `database/queries/comment/migrate_article_id_to_uuid.sql`. A fresh one gets the
+   UUID column from `comment_baseline.sql`.
+4. Start the new ArticleService, CommentService and clients.
+
+Existing articles get `md5('<location>:<old id>')::uuid` instead of a random id, and
+the comment script computes the same value from `(article_location, article_id)`, so
+every comment stays attached to its article without a lookup across the two
+databases. Seeded articles get `md5('<location>:<title>')::uuid`, which is how
+`seed_comments.sql` refers to them. New articles get `gen_random_uuid()`.
+
+For a local dev stack, `docker compose down -v` and starting fresh is simpler than
+steps 2-3: an upgraded article database keeps the old-id-based UUIDs, so a freshly
+seeded comment database (title-based) wouldn't line up with it.
+
 ## If this were a real, already-running system
 
 Everything above is written as if the deploy order is the only thing standing

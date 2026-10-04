@@ -7,11 +7,11 @@ namespace CommentService.Cache;
 public interface ICommentCache
 {
     // Null means a miss: the article isn't cached (or the cache is unavailable).
-    Task<IReadOnlyList<CommentDto>?> GetAsync(string articleLocation, long articleId);
+    Task<IReadOnlyList<CommentDto>?> GetAsync(string articleLocation, Guid articleId);
 
     // Fills the cache after a miss. May evict the least recently used article.
-    Task SetAsync(string articleLocation, long articleId, IReadOnlyList<CommentDto> comments);
+    Task SetAsync(string articleLocation, Guid articleId, IReadOnlyList<CommentDto> comments);
 
     // Write-through for a newly approved comment. Does nothing if the article isn't cached.
-    Task AppendIfCachedAsync(string articleLocation, long articleId, CommentDto comment);
+    Task AppendIfCachedAsync(string articleLocation, Guid articleId, CommentDto comment);
 }

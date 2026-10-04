@@ -82,7 +82,7 @@ public class RedisCommentCache : ICommentCache
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<CommentDto>?> GetAsync(string articleLocation, long articleId)
+    public async Task<IReadOnlyList<CommentDto>?> GetAsync(string articleLocation, Guid articleId)
     {
         try
         {
@@ -107,7 +107,7 @@ public class RedisCommentCache : ICommentCache
         }
     }
 
-    public async Task SetAsync(string articleLocation, long articleId, IReadOnlyList<CommentDto> comments)
+    public async Task SetAsync(string articleLocation, Guid articleId, IReadOnlyList<CommentDto> comments)
     {
         RedisValue[] values =
         [
@@ -127,7 +127,7 @@ public class RedisCommentCache : ICommentCache
         }
     }
 
-    public async Task AppendIfCachedAsync(string articleLocation, long articleId, CommentDto comment)
+    public async Task AppendIfCachedAsync(string articleLocation, Guid articleId, CommentDto comment)
     {
         var db = _redis.GetDatabase();
         var key = ArticleKey(articleLocation, articleId);
@@ -157,9 +157,9 @@ public class RedisCommentCache : ICommentCache
         }
     }
 
-    private static RedisKey ArticleKey(string articleLocation, long articleId) =>
+    private static RedisKey ArticleKey(string articleLocation, Guid articleId) =>
         $"{KeyPrefix}{articleLocation}:{articleId}";
 
-    private static RedisKey[] LruKeys(string articleLocation, long articleId) =>
+    private static RedisKey[] LruKeys(string articleLocation, Guid articleId) =>
         [ArticleKey(articleLocation, articleId), LruKey, LruSizeKey, LruClockKey];
 }

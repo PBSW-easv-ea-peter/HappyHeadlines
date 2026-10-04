@@ -3,7 +3,7 @@ namespace CommentService.Models;
 public class CommentDto
 {
     public long Id { get; set; }
-    public long ArticleId { get; set; }
+    public Guid ArticleId { get; set; }
     public string ArticleLocation { get; set; } = string.Empty;
     public string AuthorName { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;

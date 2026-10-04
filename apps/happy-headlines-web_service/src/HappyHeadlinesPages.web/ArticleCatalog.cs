@@ -41,7 +41,7 @@ public static class ArticleCatalog
 
     // Ids are only unique within a shard, so the region is part of the key.
     // Returns null both for a 404 and for a failed call - callers show "not found".
-    public static async Task<ArticleDTO?> GetArticleAsync(HttpClient http, ILogger logger, string region, long id)
+    public static async Task<ArticleDTO?> GetArticleAsync(HttpClient http, ILogger logger, string region, Guid id)
     {
         var regionCode = region.ToUpper();
 

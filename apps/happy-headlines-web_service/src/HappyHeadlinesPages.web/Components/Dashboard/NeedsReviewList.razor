@@ -23,7 +23,13 @@ else
                         <MudText Typo="Typo.caption">
                             By @JournalistState.NameOf(draft.CreatedByJournalistId) &middot; Submitted @draft.LastEditedDate.ToLocalTime().ToString("g")
                         </MudText>
-                        @if (draft.FlaggedWords.Length > 0)
+                        @if (draft.ProfanityCheckSkipped)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Warning">
+                                Profanity check not run
+                            </MudText>
+                        }
+                        else if (draft.FlaggedWords.Length > 0)
                         {
                             <MudText Typo="Typo.caption" Color="Color.Error">
                                 Flagged words: @string.Join(", ", draft.FlaggedWords)

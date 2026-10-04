@@ -7,7 +7,7 @@ public class Article : ArticleDTO
 
 public class ArticleDTO
 {
-    public long Id { get; set; }
+    public Guid Id { get; set; }
     public string Byline { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public DateTimeOffset CreatedDate { get; set; }

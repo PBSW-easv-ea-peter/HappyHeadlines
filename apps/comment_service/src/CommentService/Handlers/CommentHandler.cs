@@ -24,7 +24,7 @@ public class CommentHandler : ICommentHandler
 
     // Cache miss approach: an article's comments are only cached once they're read and
     // weren't cached yet (docs/Caching.md).
-    public async Task<IEnumerable<CommentDto>> GetApprovedAsync(string articleLocation, long articleId)
+    public async Task<IEnumerable<CommentDto>> GetApprovedAsync(string articleLocation, Guid articleId)
     {
         var cached = await _cache.GetAsync(articleLocation, articleId);
         if (cached is not null)
@@ -39,7 +39,7 @@ public class CommentHandler : ICommentHandler
         return comments;
     }
 
-    public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, long articleId, PostCommentRequest request, CancellationToken ct = default)
+    public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, Guid articleId, PostCommentRequest request, CancellationToken ct = default)
     {
         var status = await ClassifyAsync(request.Text, ct);
         var entity = await _repository.CreateAsync(articleLocation, articleId, request, status);

@@ -5,7 +5,7 @@ CREATE TABLE status (
 
 CREATE TABLE comments (
     id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    article_id       BIGINT NOT NULL,
+    article_id       UUID NOT NULL, -- articles.id in the article shard for article_location (no FK: separate database)
     article_location VARCHAR NOT NULL,
     author_name      VARCHAR(25) NOT NULL,
     text             VARCHAR(500) NOT NULL,

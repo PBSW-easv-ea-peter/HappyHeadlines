@@ -1,3 +1,4 @@
+using CommentService.Cache;
 using CommentService.Handlers;
 using CommentService.Models;
 using CommentService.Profanity;
@@ -12,11 +13,12 @@ public class CommentHandlerTests
 {
     private readonly Mock<ICommentRepository> _repository = new();
     private readonly Mock<IProfanityClient> _profanityClient = new();
+    private readonly Mock<ICommentCache> _cache = new();
     private readonly CommentHandler _handler;
 
     public CommentHandlerTests()
     {
-        _handler = new CommentHandler(_repository.Object, _profanityClient.Object, Mock.Of<ILogger<CommentHandler>>());
+        _handler = new CommentHandler(_repository.Object, _profanityClient.Object, _cache.Object, Mock.Of<ILogger<CommentHandler>>());
 
         _repository
             .Setup(r => r.CreateAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<PostCommentRequest>(), It.IsAny<CommentStatus>()))
@@ -103,5 +105,74 @@ public class CommentHandlerTests
         await _handler.PostAsync("EU", 1, request);
 
         _repository.Verify(r => r.CreateAsync("EU", 1, request, CommentStatus.Rejected), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetApprovedAsync_CacheHit_DoesNotQueryDatabase()
+    {
+        var cached = new List<CommentDto> { new() { Id = 7, ArticleId = 1, ArticleLocation = "EU", Text = "Cached" } };
+        _cache.Setup(c => c.GetAsync("EU", 1)).ReturnsAsync(cached);
+
+        var comments = await _handler.GetApprovedAsync("EU", 1);
+
+        Assert.Same(cached, comments);
+        _repository.Verify(r => r.GetApprovedByArticleIdAsync(It.IsAny<string>(), It.IsAny<long>()), Times.Never);
+        _cache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<IReadOnlyList<CommentDto>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetApprovedAsync_CacheMiss_LoadsFromDatabaseAndFillsCache()
+    {
+        _cache.Setup(c => c.GetAsync("EU", 1)).ReturnsAsync((IReadOnlyList<CommentDto>?)null);
+        _repository
+            .Setup(r => r.GetApprovedByArticleIdAsync("EU", 1))
+            .ReturnsAsync([new CommentEntity { Id = 7, ArticleId = 1, ArticleLocation = "EU", Text = "From db", Status = CommentStatus.Approved }]);
+
+        var comments = (await _handler.GetApprovedAsync("EU", 1)).ToList();
+
+        Assert.Equal(7, Assert.Single(comments).Id);
+        _cache.Verify(c => c.SetAsync("EU", 1, It.Is<IReadOnlyList<CommentDto>>(list => list.Count == 1 && list[0].Id == 7)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetApprovedAsync_CacheMissWithoutComments_CachesEmptyList()
+    {
+        // Otherwise every read of an article without comments would hit the database.
+        _cache.Setup(c => c.GetAsync("EU", 1)).ReturnsAsync((IReadOnlyList<CommentDto>?)null);
+        _repository.Setup(r => r.GetApprovedByArticleIdAsync("EU", 1)).ReturnsAsync([]);
+
+        await _handler.GetApprovedAsync("EU", 1);
+
+        _cache.Verify(c => c.SetAsync("EU", 1, It.Is<IReadOnlyList<CommentDto>>(list => list.Count == 0)), Times.Once);
+    }
+
+    [Fact]
+    public async Task PostAsync_Approved_WritesThroughToCache()
+    {
+        _profanityClient
+            .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: false));
+
+        var request = new PostCommentRequest { AuthorName = "Alice", Text = "This is a nice comment" };
+
+        var (comment, _) = await _handler.PostAsync("EU", 1, request);
+
+        _cache.Verify(c => c.AppendIfCachedAsync("EU", 1, comment), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(false, "idiot")] // rejected
+    [InlineData(true)]           // pending profanity check
+    public async Task PostAsync_NotApproved_IsNotCached(bool unavailable, params string[] bannedWords)
+    {
+        _profanityClient
+            .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: bannedWords, Unavailable: unavailable));
+
+        var request = new PostCommentRequest { AuthorName = "Alice", Text = "You are an idiot" };
+
+        await _handler.PostAsync("EU", 1, request);
+
+        _cache.Verify(c => c.AppendIfCachedAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CommentDto>()), Times.Never);
     }
 }

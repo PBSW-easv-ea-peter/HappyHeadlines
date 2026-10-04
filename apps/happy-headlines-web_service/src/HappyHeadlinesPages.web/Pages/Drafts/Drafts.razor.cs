@@ -24,9 +24,9 @@ public partial class Drafts : ComponentBase
     private IEnumerable<Draft> MyArchivedDrafts =>
         MyDrafts.Where(d => d.Status == DraftStatus.Archived);
 
-    // DraftService.Publish never actually creates an Article, so "published" is
-    // sourced from ArticleService directly - matched by journalist name, since
-    // Article responses don't carry a journalist id, only the name.
+    // Published articles live in ArticleService (PublishService queues them there),
+    // so "published" is sourced from ArticleService directly - matched by journalist
+    // name, since Article responses don't carry a journalist id, only the byline.
     private IEnumerable<ArticleDTO> MyPublishedArticles =>
         _allArticles.Where(a => string.Equals(
             a.Byline,

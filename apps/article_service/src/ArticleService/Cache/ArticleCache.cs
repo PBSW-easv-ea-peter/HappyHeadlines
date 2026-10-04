@@ -27,10 +27,9 @@ public class ArticleCache : IArticleCache
 
     public async Task<IList<Article>> GetArticlesAsync(string location)
     {
-        IDatabase db = _redis.GetDatabase();
         string key = $"{ArticlesKeyPrefix}{location}";
 
-        RedisValue cached = await db.StringGetAsync(key);
+        RedisValue cached = await TryGetAsync(key);
         if (cached.HasValue)
         {
             return JsonSerializer.Deserialize<IList<Article>>(cached.ToString()) ?? [];
@@ -41,16 +40,31 @@ public class ArticleCache : IArticleCache
 
     public async Task<Article?> GetArticleByIdAsync(string location, long id)
     {
-        IDatabase db = _redis.GetDatabase();
         string key = $"{ArticleKeyPrefix}{location}:{id}";
 
-        RedisValue cached = await db.StringGetAsync(key);
+        RedisValue cached = await TryGetAsync(key);
         if (cached.HasValue)
         {
             return JsonSerializer.Deserialize<Article>(cached.ToString());
         }
 
         return null;
+    }
+
+    // A failing cache must never fail the request: if Redis is down or slow, the read counts
+    // as a miss and ArticlesController falls back to the database.
+    private async Task<RedisValue> TryGetAsync(string key)
+    {
+        try
+        {
+            return await _redis.GetDatabase().StringGetAsync(key);
+        }
+        catch (Exception ex) when (ex is RedisException or RedisTimeoutException)
+        {
+            _logger.LogWarning("ArticleCache read failed ({ExceptionType}) - falling back to the database",
+                ex.GetType().Name);
+            return RedisValue.Null;
+        }
     }
 
     public async Task RefreshCacheAsync(params string[] locations)

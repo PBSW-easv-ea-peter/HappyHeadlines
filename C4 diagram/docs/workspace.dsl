@@ -38,19 +38,26 @@ workspace "Happy Headlines" "Positive news platform" {
 
             group "Article" {
                 articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas via Docker Swarm, docker-compose.yaml)" "Service" "Implemented" {
+                    articleCache = component "ArticleCache" "Caches articles in Redis for faster retrieval. Implements IArticleCache." "Component"
+                    cacheRefreshService = component "CacheRefreshService" "Background service that refreshes the article cache hourly." "Background Service"
                     articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
                     articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
                     articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
                     articleShardResolver = component "ArticleShardResolver" "Resolves a location code to the correct shard connection string." "Component"
                     articleQueueConsumer = component "ArticleQueueConsumer" "Will consume ArticleQueue for Create/Update once wired up. Currently idle." "Background Service"
 
+                    articlesController -> articleCache "Checks cache for articles via"
                     articlesController -> articleReadRepository "Delegates GET requests to"
                     articlesController -> articleWriteRepository "Delegates Create/Update/Delete REST stand-ins to"
                     articleReadRepository -> articleShardResolver "Resolves shard via"
                     articleWriteRepository -> articleShardResolver "Resolves shard via"
+                    articleWriteRepository -> articleCache "Invalidates cache via"
                     articleQueueConsumer -> articleWriteRepository "Will persist consumed messages via (not yet wired)"
+                    cacheRefreshService -> articleCache "Refreshes cache via"
+
                 }
                 articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "PostgreSQL" "Database,Implemented"
+                articleCacheDb = container "ArticleCache" "Redis cache for article data." "Redis" "Database,Implemented"
             }
 
             group "Comment" {
@@ -134,6 +141,7 @@ workspace "Happy Headlines" "Positive news platform" {
         articleReadRepository -> articleDb "Reads articles from"
         articleWriteRepository -> articleDb "Writes articles to"
         articleQueueConsumer -> articleQueue "Subscribes to (idle - not wired up yet)"
+        articleCache -> articleCacheDb "Stores cached articles in"
 
         // ProfanityService component-level relations (imply the ProfanityService
         // container-level relation to ProfanityDatabase, so no separate one here)
@@ -203,6 +211,9 @@ workspace "Happy Headlines" "Positive news platform" {
             }
             deploymentNode "ArticleQueue" "Docker container" {
                 articleQueueInstance = containerInstance articleQueue
+            }
+            deploymentNode "ArticleCache" "Docker container" {
+                articleCacheInstance = containerInstance articleCacheDb
             }
 
             deploymentNode "ArticleService Instance 1" "Docker container" {
@@ -287,7 +298,7 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // C4 Level 5 - Deployment diagram
         deployment happyHeadlines "Production" "ArticleServiceDeployment" {
-            include websiteInstance newsletterServiceInstance loadBalancer articleServiceInstance1 articleServiceInstance2 articleServiceInstance3
+            include websiteInstance newsletterServiceInstance loadBalancer articleServiceInstance1 articleServiceInstance2 articleServiceInstance3 articleCacheInstance
             autolayout lr
         }
 

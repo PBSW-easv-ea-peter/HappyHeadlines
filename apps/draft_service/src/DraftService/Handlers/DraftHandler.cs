@@ -41,6 +41,11 @@ public class DraftHandler : IDraftHandler
             return DraftActionResult.ValidationFailed($"Unknown location '{request.Location}'.");
         }
 
+        if (!Sections.IsValid(request.SectionId))
+        {
+            return DraftActionResult.ValidationFailed($"Unknown section {request.SectionId}.");
+        }
+
         var creditedJournalistsError = await ValidateCreditedJournalistsAsync(request.CreditedJournalistIds);
         if (creditedJournalistsError is not null)
         {
@@ -57,6 +62,11 @@ public class DraftHandler : IDraftHandler
         if (!ValidLocations.Contains(request.Location))
         {
             return DraftActionResult.ValidationFailed($"Unknown location '{request.Location}'.");
+        }
+
+        if (!Sections.IsValid(request.SectionId))
+        {
+            return DraftActionResult.ValidationFailed($"Unknown section {request.SectionId}.");
         }
 
         var creditedJournalistsError = await ValidateCreditedJournalistsAsync(request.CreditedJournalistIds);

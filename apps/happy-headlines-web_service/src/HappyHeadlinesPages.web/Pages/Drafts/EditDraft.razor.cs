@@ -1,5 +1,6 @@
 using HappyHeadlinesPages.web.Models;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
@@ -9,6 +10,7 @@ namespace HappyHeadlinesPages.web.Pages.Drafts;
 public partial class EditDraft : ComponentBase
 {
     private const string DraftServiceBaseUrl = "http://localhost:8083";
+    private const string PublishServiceBaseUrl = "http://localhost:8084";
 
     [Parameter]
     public Guid Id { get; set; }
@@ -210,6 +212,55 @@ public partial class EditDraft : ComponentBase
         finally
         {
             isSaving = false;
+        }
+    }
+
+    // PublishService queues the draft as an article and marks it published. The article
+    // itself is stored by ArticleService a moment later, so it may not be on the site yet.
+    private async Task PublishAsync()
+    {
+        isSaving = true;
+
+        try
+        {
+            var response = await Http.PostAsync($"{PublishServiceBaseUrl}/api/v1/publish-draft/{Id}", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Snackbar.Add(await ReadErrorAsync(response) ?? "Could not publish the draft.", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Draft published. The article will appear on the site in a moment.", Severity.Success);
+            Navigation.NavigateTo(PageRoutes.Drafts);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to publish draft {DraftId}", Id);
+            Snackbar.Add("Could not publish the draft.", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // PublishService explains refusals: a JSON string for 409, problem details for 503.
+    private static async Task<string?> ReadErrorAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            return json.RootElement.ValueKind switch
+            {
+                JsonValueKind.String => json.RootElement.GetString(),
+                JsonValueKind.Object when json.RootElement.TryGetProperty("detail", out var detail) => detail.GetString(),
+                _ => null
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 

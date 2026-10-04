@@ -316,6 +316,14 @@ services:
       - ./database/init/comment/comment_baseline.sql:/docker-entrypoint-initdb.d/01_comment_baseline.sql:ro
       - ./database/queries/comment/seed_comments.sql:/docker-entrypoint-initdb.d/02_seed_comments.sql:ro
 
+  # CommentCache - filled on miss, LRU over the 30 most recently read articles (docs/Caching.md).
+  # No persistence: an empty cache after a restart just fills up again.
+  comment-cache:
+    image: redis:8.8.3-alpine
+    ports:
+      - "6380:6379"  # HostPort:ContainerPort
+    command: redis-server --save "" --appendonly no
+
   profanitydb:
     image: postgres:18-trixie
     environment:

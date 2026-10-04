@@ -272,7 +272,8 @@ services:
   ## Article Service
   articleservice:
     build:
-      context: ./apps/article_service/
+      context: ./apps/
+      dockerfile: article_service/Dockerfile
     image: happyheadlines/article_service:dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
@@ -296,6 +297,8 @@ services:
         condition: service_completed_successfully
       articledb-global-migrate:
         condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Comments

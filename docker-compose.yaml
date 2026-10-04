@@ -215,7 +215,8 @@ services:
   ## Article Service
   articleservice:
     build:
-      context: ./apps/article_service/
+      context: ./apps/
+      dockerfile: article_service/Dockerfile
     image: happyheadlines/article_service
     environment:
       ASPNETCORE_ENVIRONMENT: Production

@@ -1,4 +1,4 @@
-## Structirizr inde i 'C4 diagram*' anvender port 8081
+## Structirizr inde i 'C4 diagram*' anvender port 8089
 # Own project name so prod never shares containers/DB volumes with docker-compose.dev.yaml
 name: happyheadlines-prod
 
@@ -401,3 +401,15 @@ services:
     image: happyheadlines/happyheadlines_reader
     ports:
       - "8001:8001"
+
+# =============================================================================
+#        Networks
+# =============================================================================
+
+# Fixed name (instead of <stack>_default) so monitoring/docker-compose.yaml can join it
+# with APP_NETWORK=happyheadlines-prod. Separate from dev, like the project name above.
+# attachable: Swarm overlay networks reject plain `docker compose` containers without it.
+networks:
+  default:
+    name: happyheadlines-prod
+    attachable: true

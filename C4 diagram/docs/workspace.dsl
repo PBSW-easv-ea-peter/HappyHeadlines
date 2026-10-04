@@ -38,26 +38,25 @@ workspace "Happy Headlines" "Positive news platform" {
 
             group "Article" {
                 articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas via Docker Swarm, docker-compose.yaml)" "Service" "Implemented" {
-                    articleCache = component "ArticleCache" "Caches articles in Redis for faster retrieval. Implements IArticleCache." "Component"
-                    cacheRefreshService = component "CacheRefreshService" "Background service that refreshes the article cache hourly." "Background Service"
                     articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
                     articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
                     articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
                     articleShardResolver = component "ArticleShardResolver" "Resolves a location code to the correct shard connection string." "Component"
                     articleQueueConsumer = component "ArticleQueueConsumer" "Will consume ArticleQueue for Create/Update once wired up. Currently idle." "Background Service"
+                    articleCache = component "ArticleCache" "Implements IArticleCache: reads and writes cached articles (keys per location and per article) in Redis, with a 14-day expiry." "Component"
+                    cacheRefreshService = component "CacheRefreshService" "Refills the cache every hour. Currently only location GO (global)." "Background Service"
 
-                    articlesController -> articleCache "Checks cache for articles via"
-                    articlesController -> articleReadRepository "Delegates GET requests to"
+                    articlesController -> articleCache "Reads articles from cache first, invalidates on update/delete via"
+                    articlesController -> articleReadRepository "Falls back to on cache miss"
                     articlesController -> articleWriteRepository "Delegates Create/Update/Delete REST stand-ins to"
                     articleReadRepository -> articleShardResolver "Resolves shard via"
                     articleWriteRepository -> articleShardResolver "Resolves shard via"
-                    articleWriteRepository -> articleCache "Invalidates cache via"
                     articleQueueConsumer -> articleWriteRepository "Will persist consumed messages via (not yet wired)"
-                    cacheRefreshService -> articleCache "Refreshes cache via"
-
+                    cacheRefreshService -> articleCache "Refreshes every hour via"
+                    articleCache -> articleReadRepository "Loads articles for refresh via"
                 }
                 articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "PostgreSQL" "Database,Implemented"
-                articleCacheDb = container "ArticleCache" "Redis cache for article data." "Redis" "Database,Implemented"
+                articleCacheDb = container "ArticleCache" "Offline cache of articles from the last 14 days, refilled every hour. A miss reads the database but does not fill the cache. Shared by all ArticleService replicas." "Redis" "Database,Implemented"
             }
 
             group "Comment" {
@@ -73,6 +72,7 @@ workspace "Happy Headlines" "Positive news platform" {
                     commentHandler -> commentRepository "Persists and reads comments via"
                 }
                 commentDb = container "CommentDatabase" "Stores comments." "PostgreSQL" "Database,Implemented"
+                commentCache = container "CommentCache" "Cache-aside: filled on a miss, keeps comments for the 30 most recently used articles (LRU). The service falls back to the database if it is down." "Redis" "Database,Implemented"
             }
 
             group "Profanity" {
@@ -141,7 +141,7 @@ workspace "Happy Headlines" "Positive news platform" {
         articleReadRepository -> articleDb "Reads articles from"
         articleWriteRepository -> articleDb "Writes articles to"
         articleQueueConsumer -> articleQueue "Subscribes to (idle - not wired up yet)"
-        articleCache -> articleCacheDb "Stores cached articles in"
+        articleCache -> articleCacheDb "Reads and writes cached articles in" "Redis"
 
         // ProfanityService component-level relations (imply the ProfanityService
         // container-level relation to ProfanityDatabase, so no separate one here)
@@ -162,6 +162,7 @@ workspace "Happy Headlines" "Positive news platform" {
         // relations to ProfanityService/CommentDatabase, so no separate container-level ones here)
         profanityClient -> profanityService "Checks comment text via HTTP POST /api/profanity/check"
         commentRepository -> commentDb "Reads and writes comments in"
+        commentService -> commentCache "Reads and fills cached comments in" "Redis"
 
 
         // Reader - newsletter subscription
@@ -332,7 +333,5 @@ workspace "Happy Headlines" "Positive news platform" {
                 dashed true
             }
         }
-
-        theme default
     }
 }

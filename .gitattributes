@@ -3,6 +3,9 @@
 ###############################################################################
 * text=auto
 
+# Shell scripts run inside Linux containers and must always use LF
+*.sh text eol=lf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

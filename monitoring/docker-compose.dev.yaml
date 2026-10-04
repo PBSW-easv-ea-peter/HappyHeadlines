@@ -1,9 +1,9 @@
-# Monitoring for the whole HappyHeadlines application.
-# Joins the app's network (dev by default, see APP_NETWORK below), so start the app stack first - see README.md.
-# For monitoring alone with dummy caches and simulated traffic, use docker-compose.dev.yaml.
+# Monitoring on its own - no app stack needed. Dummy caches stand in for ArticleCache and
+# CommentCache, and the traffic simulator generates hits and misses. See README.md.
+# Mirrors docker-compose.yaml - keep the shared services in sync.
 
 # Explicit project name - both compose files live in this folder and would otherwise share one.
-name: monitoring
+name: monitoring-dev
 
 services:
 
@@ -11,7 +11,7 @@ services:
 #        Telemetry pipeline (traces and logs from the services)
 # ──────────────────────────────────────────────────────────────────────────────
 
-  # The services send OTLP to http://otel-collector:4318 (see appsettings.*.json).
+  # Receives OTLP from services you run on the host (http://localhost:4318).
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otelcol/config.yaml"]
@@ -19,24 +19,19 @@ services:
       - ./otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
     ports:
       - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP - also used by services running on the host
-#      - "9464:9464"   # Prometheus scrape endpoint
+      - "4318:4318"   # OTLP HTTP
     depends_on:
       - loki
       - tempo
 
   tempo:
     image: grafana/tempo:latest
-#    ports:
-#      - "3200:3200"
     command: -config.file=/etc/tempo/config.yaml
     volumes:
       - ./tempo/config.yaml:/etc/tempo/config.yaml:ro
 
   loki:
     image: grafana/loki:latest
-#    ports:
-#      - "3100:3100"
     command: -config.file=/etc/loki/config/config.yaml
     volumes:
       - ./loki/config.yaml:/etc/loki/config/config.yaml:ro
@@ -53,16 +48,15 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
-  # One exporter per cache, so hit/miss stats stay separated per cache.
   redis-exporter-article:
     image: oliver006/redis_exporter:latest
     environment:
-      REDIS_ADDR: redis://article-cache:6379
+      REDIS_ADDR: redis://redis-article:6379
 
   redis-exporter-comment:
     image: oliver006/redis_exporter:latest
     environment:
-      REDIS_ADDR: redis://comment-cache:6379
+      REDIS_ADDR: redis://redis-comment:6379
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Visualisation
@@ -70,25 +64,41 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
       - loki
       - tempo
 
-volumes:
-  grafana_data:
+# ──────────────────────────────────────────────────────────────────────────────
+#        Dummy caches and simulation
+# ──────────────────────────────────────────────────────────────────────────────
 
-# Created by the app stack: happyheadlines-dev (docker-compose.dev.yaml) or happyheadlines-prod
-# (docker-compose.yaml). Pick prod with APP_NETWORK=happyheadlines-prod.
-networks:
-  default:
-    name: ${APP_NETWORK:-happyheadlines-dev}
-    external: true
+  # maxmemory = empty Redis (article ~1 667 000 B, comment ~1 693 000 B, measured under load) + capacity.
+  # The capacity is also set as a constant in the dashboard (variables article_capacity /
+  # comment_capacity) - change both places when you raise a limit. See README.md.
+  redis-article:
+    image: redis:latest
+    # Capacity: 150 articles x 5 186 B (4 KB payload incl. Redis overhead) = 780 000 B
+    command: redis-server --maxmemory 2447000 --maxmemory-policy allkeys-lru
+
+  redis-comment:
+    image: redis:latest
+    # Capacity: 50 articles' comments x 2 613 B (2 KB payload incl. Redis overhead) = 131 000 B
+    command: redis-server --maxmemory 1824000 --maxmemory-policy allkeys-lru
+
+  # Simulated reader traffic against the dummy caches - only started with `--profile simulate`.
+  traffic-simulator:
+    image: redis:latest
+    profiles: [simulate]
+    entrypoint: ["bash", "/scripts/simulate-traffic.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+    depends_on:
+      - redis-article
+      - redis-comment

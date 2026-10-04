@@ -1,0 +1,84 @@
+@page "/"
+
+<PageTitle>Happy Headlines &middot; @ReaderRegions.NameOf(RegionCode)</PageTitle>
+
+<nav class="section-strip">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex flex-wrap gap-2 py-2">
+        <MudChip T="string"
+                 Href="@SectionHref(null)"
+                 Variant="Variant.Outlined"
+                 Size="Size.Small"
+                 Style="@ChipStyle(CustomMudTheme.LogoNavy, ActiveSection is null)">
+            All
+        </MudChip>
+        @foreach (var s in Sections.All)
+        {
+            <MudChip T="string"
+                     Href="@SectionHref(s.Name)"
+                     Variant="Variant.Outlined"
+                     Size="Size.Small"
+                     Style="@ChipStyle(s.Color, s.Name == ActiveSection)">
+                @s.Name
+            </MudChip>
+        }
+    </MudContainer>
+</nav>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    @if (_isLoading)
+    {
+        <MudGrid Spacing="6">
+            <MudItem xs="12" md="8">
+                <MudSkeleton Height="48px" Width="80%" />
+                <MudSkeleton Height="24px" Width="40%" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="160px" Class="mt-4" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                @for (var i = 0; i < PopularCount; i++)
+                {
+                    <MudSkeleton Height="48px" />
+                }
+            </MudItem>
+        </MudGrid>
+    }
+    else if (_articles.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Text">
+            No happy headlines in the @ReaderRegions.NameOf(RegionCode) edition yet - try another edition.
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="6">
+            <MudItem xs="12" md="8">
+                @if (Highlighted is not null)
+                {
+                    <HeroArticle Article="Highlighted" />
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Text">
+                        No @ActiveSection stories in this edition yet.
+                    </MudAlert>
+                }
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <PopularList Articles="Popular" />
+            </MudItem>
+        </MudGrid>
+
+        <MudText Typo="Typo.h6" Class="block-heading mt-10">Sections</MudText>
+
+        <MudGrid Spacing="4">
+            @foreach (var s in Sections.All)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <SectionCard Name="@s.Name"
+                                 Articles="InSection(s.Name)"
+                                 Href="@SectionHref(s.Name)" />
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>

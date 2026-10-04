@@ -5,7 +5,7 @@ using System.Net.Sockets;
 
 namespace ArticleService.Seeding;
 
-public class ArticleSeeder : IHostedService
+public partial class ArticleSeeder : IHostedService
 {
     private readonly IArticleShardResolver _shardResolver;
     private readonly ILogger<ArticleSeeder> _logger;
@@ -24,7 +24,7 @@ public class ArticleSeeder : IHostedService
 
         await Task.Delay(10000);
 
-        foreach (var location in Articles
+        foreach (var location in AllArticles
                      .Select(article => article.Location)
                      .Distinct())
         {
@@ -62,7 +62,7 @@ public class ArticleSeeder : IHostedService
 
         await connection.OpenAsync(cancellationToken);
 
-        foreach (var article in Articles.Where(x => x.Location == location))
+        foreach (var article in AllArticles.Where(x => x.Location == location))
         {
             const string sql = """
                 insert into articles

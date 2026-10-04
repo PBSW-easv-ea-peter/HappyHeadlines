@@ -1,0 +1,308 @@
+/* ------------------------------------------------------------- */
+/*                   Reader website (front page)                 */
+/* ------------------------------------------------------------- */
+
+body {
+    background-color: var(--mud-palette-background);
+}
+
+.muted {
+    color: var(--mud-palette-text-secondary);
+}
+
+.block-heading {
+    font-family: "EB Garamond", serif !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid var(--mud-palette-lines-default);
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+}
+
+/* header */
+.reader-header {
+    background-color: var(--mud-palette-surface);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.reader-topbar {
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    padding: 8px 0;
+}
+
+.reader-date {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.reader-region-select {
+    min-width: 190px;
+    max-width: 220px;
+}
+
+.reader-masthead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 16px;
+    text-align: center;
+}
+
+.reader-brand {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.reader-logo {
+    width: 112px;
+    height: 112px;
+    object-fit: contain;
+}
+
+@media (max-width: 600px) {
+    .reader-brand {
+        gap: 12px;
+    }
+
+    .reader-logo {
+        width: 72px;
+        height: 72px;
+    }
+}
+
+.reader-wordmark {
+    font-family: "EB Garamond", serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    line-height: 1.1;
+    color: var(--mud-palette-text-primary);
+}
+
+.reader-tagline {
+    margin-top: 4px;
+    color: var(--mud-palette-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* section strip */
+.section-strip {
+    background-color: var(--mud-palette-surface);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.section-strip .mud-chip {
+    margin: 0;
+}
+
+/* shared article bits */
+/* A whole article card is one link: visibly a card, lifts on hover. */
+.card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    background-color: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.card-link:hover {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.card-link:hover .card-link-title {
+    text-decoration: underline;
+}
+
+.card-link:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card-link,
+    .card-link:hover {
+        transition: none;
+        transform: none;
+    }
+}
+
+.article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.section-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* hero */
+.hero-article {
+    border-top: 4px solid;
+    padding-top: 16px;
+}
+
+/* The hero on the front page is a card; on the article page it is plain. */
+.card-link.hero-article {
+    padding: 20px 24px 24px;
+}
+
+.hero-kicker {
+    color: var(--mud-palette-text-secondary);
+}
+
+.hero-title {
+    margin: 4px 0 12px;
+    line-height: 1.15 !important;
+}
+
+.hero-excerpt {
+    margin-top: 16px !important;
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+}
+
+/* most popular */
+.popular-list ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.popular-list ol {
+    display: grid;
+    gap: 10px;
+}
+
+.popular-item {
+    display: flex;
+    gap: 14px;
+}
+
+.popular-rank {
+    font-family: "EB Garamond", serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+    min-width: 1.5ch;
+}
+
+.popular-title {
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+    margin-bottom: 4px;
+}
+
+/* sections */
+/* Muted panel so the article cards inside it read as separate, clickable cards. */
+.section-card {
+    height: 100%;
+    padding: 16px;
+    border-top: 4px solid;
+    border-radius: 10px !important;
+    background-color: var(--mud-palette-background-gray) !important;
+}
+
+.section-item + .section-item {
+    margin-top: 8px;
+}
+
+.section-item-title {
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+}
+
+/* article page */
+/* Centred reading column - wide enough for the headline, narrow enough that
+   body lines stay comfortable to read. */
+.article-page {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.article-back {
+    display: inline-block;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mud-palette-text-secondary);
+    text-decoration: none;
+}
+
+.article-back:hover {
+    color: var(--mud-palette-text-primary);
+}
+
+.article-body p {
+    font-size: 1.15rem;
+    line-height: 1.75;
+    margin: 0 0 1.1em;
+}
+
+.more-news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.article-card {
+    border-top: 4px solid;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.article-card-title {
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+}
+
+.article-card-excerpt {
+    line-height: 1.45 !important;
+}
+
+.comment-form {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    background-color: var(--mud-palette-background-gray);
+}
+
+.comment-item {
+    padding: 12px 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+/* footer */
+.build-stamp {
+    margin-left: 4px;
+    opacity: 0.75;
+}
+
+.reader-footer {
+    border-top: 1px solid var(--mud-palette-lines-default);
+    padding: 16px 0;
+    margin-top: 32px;
+    color: var(--mud-palette-text-secondary);
+}

@@ -1,0 +1,75 @@
+volumes:
+  comment-db:
+
+secrets:
+  pg_password:
+    external: true
+
+configs:
+  comment_appsettings:
+    external: true
+
+networks:
+  happy-headlines:
+    external: true
+  traefik-public: # For comment-service
+    external: true
+
+x-comment-db-common: &comment-db-common
+
+services:
+  comment-service:
+    image: comment_service:1.0.0
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+    configs:
+      - source: comment_appsettings
+        target: /app/appsettings.Production.json
+
+    networks:
+      - happy-headlines
+      - traefik-public
+
+    deploy:
+      replicas: 2
+      endpoint_mode: dnsrr
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.comment-service.rule=PathPrefix(`/api/comments/`)"
+        - "traefik.http.routers.comment-service.entrypoints=web"
+        - "traefik.http.services.comment-service.loadbalancer.server.port=8080"
+        - "traefik.docker.network=traefik-public"
+
+  db:
+    image: postgres:18-trixie
+
+    environment:
+      POSTGRES_DB: comments
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+
+    secrets:
+      - pg_password
+
+    deploy:
+      replicas: 1
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.pg == true
+
+    networks:
+      - happy-headlines
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d comments"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    
+    volumes:
+      - comment-db:/var/lib/postgresql/18/docker

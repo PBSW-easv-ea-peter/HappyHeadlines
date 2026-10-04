@@ -40,6 +40,10 @@ public class Draft
     public long? ApprovedByJournalistId { get; set; }
     public DateTimeOffset? ApprovedDate { get; set; }
     public string[] FlaggedWords { get; set; } = [];
+
+    // True when ProfanityService couldn't be asked at submit time, so an empty FlaggedWords
+    // does not mean the text is clean.
+    public bool ProfanityCheckSkipped { get; set; }
     public DraftStatus Status { get; set; }
     public string? ReviewNote { get; set; }
     public string Byline { get; set; } = string.Empty;

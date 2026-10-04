@@ -34,7 +34,14 @@
             </MudAlert>
         }
 
-        @if (HasBeenSubmitted)
+        @if (HasBeenSubmitted && _draft.ProfanityCheckSkipped)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                <b>Profanity check:</b> not run - the profanity service was unavailable when this draft was submitted.
+                Read it carefully before approving.
+            </MudAlert>
+        }
+        else if (HasBeenSubmitted)
         {
             <MudAlert Severity="@(_draft.FlaggedWords.Length > 0 ? Severity.Warning : Severity.Success)" Class="mb-4">
                 @if (_draft.FlaggedWords.Length > 0)

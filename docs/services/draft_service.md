@@ -15,7 +15,7 @@ service: DraftService
 - **Commands:** Opret/redigér draft, submit, approve, reject, publish, archive, reactivate.
 - **Queries:** Alle drafts (evt. filtreret på `createdBy`), én draft, "filled-in" draft til publicering, alle journalister.
 - **Publicerer:** –
-- **Afhænger af:** ProfanityService (`POST /api/profanity/check`) ved submit-for-approval → markerede ord. Fortsætter uden, hvis circuit er åben.
+- **Afhænger af:** ProfanityService (`POST /api/profanity/check`) ved submit-for-approval → markerede ord. Svarer ProfanityService ikke, fortsætter submit uden tjek, og draftet markeres `profanity_check_skipped`, så editoren ikke får "no issues found".
 - **Afvigelse:** Profanity-tjek ligger her i stedet for i PublishService. `/publish` skifter kun status – PublishService kalder den ikke. `filled-in-draft` returnerer `"Unknown"` som journalist- og sektionsnavn.
 
 ## Endpoint-map

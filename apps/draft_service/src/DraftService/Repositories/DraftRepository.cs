@@ -20,7 +20,8 @@ public class DraftRepository : IDraftRepository
         created_by_journalist_id as CreatedByJournalistId, created_date as CreatedDate,
         last_edited_by_journalist_id as LastEditedByJournalistId, last_edited_date as LastEditedDate,
         approved_by_journalist_id as ApprovedByJournalistId, approved_date as ApprovedDate,
-        flagged_words as FlaggedWords, status, review_note as ReviewNote, byline as Byline
+        flagged_words as FlaggedWords, profanity_check_skipped as ProfanityCheckSkipped,
+        status, review_note as ReviewNote, byline as Byline
         """;
 
     public async Task<IEnumerable<Draft>> GetAllAsync(long? createdBy)
@@ -103,6 +104,7 @@ public class DraftRepository : IDraftRepository
                 last_edited_by_journalist_id = @JournalistId,
                 last_edited_date = current_timestamp,
                 flagged_words = ARRAY[]::text[],
+                profanity_check_skipped = false,
                 byline = @Byline
             where id = @Id and status = @RequiredStatus
             returning {SelectColumns}
@@ -131,13 +133,14 @@ public class DraftRepository : IDraftRepository
         return draft;
     }
 
-    public async Task<Draft?> SubmitForApprovalAsync(Guid id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords)
+    public async Task<Draft?> SubmitForApprovalAsync(Guid id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords, bool profanityCheckSkipped)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         var sql = $"""
             update drafts
             set status = @NewStatus,
                 flagged_words = @FlaggedWords,
+                profanity_check_skipped = @ProfanityCheckSkipped,
                 review_note = null
             where id = @Id and status = @ExpectedCurrentStatus
             returning {SelectColumns}
@@ -148,6 +151,7 @@ public class DraftRepository : IDraftRepository
             Id = id,
             NewStatus = (short)DraftStatus.PendingApproval,
             FlaggedWords = flaggedWords.ToArray(),
+            ProfanityCheckSkipped = profanityCheckSkipped,
             ExpectedCurrentStatus = (short)expectedCurrentStatus
         });
     }

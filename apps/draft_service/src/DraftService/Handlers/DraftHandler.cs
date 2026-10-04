@@ -105,18 +105,18 @@ public class DraftHandler : IDraftHandler
         var profanityResult = await _profanityClient.CheckAsync(draft.Breadtext, cancellationToken);
 
         // Fault isolation, same principle as CommentService: if ProfanityService can't be
-        // reached, submission still succeeds - the editor just won't get a pre-flagged word
-        // list for this pass and has to read the draft themselves.
+        // reached, submission still succeeds - the draft is marked as not checked, so the
+        // editor is told to read it themselves instead of seeing "no issues found".
         if (profanityResult.Unavailable)
         {
-            _logger.LogWarning("ProfanityService unavailable - submitting draft {DraftId} without flagged words.", id);
+            _logger.LogWarning("ProfanityService unavailable - submitting draft {DraftId} without a profanity check.", id);
         }
 
         var flaggedWords = profanityResult.Unavailable
             ? Array.Empty<string>()
             : profanityResult.BannedWords.ToArray();
 
-        var updated = await _repository.SubmitForApprovalAsync(id, draft.Status, flaggedWords);
+        var updated = await _repository.SubmitForApprovalAsync(id, draft.Status, flaggedWords, profanityResult.Unavailable);
         return StatusChanged(id, draft.Status, updated);
     }
 

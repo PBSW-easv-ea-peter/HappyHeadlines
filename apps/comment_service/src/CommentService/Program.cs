@@ -1,3 +1,4 @@
+using CommentService.Cache;
 using CommentService.Handlers;
 using CommentService.Profanity;
 using CommentService.Repositories;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,21 @@ builder.AddObservability();
 builder.Services.AddControllers();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentHandler, CommentHandler>();
+
+// CommentCache (docs/Caching.md). The service must keep working without it, so startup
+// doesn't wait for Redis and commands fail fast instead of queueing while it's down -
+// RedisCommentCache then falls back to the database.
+var redisOptions = ConfigurationOptions.Parse(
+    builder.Configuration["Cache:RedisConnection"]
+        ?? throw new InvalidOperationException("Cache:RedisConnection is not configured."));
+redisOptions.AbortOnConnectFail = false;
+redisOptions.BacklogPolicy = BacklogPolicy.FailFast;
+redisOptions.ConnectTimeout = 2000;
+redisOptions.SyncTimeout = 1000;
+redisOptions.AsyncTimeout = 1000;
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
+builder.Services.AddSingleton<ICommentCache, RedisCommentCache>();
 
 var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
     ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");

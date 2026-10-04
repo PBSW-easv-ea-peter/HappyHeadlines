@@ -1,0 +1,69 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<header class="reader-header">
+    <div class="reader-topbar">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex align-center justify-space-between">
+            <MudText Typo="Typo.caption" Class="reader-date">@Today</MudText>
+
+            <div class="d-flex align-center gap-2">
+                <MudSelect T="string"
+                           Value="_region"
+                           ValueChanged="OnRegionChanged"
+                           Label="Edition"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           AdornmentIcon="@Icons.Material.Filled.Public"
+                           Adornment="Adornment.Start"
+                           Class="reader-region-select">
+                    @foreach (var region in ReaderRegions.Ordered)
+                    {
+                        <MudSelectItem T="string" Value="@region.Code">@region.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudIconButton Icon="@DarkLightModeButtonIcon"
+                               Color="Color.Inherit"
+                               Size="Size.Small"
+                               OnClick="@DarkModeToggle" />
+            </div>
+        </MudContainer>
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.Large" Class="reader-masthead">
+        <a href="@HomeHref" class="reader-brand">
+            <img src="_content/HappyHeadlinesPages.web/images/logo.png" alt="" class="reader-logo" />
+            <span class="reader-wordmark">Happy Headlines</span>
+        </a>
+        <MudText Typo="Typo.subtitle2" Class="reader-tagline">
+            Only the good news &middot; @ReaderRegions.NameOf(_region) edition
+        </MudText>
+    </MudContainer>
+</header>
+
+<main class="reader-main">
+    @Body
+</main>
+
+<footer class="reader-footer">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex align-center justify-space-between">
+        <MudText Typo="Typo.caption">
+            &copy; @DateTime.Now.Year Happy Headlines
+            <span class="build-stamp" title="@BuildInfo.BuiltAt?.ToString("o")">&middot; Build @BuildInfo.Display</span>
+        </MudText>
+
+        @* TODO: backstage should sit behind a login page - skipped for now. *@
+        <MudButton Href="@SiteUrls.Backstage"
+                   Variant="Variant.Outlined"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Login"
+                   Color="Color.Default">
+            Backstage
+        </MudButton>
+    </MudContainer>
+</footer>

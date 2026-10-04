@@ -16,12 +16,12 @@ public static class ArticleCatalog
 
     public static async Task<List<ArticleDTO>> GetAllArticlesAsync(HttpClient http, ILogger logger)
     {
-        var regionResults = await Task.WhenAll(Regions.Select(region => LoadRegionAsync(http, logger, region)));
+        var regionResults = await Task.WhenAll(Regions.Select(region => GetRegionArticlesAsync(http, logger, region)));
 
         return regionResults.SelectMany(articles => articles).ToList();
     }
 
-    private static async Task<List<ArticleDTO>> LoadRegionAsync(HttpClient http, ILogger logger, string region)
+    public static async Task<List<ArticleDTO>> GetRegionArticlesAsync(HttpClient http, ILogger logger, string region)
     {
         var regionCode = region.ToUpper();
 
@@ -36,6 +36,24 @@ public static class ArticleCatalog
         {
             logger.LogWarning(ex, "Failed to load articles for region {Region}", regionCode);
             return [];
+        }
+    }
+
+    // Ids are only unique within a shard, so the region is part of the key.
+    // Returns null both for a 404 and for a failed call - callers show "not found".
+    public static async Task<ArticleDTO?> GetArticleAsync(HttpClient http, ILogger logger, string region, long id)
+    {
+        var regionCode = region.ToUpper();
+
+        try
+        {
+            return await http.GetFromJsonAsync<ArticleDTO>(
+                $"http://localhost:8080/api/articles/{regionCode}/{id}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to load article {ArticleId} for region {Region}", id, regionCode);
+            return null;
         }
     }
 }

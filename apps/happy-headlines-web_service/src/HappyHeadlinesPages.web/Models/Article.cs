@@ -11,6 +11,7 @@ public class ArticleDTO
     public string Byline { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public DateTimeOffset CreatedDate { get; set; }
+    public DateTimeOffset? PublishDate { get; set; }
     public string Location { get; set; } = string.Empty;
     public string SectionName { get; set; } = string.Empty;
     public string BreadText { get; set; } = string.Empty;

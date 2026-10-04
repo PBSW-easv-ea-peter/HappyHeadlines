@@ -40,13 +40,15 @@ builder.Services.AddSingleton<ICommentCache, RedisCommentCache>();
 
 var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
     ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+var readerWebBaseUrl = builder.Configuration["ReaderWeb:BaseUrl"]
+    ?? throw new InvalidOperationException("ReaderWeb:BaseUrl is not configured.");
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins(webAppBaseUrl)
+            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

@@ -1,4 +1,4 @@
-## Structirizr inde i 'C4 diagram*' anvender port 8081
+## Structirizr inde i 'C4 diagram*' anvender port 8089
 
 x-flyway-article-env: &flyway-article-env
   FLYWAY_USER: postgres
@@ -350,3 +350,14 @@ services:
     image: happyheadlines/happyheadlines_web
     ports:
       - "8000:8000"
+
+# =============================================================================
+#        Networks
+# =============================================================================
+
+# Fixed name (instead of <stack>_default) so monitoring/docker-compose.yaml can join it.
+# attachable: Swarm overlay networks reject plain `docker compose` containers without it.
+networks:
+  default:
+    name: happyheadlines
+    attachable: true

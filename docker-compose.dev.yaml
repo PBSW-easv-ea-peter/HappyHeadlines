@@ -1,4 +1,4 @@
-## Structirizr inde i 'C4 diagram*' anvender port 8081
+## Structirizr inde i 'C4 diagram*' anvender port 8089
 
 x-flyway-article-env: &flyway-article-env
   FLYWAY_USER: postgres
@@ -6,48 +6,9 @@ x-flyway-article-env: &flyway-article-env
   FLYWAY_LOCATIONS: filesystem:/flyway/sql
   FLYWAY_CONNECT_RETRIES: "10"
 
+## Telemetry (OTel Collector, Loki, Tempo, Prometheus, Grafana) runs separately - see monitoring/README.md
+
 services:
-
-# ──────────────────────────────────────────────────────────────────────────────
-#        Telemetry
-# ──────────────────────────────────────────────────────────────────────────────
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/etc/otelcol/config.yaml"]
-    volumes:
-      - ./configs/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
-    ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-#      - "9464:9464"   # Prometheus scrape endpoint
-    depends_on:
-      - loki
-      - tempo
-
-  tempo:
-    image: grafana/tempo:latest
-#    ports:
-#      - "3200:3200"
-    command: -config.file=/etc/tempo/config.yaml
-    volumes:
-      - ./configs/tempo-config.yaml:/etc/tempo/config.yaml:ro
-
-  loki:
-    image: grafana/loki:latest
-#    ports:
-#      - "3100:3100"
-    command: -config.file=/etc/loki/config/config.yaml
-    volumes:
-      - ./configs/loki-config.yaml:/etc/loki/config/config.yaml:ro
-
-  grafana:
-    image: grafana/grafana:latest
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./configs/grafana/data-sources:/etc/grafana/provisioning/datasources:ro
-      - grafana_data:/var/lib/grafana
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Articles
@@ -442,5 +403,13 @@ services:
 
 volumes:
   rabbitmq_data:
-  grafana_data:
+
+# =============================================================================
+#        Networks
+# =============================================================================
+
+# Fixed name (instead of <folder>_default) so monitoring/docker-compose.yaml can join it.
+networks:
+  default:
+    name: happyheadlines
 

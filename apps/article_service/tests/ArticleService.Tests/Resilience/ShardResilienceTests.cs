@@ -1,5 +1,5 @@
 using System.Net.Sockets;
-using ArticleService.Resilience;
+using ArticleService.Setup;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using Polly;

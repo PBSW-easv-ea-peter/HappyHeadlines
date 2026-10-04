@@ -1,0 +1,56 @@
+# Monitoring sandbox for the cache dashboard (week 40).
+# Standalone - runs without the dev/prod compose files. See README.md for how to
+# migrate these services into them once ArticleCache and CommentCache exist.
+
+services:
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  # One exporter per cache, so hit/miss stats stay separated per cache.
+  # MIGRATION: point REDIS_ADDR at the real cache containers.
+  redis-exporter-article:
+    image: oliver006/redis_exporter:latest
+    environment:
+      REDIS_ADDR: redis://redis-article:6379
+
+  redis-exporter-comment:
+    image: oliver006/redis_exporter:latest
+    environment:
+      REDIS_ADDR: redis://redis-comment:6379
+
+  # Dummy caches - only started with `--profile dummy`. Delete on migration.
+  redis-article:
+    image: redis:latest
+    profiles: [dummy]
+
+  redis-comment:
+    image: redis:latest
+    profiles: [dummy]
+
+  # Simulated reader traffic against the dummy caches - see README.md. Delete on migration.
+  traffic-simulator:
+    image: redis:latest
+    profiles: [simulate]
+    entrypoint: ["bash", "/scripts/simulate-traffic.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+    depends_on:
+      - redis-article
+      - redis-comment

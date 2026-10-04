@@ -1,0 +1,77 @@
+@page "/article/{Id:long}"
+
+<PageTitle>@(_article?.Title ?? "Happy Headlines")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    <div class="article-page">
+        <a href="@FrontPageHref" class="article-back">&larr; @ReaderRegions.NameOf(RegionCode) front page</a>
+
+        @if (_isLoading)
+        {
+            <MudSkeleton Height="56px" Width="85%" />
+            <MudSkeleton Height="24px" Width="40%" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="220px" Class="mt-4" />
+        }
+        else if (_article is null)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Text">
+                This story couldn't be found in the @ReaderRegions.NameOf(RegionCode) edition.
+            </MudAlert>
+        }
+        else
+        {
+            <article class="hero-article" style="@($"border-top-color:{Sections.ColorOfName(_article.SectionName)};")">
+                <MudText Typo="Typo.h3" HtmlTag="h1" Class="hero-title">@_article.Title</MudText>
+
+                <div class="article-meta mb-6">
+                    <SectionBadge Name="@_article.SectionName" />
+                    <span>By @_article.Byline</span>
+                    <span>&middot;</span>
+                    <span>@ArticleDisplay.FormatDate(_article)</span>
+                </div>
+
+                <div class="article-body">
+                    @foreach (var paragraph in Paragraphs)
+                    {
+                        <p>@paragraph</p>
+                    }
+                </div>
+            </article>
+
+            @if (_moreNews.Count > 0)
+            {
+                <section class="mt-10">
+                    <MudText Typo="Typo.h6" Class="block-heading">More good news</MudText>
+                    <div class="more-news-grid">
+                        @foreach (var other in _moreNews)
+                        {
+                            <ArticleCard Article="other" />
+                        }
+                    </div>
+                </section>
+            }
+
+            <section class="mt-10">
+                <MudText Typo="Typo.h6" Class="block-heading">Comments (@_comments.Count)</MudText>
+
+                @if (_comments.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="muted">No comments yet.</MudText>
+                }
+
+                @foreach (var comment in _comments)
+                {
+                    <div class="comment-item">
+                        <div class="d-flex justify-space-between align-center mb-1">
+                            <MudText Typo="Typo.subtitle2">@comment.AuthorName</MudText>
+                            <MudText Typo="Typo.caption" Class="muted">@comment.CreatedDate.ToLocalTime().ToString("d MMM yyyy HH:mm")</MudText>
+                        </div>
+                        <MudText Typo="Typo.body2">@comment.Text</MudText>
+                    </div>
+                }
+
+                <CommentForm @key="_loadedKey" Region="@RegionCode" ArticleId="Id" OnPublished="AddComment" />
+            </section>
+        }
+    </div>
+</MudContainer>

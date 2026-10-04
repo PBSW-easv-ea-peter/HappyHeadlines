@@ -1,4 +1,6 @@
 ## Structirizr inde i 'C4 diagram*' anvender port 8081
+# Own project name so dev never shares containers/DB volumes with docker-compose.yaml
+name: happyheadlines-dev
 
 x-flyway-article-env: &flyway-article-env
   FLYWAY_USER: postgres
@@ -436,6 +438,14 @@ services:
     image: happyheadlines/happyheadlines_web:dev
     ports:
       - "8000:8000"
+
+  happyheadlines-reader:
+    build:
+      context: ./apps/happy-headlines-web_service
+      dockerfile: Dockerfile.reader
+    image: happyheadlines/happyheadlines_reader:dev
+    ports:
+      - "8001:8001"
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Message Brokers 

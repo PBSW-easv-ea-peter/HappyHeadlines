@@ -1,0 +1,108 @@
+@inject HttpClient Http
+@inject ILogger<CommentForm> Logger
+
+<div class="comment-form">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Leave a comment</MudText>
+
+    <MudTextField T="string"
+                  @bind-Value="_authorName"
+                  Label="Your name"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  MaxLength="CommentCatalog.MaxAuthorNameLength"
+                  Counter="CommentCatalog.MaxAuthorNameLength"
+                  Immediate="true"
+                  Disabled="_isPosting"
+                  Class="mb-2" />
+
+    <MudTextField T="string"
+                  @bind-Value="_text"
+                  Label="Share something positive"
+                  Variant="Variant.Outlined"
+                  Lines="4"
+                  MaxLength="CommentCatalog.MaxTextLength"
+                  Counter="CommentCatalog.MaxTextLength"
+                  Immediate="true"
+                  Disabled="_isPosting"
+                  Class="mb-3" />
+
+    @if (_message is not null)
+    {
+        <MudAlert Severity="_severity" Variant="Variant.Text" Dense="true" Class="mb-3">@_message</MudAlert>
+    }
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Disabled="@(!CanPost)"
+               OnClick="PostAsync">
+        @(_isPosting ? "Posting…" : "Post comment")
+    </MudButton>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Region { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public long ArticleId { get; set; }
+
+    // Only called for comments that passed the profanity check and are visible.
+    [Parameter]
+    public EventCallback<Comment> OnPublished { get; set; }
+
+    private string _authorName = string.Empty;
+    private string _text = string.Empty;
+    private bool _isPosting;
+    private string? _message;
+    private Severity _severity = Severity.Info;
+
+    private bool CanPost =>
+        !_isPosting
+        && !string.IsNullOrWhiteSpace(_authorName)
+        && !string.IsNullOrWhiteSpace(_text);
+
+    private async Task PostAsync()
+    {
+        if (!CanPost)
+            return;
+
+        _isPosting = true;
+        _message = null;
+
+        var result = await CommentCatalog.PostAsync(Http, Logger, Region, ArticleId, _authorName.Trim(), _text.Trim());
+
+        _isPosting = false;
+
+        switch (result.Outcome)
+        {
+            case CommentPostOutcome.Published:
+                Show(Severity.Success, "Thanks! Your comment is now live.");
+                _text = string.Empty; // keep the name for the next comment
+                await OnPublished.InvokeAsync(result.Comment!);
+                break;
+
+            case CommentPostOutcome.Rejected:
+                Show(Severity.Warning, "Your comment wasn't published because it contains language we don't allow. Please rephrase it and try again.");
+                break;
+
+            // Nothing re-checks a pending comment later, so don't promise it will appear.
+            case CommentPostOutcome.NotVerified:
+                Show(Severity.Info, "We couldn't check your comment right now, so it hasn't been published. Please try again in a moment.");
+                break;
+
+            case CommentPostOutcome.Invalid:
+                Show(Severity.Error, result.Error ?? "Please fill in both your name and a comment.");
+                break;
+
+            default:
+                Show(Severity.Error, "Something went wrong while posting your comment. Please try again.");
+                break;
+        }
+    }
+
+    private void Show(Severity severity, string message)
+    {
+        _severity = severity;
+        _message = message;
+    }
+}

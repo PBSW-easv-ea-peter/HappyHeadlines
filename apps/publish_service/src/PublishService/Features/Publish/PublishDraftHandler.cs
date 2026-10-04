@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json;
 using Messaging.Events;
 using Messaging.Exchanges;
 using Messaging.RoutingKeys;
@@ -7,8 +5,6 @@ using PublishService.Shared;
 using PublishService.Shared.Exceptions;
 using PublishService.Shared.External;
 using PublishService.Shared.Models;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Exceptions;
 
 namespace PublishService.Features.Publish;
 
@@ -17,6 +13,12 @@ public interface IPublishDraftHandler
     Task<IResult> PublishAsync(Guid id);
 }
 
+// Turns an approved draft into a PublishedArticleEvent on the queue, which ArticleService
+// stores as an article, and then marks the draft as published in DraftService.
+//
+// The event is queued before the draft is marked, so a failure in between leaves the draft
+// Approved and publishing it again is safe: ArticleService ignores a second event for the
+// same DraftId. Marking first would risk a Published draft without an article.
 public class PublishDraftHandler(
     IHttpDraftClient draftClient,
     ILogger<PublishDraftHandler> logger,
@@ -30,15 +32,22 @@ public class PublishDraftHandler(
         {
             draft = await draftClient.GetAsync(id);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            logger.LogError("A network error occurred while trying to get draft with ID {Id}. Exception: {ex}", id, ex);
-            throw new InfrastructureException("A network error occurred while trying to get draft with ID {Id}.", ex);
+            logger.LogError(ex, "Could not get draft {DraftId} from DraftService", id);
+            throw new InfrastructureException("DraftService is unavailable. Please try again.", ex);
         }
 
         if (draft == null)
         {
             return Results.NotFound();
+        }
+
+        if (draft.Status != DraftStatus.Approved)
+        {
+            return Results.Conflict(draft.Status == DraftStatus.Published
+                ? "The draft is already published."
+                : $"Only approved drafts can be published. This draft is {draft.Status}.");
         }
 
         PublishedArticleEvent publishedArticleEvent = new()
@@ -61,12 +70,28 @@ public class PublishDraftHandler(
                 exchange: PublishedArticlesExchange.Name,
                 routingKey: PublishedArticleRKeys.ArticlePublished);
         }
-        catch (BrokerUnreachableException e)
+        catch (Exception ex)
         {
-            logger.LogError("Unreachable broker while trying to publish draft with ID {Id}. Exception: {ex}", id, e);
-            throw new InfrastructureException("An error occurred while trying to publish draft with ID {Id}.", e);
+            // Broker down, message not confirmed, or no queue bound to receive it.
+            logger.LogError(ex, "Could not queue draft {DraftId} for publishing", id);
+            throw new InfrastructureException("The article could not be queued for publishing. Please try again.", ex);
         }
-        
-        return Results.Ok();
+
+        logger.LogInformation("Draft {DraftId} queued for publishing as event {EventId}",
+            draft.Id, publishedArticleEvent.Id);
+
+        try
+        {
+            await draftClient.MarkPublishedAsync(id);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            logger.LogError(ex, "Draft {DraftId} was queued but could not be marked as published", id);
+            throw new InfrastructureException(
+                "The article was queued, but the draft could not be marked as published. Publish it again to retry.", ex);
+        }
+
+        return Results.Accepted(
+            value: new PublishDraftResponse(draft.Id, publishedArticleEvent.Id, publishedArticleEvent.PublishDate));
     }
 }

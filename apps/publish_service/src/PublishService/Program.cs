@@ -4,15 +4,11 @@ using PublishService.Shared.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load appsettings.jsonc (base configuration)
-var config = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    // .AddJsonFile("appsettings.jsonc", optional: false, reloadOnChange: true)
+// Load appsettings.{env}.jsonc. Sources added later win, so environment variables are added
+// again afterwards - otherwise the file would override e.g. RabbitMQ__HostName from compose.
+builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.jsonc", optional: true, reloadOnChange: true)
-    .Build();
-
-// Assign the configuration to the builder
-builder.Configuration.AddConfiguration(config);
+    .AddEnvironmentVariables();
 
 // OpenAPI
 builder.ConfigureOpenApi();

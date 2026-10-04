@@ -349,6 +349,41 @@ services:
         condition: service_completed_successfully
 
 # ──────────────────────────────────────────────────────────────────────────────
+#        Publishing
+# ──────────────────────────────────────────────────────────────────────────────
+
+  publishservice:
+    build:
+      context: ./apps/
+      dockerfile: publish_service/Dockerfile
+    image: happyheadlines/publish_service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8084
+    ports:
+      - "8084:8084"
+    # NOTE: ignored by `docker stack deploy` (Swarm) - see draftservice above.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+# ──────────────────────────────────────────────────────────────────────────────
+#        Message Brokers
+# ──────────────────────────────────────────────────────────────────────────────
+
+  # PublishService publishes published articles here; ArticleService consumes them.
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
+# ──────────────────────────────────────────────────────────────────────────────
 #        Clients
 # ──────────────────────────────────────────────────────────────────────────────
 

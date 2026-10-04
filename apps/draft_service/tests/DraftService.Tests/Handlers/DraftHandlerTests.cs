@@ -56,6 +56,28 @@ public class DraftHandlerTests
     }
 
     [Fact]
+    public async Task CreateAsync_UnknownSection_ReturnsValidationFailed()
+    {
+        // Articles are matched to a section by name, so an unknown section could never be published.
+        var request = new CreateDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "EU", SectionId = 99 };
+
+        var result = await _handler.CreateAsync(request);
+
+        Assert.Equal(DraftActionOutcome.ValidationFailed, result.Outcome);
+        _repository.Verify(r => r.CreateAsync(It.IsAny<CreateDraftRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateContentAsync_UnknownSection_ReturnsValidationFailed()
+    {
+        var request = new EditDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "EU", SectionId = 99 };
+
+        var result = await _handler.UpdateContentAsync(Guid.NewGuid(), request);
+
+        Assert.Equal(DraftActionOutcome.ValidationFailed, result.Outcome);
+    }
+
+    [Fact]
     public async Task CreateAsync_ValidLocation_ReturnsSuccess()
     {
         var request = new CreateDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "EU", SectionId = 1 };

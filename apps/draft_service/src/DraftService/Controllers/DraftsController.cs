@@ -29,25 +29,34 @@ public class DraftsController : ControllerBase
     }
     
     
+    // The draft as PublishService needs it to build a PublishedArticleEvent.
     [HttpGet("filled-in-draft/{id:guid}")]
     public async Task<ActionResult<FilledInDraft>> GetFilledInDraftById(Guid id)
     {
         var draft = await _handler.GetByIdAsync(id);
-        
+
         if (draft is null)
             return NotFound();
+
+        // ArticleService looks the section up by name and discards articles with an unknown
+        // one, so refuse here instead. Only drafts created before section validation can hit this.
+        var sectionName = Sections.NameOf(draft.SectionId);
+        if (sectionName is null)
+            return UnprocessableEntity($"Draft has an unknown section {draft.SectionId}.");
 
         FilledInDraft filledInDraft = new()
         {
             Id = draft.Id,
             Title = draft.Title,
             Location = draft.Location,
-            CreatedDate = draft.CreatedDate.DateTime,
+            CreatedDate = draft.CreatedDate.UtcDateTime,
             BreadText = draft.Breadtext,
-            JournalistName = "Unknown",
-            SectionName = "Unknown"
+            // Becomes the article's byline.
+            JournalistName = string.IsNullOrWhiteSpace(draft.Byline) ? "Happy Headlines" : draft.Byline,
+            SectionName = sectionName,
+            Status = draft.Status
         };
-        
+
         return Ok(filledInDraft);
     }
 

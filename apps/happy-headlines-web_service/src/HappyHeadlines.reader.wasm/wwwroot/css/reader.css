@@ -281,6 +281,14 @@ body {
     line-height: 1.45 !important;
 }
 
+.comment-form {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    background-color: var(--mud-palette-background-gray);
+}
+
 .comment-item {
     padding: 12px 0;
     border-top: 1px solid var(--mud-palette-lines-default);

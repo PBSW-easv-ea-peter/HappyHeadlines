@@ -62,6 +62,8 @@ public partial class ArticlePage : ComponentBase
         _isLoading = false;
     }
 
+    private void AddComment(Comment comment) => _comments.Add(comment);
+
     // Same edition, same section first, then the newest of the rest - so the
     // reader always has something to continue with.
     private List<ArticleDTO> PickMoreNews(List<ArticleDTO> regionArticles, ArticleDTO? current) =>

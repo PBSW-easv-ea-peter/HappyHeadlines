@@ -69,6 +69,8 @@
                         <MudText Typo="Typo.body2">@comment.Text</MudText>
                     </div>
                 }
+
+                <CommentForm @key="_loadedKey" Region="@RegionCode" ArticleId="Id" OnPublished="AddComment" />
             </section>
         }
     </div>

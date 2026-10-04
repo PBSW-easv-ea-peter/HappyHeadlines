@@ -20,7 +20,7 @@ service: CommentService
 
 ## Endpoint-map
 
-Base-URL (lokalt): `http://localhost:8082`
+Base-URL (lokalt): `http://localhost:8082` · `{articleId}` er artiklens GUID (`comments.article_id UUID`, ingen FK – artiklen ligger i ArticleServices shard for `{location}`)
 
 | Type | Metode | Route / Emne                              | Beskrivelse |
 |------|--------|-------------------------------------------|-------------|

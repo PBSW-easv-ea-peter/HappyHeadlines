@@ -14,7 +14,7 @@ public class CommentRepository : ICommentRepository
             ?? throw new InvalidOperationException("ConnectionStrings:CommentDatabase is not configured.");
     }
 
-    public async Task<IEnumerable<CommentEntity>> GetApprovedByArticleIdAsync(string articleLocation, long articleId)
+    public async Task<IEnumerable<CommentEntity>> GetApprovedByArticleIdAsync(string articleLocation, Guid articleId)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         const string sql = """
@@ -26,7 +26,7 @@ public class CommentRepository : ICommentRepository
         return await connection.QueryAsync<CommentEntity>(sql, new { ArticleId = articleId, ArticleLocation = articleLocation, Status = (short)CommentStatus.Approved });
     }
 
-    public async Task<CommentEntity> CreateAsync(string articleLocation, long articleId, PostCommentRequest request, CommentStatus status)
+    public async Task<CommentEntity> CreateAsync(string articleLocation, Guid articleId, PostCommentRequest request, CommentStatus status)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         const string sql = """

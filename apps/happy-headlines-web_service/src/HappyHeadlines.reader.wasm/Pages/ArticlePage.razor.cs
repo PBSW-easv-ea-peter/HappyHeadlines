@@ -14,7 +14,7 @@ public partial class ArticlePage : ComponentBase
     private ILogger<ArticlePage> Logger { get; set; } = default!;
 
     [Parameter]
-    public long Id { get; set; }
+    public Guid Id { get; set; }
 
     // The article's shard - ids are only unique within one region.
     [SupplyParameterFromQuery(Name = "region")]

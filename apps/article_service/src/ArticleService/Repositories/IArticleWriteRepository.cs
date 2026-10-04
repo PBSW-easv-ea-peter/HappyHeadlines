@@ -10,6 +10,6 @@ public interface IArticleWriteRepository
     // Returns false if an article for the same DraftId already exists (redelivered message).
     Task<bool> CreatePublishedAsync(PublishedArticleEvent published);
 
-    Task<bool> UpdateAsync(string location, long id, UpsertArticleRequest request);
-    Task<bool> DeleteAsync(string location, long id);
+    Task<bool> UpdateAsync(string location, Guid id, UpsertArticleRequest request);
+    Task<bool> DeleteAsync(string location, Guid id);
 }

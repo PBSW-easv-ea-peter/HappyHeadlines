@@ -18,8 +18,8 @@ public class CommentsController : ControllerBase
         _handler = handler;
     }
 
-    [HttpGet("{location}/{articleId:long}")]
-    public async Task<ActionResult<IEnumerable<CommentDto>>> GetForArticle(string location, long articleId)
+    [HttpGet("{location}/{articleId:guid}")]
+    public async Task<ActionResult<IEnumerable<CommentDto>>> GetForArticle(string location, Guid articleId)
     {
         if (!ValidLocations.Contains(location))
         {
@@ -32,8 +32,8 @@ public class CommentsController : ControllerBase
         return Ok(await _handler.GetApprovedAsync(location, articleId));
     }
 
-    [HttpPost("{location}/{articleId:long}")]
-    public async Task<ActionResult<CommentDto>> Post(string location, long articleId, PostCommentRequest request, CancellationToken ct = default)
+    [HttpPost("{location}/{articleId:guid}")]
+    public async Task<ActionResult<CommentDto>> Post(string location, Guid articleId, PostCommentRequest request, CancellationToken ct = default)
     {
         if (!ValidLocations.Contains(location))
         {

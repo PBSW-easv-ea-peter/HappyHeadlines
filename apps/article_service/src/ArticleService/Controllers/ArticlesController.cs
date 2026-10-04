@@ -43,8 +43,8 @@ public class ArticlesController : ControllerBase
         return Ok(await _readRepository.GetAllAsync(location));
     }
 
-    [HttpGet("{location}/{id:long}")]
-    public async Task<ActionResult<Article>> GetById(string location, long id)
+    [HttpGet("{location}/{id:guid}")]
+    public async Task<ActionResult<Article>> GetById(string location, Guid id)
     {
         if (!ValidLocations.Contains(location))
         {
@@ -73,8 +73,8 @@ public class ArticlesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { location, id = article.Id }, article);
     }
 
-    [HttpPut("{location}/{id:long}")]
-    public async Task<IActionResult> Update(string location, long id, UpsertArticleRequest request)
+    [HttpPut("{location}/{id:guid}")]
+    public async Task<IActionResult> Update(string location, Guid id, UpsertArticleRequest request)
     {
         if (!ValidLocations.Contains(location))
         {
@@ -89,8 +89,8 @@ public class ArticlesController : ControllerBase
         return updated ? NoContent() : NotFound();
     }
 
-    [HttpDelete("{location}/{id:long}")]
-    public async Task<IActionResult> Delete(string location, long id)
+    [HttpDelete("{location}/{id:guid}")]
+    public async Task<IActionResult> Delete(string location, Guid id)
     {
         if (!ValidLocations.Contains(location))
         {

@@ -44,7 +44,7 @@
     public string Region { get; set; } = string.Empty;
 
     [Parameter, EditorRequired]
-    public long ArticleId { get; set; }
+    public Guid ArticleId { get; set; }
 
     // Only called for comments that passed the profanity check and are visible.
     [Parameter]

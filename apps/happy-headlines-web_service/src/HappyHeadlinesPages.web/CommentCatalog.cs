@@ -28,7 +28,7 @@ public static class CommentCatalog
 
     // CommentService only returns approved comments from this endpoint, so the
     // result is safe to show to readers as-is.
-    public static async Task<List<Comment>> GetApprovedAsync(HttpClient http, ILogger logger, string region, long articleId)
+    public static async Task<List<Comment>> GetApprovedAsync(HttpClient http, ILogger logger, string region, Guid articleId)
     {
         var regionCode = region.ToUpper();
 
@@ -49,7 +49,7 @@ public static class CommentCatalog
     // The profanity check runs synchronously inside the POST, so the outcome is
     // known as soon as the call returns (see docs/comment_and_profanity_service.md).
     public static async Task<CommentPostResult> PostAsync(
-        HttpClient http, ILogger logger, string region, long articleId, string authorName, string text)
+        HttpClient http, ILogger logger, string region, Guid articleId, string authorName, string text)
     {
         var regionCode = region.ToUpper();
 

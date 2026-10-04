@@ -39,7 +39,7 @@ public class ArticleCache : IArticleCache
         return [];
     }
 
-    public async Task<Article?> GetArticleByIdAsync(string location, long id)
+    public async Task<Article?> GetArticleByIdAsync(string location, Guid id)
     {
         IDatabase db = _redis.GetDatabase();
         string key = $"{ArticleKeyPrefix}{location}:{id}";
@@ -86,7 +86,7 @@ public class ArticleCache : IArticleCache
         _logger.LogInformation("Full cache refresh completed");
     }
 
-    public async Task RefreshArticleAsync(string location, long id)
+    public async Task RefreshArticleAsync(string location, Guid id)
     {
         try
         {
@@ -106,7 +106,7 @@ public class ArticleCache : IArticleCache
         }
     }
 
-    public async Task InvalidateArticleAsync(string location, long id)
+    public async Task InvalidateArticleAsync(string location, Guid id)
     {
         try
         {

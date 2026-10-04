@@ -9,7 +9,7 @@ public class Section
 
 public class Article
 {
-    public long Id { get; set; }
+    public Guid Id { get; set; }
 
     public string Byline { get; set; } = string.Empty;
 

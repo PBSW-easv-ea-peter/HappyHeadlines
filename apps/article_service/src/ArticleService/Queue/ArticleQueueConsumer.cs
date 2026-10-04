@@ -1,6 +1,6 @@
 using System.Text.Json;
 using ArticleService.Repositories;
-using ArticleService.Resilience;
+using ArticleService.Setup;
 using Messaging.Events;
 using Messaging.Exchanges;
 using Messaging.RoutingKeys;

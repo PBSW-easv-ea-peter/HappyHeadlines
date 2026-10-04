@@ -21,7 +21,7 @@
   },
 
   "DraftService": {
-    //"BaseUrl": "http://draftservice:8080",
+    //"BaseUrl": "http://draftservice:8083",
     "BaseUrl": "http://localhost:8083"
   },
 

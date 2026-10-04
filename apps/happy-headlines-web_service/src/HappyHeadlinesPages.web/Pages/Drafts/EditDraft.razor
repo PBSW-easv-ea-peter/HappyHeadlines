@@ -117,6 +117,12 @@
                         Reject
                     </MudButton>
                 }
+                else if (_draft.Status == DraftStatus.Approved)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="PublishAsync" Disabled="@isSaving">
+                        @(isSaving ? "Publishing…" : "Publish")
+                    </MudButton>
+                }
                 else if (_draft.Status == DraftStatus.Archived)
                 {
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ReactivateAsync" Disabled="@isSaving">

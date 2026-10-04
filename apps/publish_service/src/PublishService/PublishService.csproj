@@ -16,4 +16,9 @@
     <ProjectReference Include="..\..\..\shared\HappyHeadlines.Observability\HappyHeadlines.Observability.csproj" />
   </ItemGroup>
 
+  <!-- The Web SDK only publishes *.json config, and Program.cs loads appsettings.{env}.jsonc. -->
+  <ItemGroup>
+    <Content Include="appsettings.*.jsonc" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

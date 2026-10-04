@@ -24,6 +24,9 @@ public class FilledInDraft
     public required DateTime CreatedDate { get; init; }
 
     public required string BreadText { get; init; }
+
+    // Lets PublishService check the draft is approved before it publishes it.
+    public required DraftStatus Status { get; init; }
 }
 
 public class Draft

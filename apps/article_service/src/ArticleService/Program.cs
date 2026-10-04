@@ -20,6 +20,9 @@ builder.Services.AddSingleton<IArticleShardResolver, ArticleShardResolver>();
 builder.Services.AddScoped<IArticleReadRepository, ArticleReadRepository>();
 builder.Services.AddScoped<IArticleWriteRepository, ArticleWriteRepository>();
 
+// Circuit breaker per shard, used by ArticleQueueConsumer.
+builder.AddShardResilience();
+
 if(builder.Environment.IsDevelopment())
 {
     builder.Services.AddHostedService<ArticleSeeder>();

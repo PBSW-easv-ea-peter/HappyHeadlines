@@ -54,6 +54,34 @@ public class DraftsControllerTests
     }
 
     [Fact]
+    public async Task GetFilledInDraft_ReturnsBylineSectionNameAndStatus()
+    {
+        var draft = MakeDraft(DraftId, DraftStatus.Approved);
+        draft.SectionId = 2;
+        draft.Byline = "Ava Martinez and James Lee";
+        _handler.Setup(h => h.GetByIdAsync(DraftId)).ReturnsAsync(draft);
+
+        var result = await _controller.GetFilledInDraftById(DraftId);
+
+        var filled = Assert.IsType<FilledInDraft>(Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.Equal("Technology", filled.SectionName);
+        Assert.Equal("Ava Martinez and James Lee", filled.JournalistName);
+        Assert.Equal(DraftStatus.Approved, filled.Status);
+    }
+
+    [Fact]
+    public async Task GetFilledInDraft_UnknownSection_ReturnsUnprocessableEntity()
+    {
+        var draft = MakeDraft(DraftId, DraftStatus.Approved);
+        draft.SectionId = 99;
+        _handler.Setup(h => h.GetByIdAsync(DraftId)).ReturnsAsync(draft);
+
+        var result = await _controller.GetFilledInDraftById(DraftId);
+
+        Assert.IsType<UnprocessableEntityObjectResult>(result.Result);
+    }
+
+    [Fact]
     public async Task Create_ValidationFailed_ReturnsBadRequest()
     {
         var request = new CreateDraftRequest { JournalistId = 1, Title = "T", Breadtext = "B", Location = "XX", SectionId = 1 };

@@ -15,8 +15,9 @@ service: ArticleService
 - **Commands:** Opret, opdatér og slet artikel.
 - **Queries:** Alle artikler for en location, én artikel pr. id.
 - **Publicerer:** –
-- **Afhænger af:** Ingen i dag. (Planlagt: `published_articles` / `article.published` fra PublishService.)
-- **Afvigelse:** `ArticleQueueConsumer` er en tom stub – Create/Update sker via REST, ikke via kø som beskrevet i arkitekturen.
+- **Afhænger af:** RabbitMQ – abonnerer på `published_articles` / `article.published` fra PublishService.
+- **Fault isolation:** Circuit breaker pr. shard (`Resilience/ShardResilience.cs`). Er et shard nede, requeues dets beskeder, mens de øvrige shards skriver videre. Retry-kø er ikke implementeret – se [plan-articleservice-subscriber.md](../plan-articleservice-subscriber.md).
+- **Afvigelse:** REST-endpoints for Create/Update/Delete findes stadig ved siden af køen og går ikke gennem circuit breakeren.
 
 ## Endpoint-map
 
@@ -29,6 +30,6 @@ Base-URL (lokalt): `http://localhost:8080` · `{location}` ∈ `EU|NA|SA|AU|AS|A
 | REST  | POST     | /api/articles/{location}                | Opret artikel |
 | REST  | PUT      | /api/articles/{location}/{id}           | Opdatér artikel |
 | REST  | DELETE   | /api/articles/{location}/{id}           | Slet artikel |
-| Queue | consume  | *(ikke implementeret)*                  | Stub – logger kun ved opstart |
+| Queue | consume  | `article_service.published_articles` ← `published_articles` / `article.published` | Gemmer artiklen i shard for `Location`. Idempotent på `DraftId` (`draft_id UNIQUE`, V4). Ack efter skrivning. |
 
 Uddybning: [article_service.md](../article_service.md)

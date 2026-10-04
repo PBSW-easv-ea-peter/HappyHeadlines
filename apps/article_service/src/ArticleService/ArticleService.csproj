@@ -11,7 +11,18 @@
     <PackageReference Include="Npgsql" Version="8.*" />
     <PackageReference Include="Dapper" Version="2.*" />
     <PackageReference Include="StackExchange.Redis" Version="3.3.1" />
+    <PackageReference Include="Polly.Core" Version="8.8.0" />
+    <PackageReference Include="Polly.Extensions" Version="8.8.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ArticleService.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\HappyHeadlines.Observability\HappyHeadlines.Observability.csproj" />
+    <ProjectReference Include="..\..\..\shared\src\Messaging\Messaging.csproj" />
   </ItemGroup>
 
 </Project>

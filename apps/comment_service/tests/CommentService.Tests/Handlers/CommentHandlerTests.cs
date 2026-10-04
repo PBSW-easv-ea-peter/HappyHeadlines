@@ -39,7 +39,7 @@ public class CommentHandlerTests
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: false));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "This is a nice comment" };
 
@@ -54,7 +54,7 @@ public class CommentHandlerTests
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["idiot"], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["idiot"], Unavailable: false));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "You are an idiot" };
 
@@ -64,11 +64,11 @@ public class CommentHandlerTests
     }
 
     [Fact]
-    public async Task PostAsync_CircuitOpen_IsPendingProfanityCheck()
+    public async Task PostAsync_ProfanityServiceUnavailable_IsPendingProfanityCheck()
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], CircuitOpen: true));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: true));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "Doesn't matter" };
 
@@ -82,7 +82,7 @@ public class CommentHandlerTests
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: [], Unavailable: false));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "one two three four" };
 
@@ -98,7 +98,7 @@ public class CommentHandlerTests
     {
         _profanityClient
             .Setup(c => c.CheckAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["bandit"], CircuitOpen: false));
+            .ReturnsAsync(new ProfanityCheckResult(BannedWords: ["bandit"], Unavailable: false));
 
         var request = new PostCommentRequest { AuthorName = "Alice", Text = "bandit" };
 

@@ -21,13 +21,17 @@
     "AN": "Host=articledb-an;Port=5432;Database=articles;Username=postgres;Password=Postgres1234",
     "AF": "Host=articledb-af;Port=5432;Database=articles;Username=postgres;Password=Postgres1234",
     "GO": "Host=articledb-global;Port=5432;Database=articles;Username=postgres;Password=Postgres1234"
+  },
+
+  "OpenTelemetry": {
+    "Endpoint": "http://otel-collector:4318"
   }
 
-//  "Kestrel": {
-//    "Endpoints": {
-//      "Http": {
-//        "Url": "http://0.0.0.0:8080"
-//      }
-//    }
-//  }
+  //  "Kestrel": {
+  //    "Endpoints": {
+  //      "Http": {
+  //        "Url": "http://0.0.0.0:8080"
+  //      }
+  //    }
+  //  }
 }

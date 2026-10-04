@@ -1,8 +1,9 @@
-using PublishService.Models;
+using PublishService.Shared.External;
+using PublishService.Shared.Models;
 
-namespace PublishService.Services.External;
+namespace PublishService.Shared.HttpClients;
 
-public class FakeDraftService : IDraftService
+public class FakeDraftClient : IHttpDraftClient
 {
     private static readonly List<DraftDTO> Drafts =
     [
@@ -28,7 +29,7 @@ public class FakeDraftService : IDraftService
         }
     ];
 
-    public Task<DraftDTO?> GetDraftAsync(Guid id)
+    public Task<DraftDTO?> GetAsync(Guid id)
     {
         var draft = Drafts.FirstOrDefault(d => d.Id == id);
 

@@ -19,21 +19,22 @@
     "UserName": "admin",
     "Password": "admin"
   },
-  
+
   "DraftService": {
     //"BaseUrl": "http://draftservice:8080",
     "BaseUrl": "http://localhost:8083"
   },
 
   "OpenTelemetry": {
-    //    "LogsEndpoint": "http://otel-collector:4318/v1/logs"
-    "LogsEndpoint": "http://localhost:4318/v1/logs"
+    //    "Endpoint": "http://otel-collector:4318"
+    "Endpoint": "http://localhost:4318"
   }
-//  "Kestrel": {
-//    "Endpoints": {
-//      "Http": {
-//        "Url": "http://0.0.0.0:8080"
-//      }
-//    }
-//  }
+  //  "Kestrel": {
+  //    "Endpoints": {
+  //      "Http": { 
+  //        "Url": "http://0.0.0.0:8080"
+  //      }
+  //    }
+  //  }
+
 }

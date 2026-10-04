@@ -1,7 +1,8 @@
 using RabbitMQ.Client;
 using Messaging.Exchanges;
 using Microsoft.Extensions.Options;
-using PublishService.Models.Options;
+using PublishService.Shared;
+using PublishService.Shared.Options;
 
 namespace PublishService.Setup;
 
@@ -12,6 +13,7 @@ public static class RabbitMq
         public void ConfigureRabbitMq()
         {
             builder.AddConnectionFactory();
+            builder.Services.AddScoped<IRabbitMqService, RabbitMqService>();
         }
     }
 

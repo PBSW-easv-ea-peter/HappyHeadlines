@@ -29,6 +29,9 @@ public static class ObservabilityExtensions
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddNpgsql()
+                // RabbitMQ.Client 7 has built-in ActivitySources. Subscribing makes the client
+                // emit publish/deliver spans and carry the trace context in message headers.
+                .AddSource("RabbitMQ.Client.Publisher", "RabbitMQ.Client.Subscriber")
                 .AddOtlpExporter(options =>
                 {
                     options.Endpoint = new Uri($"{endpoint}/v1/traces");

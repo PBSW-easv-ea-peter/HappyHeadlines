@@ -20,6 +20,9 @@ builder.Services.AddSingleton<IArticleShardResolver, ArticleShardResolver>();
 builder.Services.AddScoped<IArticleReadRepository, ArticleReadRepository>();
 builder.Services.AddScoped<IArticleWriteRepository, ArticleWriteRepository>();
 
+// Circuit breaker per shard, used by ArticleQueueConsumer.
+builder.AddShardResilience();
+
 if(builder.Environment.IsDevelopment())
 {
     builder.Services.AddHostedService<ArticleSeeder>();
@@ -39,13 +42,15 @@ builder.Services.AddHostedService<CacheRefreshService>();
 
 var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
     ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+var readerWebBaseUrl = builder.Configuration["ReaderWeb:BaseUrl"]
+    ?? throw new InvalidOperationException("ReaderWeb:BaseUrl is not configured.");
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins(webAppBaseUrl)
+            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

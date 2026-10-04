@@ -23,7 +23,8 @@ public class PublishDraftEndpoint : IEndpoint
         }
         catch (InfrastructureException e)
         {
-            return Results.Problem(e.Message, statusCode: StatusCodes.Status500InternalServerError);
+            // A dependency (DraftService or RabbitMQ) is down - the request can be retried.
+            return Results.Problem(e.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
         }
     }
 }

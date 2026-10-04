@@ -1,4 +1,6 @@
 ## Structirizr inde i 'C4 diagram*' anvender port 8089
+# Own project name so dev never shares containers/DB volumes with docker-compose.yaml
+name: happyheadlines-dev
 
 x-flyway-article-env: &flyway-article-env
   FLYWAY_USER: postgres
@@ -284,6 +286,14 @@ services:
       - ./database/init/comment/comment_baseline.sql:/docker-entrypoint-initdb.d/01_comment_baseline.sql:ro
       - ./database/queries/comment/seed_comments.sql:/docker-entrypoint-initdb.d/02_seed_comments.sql:ro
 
+  # CommentCache - filled on miss, LRU over the 30 most recently read articles (docs/Caching.md).
+  # No persistence: an empty cache after a restart just fills up again.
+  comment-cache:
+    image: redis:8.8.3-alpine
+    ports:
+      - "6380:6379"  # HostPort:ContainerPort
+    command: redis-server --save "" --appendonly no
+
   profanitydb:
     image: postgres:18-trixie
     environment:
@@ -366,6 +376,28 @@ services:
         condition: service_completed_successfully
 
 # ──────────────────────────────────────────────────────────────────────────────
+#        Publishing
+# ──────────────────────────────────────────────────────────────────────────────
+
+  publishservice:
+    build:
+      context: ./apps/
+      dockerfile: publish_service/Dockerfile
+    image: happyheadlines/publish_service:dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8084
+      # appsettings.Development.jsonc targets a locally run service - point it at the containers.
+      RabbitMQ__HostName: rabbitmq
+      DraftService__BaseUrl: http://draftservice:8083
+      OpenTelemetry__Endpoint: http://otel-collector:4318
+    ports:
+      - "8084:8084"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+# ──────────────────────────────────────────────────────────────────────────────
 #        Clients
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -375,6 +407,14 @@ services:
     image: happyheadlines/happyheadlines_web:dev
     ports:
       - "8000:8000"
+
+  happyheadlines-reader:
+    build:
+      context: ./apps/happy-headlines-web_service
+      dockerfile: Dockerfile.reader
+    image: happyheadlines/happyheadlines_reader:dev
+    ports:
+      - "8001:8001"
 
 # ──────────────────────────────────────────────────────────────────────────────
 #        Message Brokers 
@@ -408,8 +448,8 @@ volumes:
 #        Networks
 # =============================================================================
 
-# Fixed name (instead of <folder>_default) so monitoring/docker-compose.yaml can join it.
+# Fixed name (instead of <project>_default) so monitoring/docker-compose.yaml can join it.
 networks:
   default:
-    name: happyheadlines
+    name: happyheadlines-dev
 

@@ -1,5 +1,5 @@
 # Monitoring for the whole HappyHeadlines application.
-# Joins the app's `happyheadlines` network, so start the app stack first - see README.md.
+# Joins the app's network (dev by default, see APP_NETWORK below), so start the app stack first - see README.md.
 # For monitoring alone with dummy caches and simulated traffic, use docker-compose.dev.yaml.
 
 # Explicit project name - both compose files live in this folder and would otherwise share one.
@@ -59,8 +59,6 @@ services:
     environment:
       REDIS_ADDR: redis://article-cache:6379
 
-  # CommentCache doesn't exist yet - the dashboard shows `Down` for it until it does.
-  # Placeholder name: update it if the service gets another name in the app compose.
   redis-exporter-comment:
     image: oliver006/redis_exporter:latest
     environment:
@@ -88,8 +86,9 @@ services:
 volumes:
   grafana_data:
 
-# Created by the app stack (docker-compose.dev.yaml / docker-compose.yaml in the repo root).
+# Created by the app stack: happyheadlines-dev (docker-compose.dev.yaml) or happyheadlines-prod
+# (docker-compose.yaml). Pick prod with APP_NETWORK=happyheadlines-prod.
 networks:
   default:
-    name: happyheadlines
+    name: ${APP_NETWORK:-happyheadlines-dev}
     external: true

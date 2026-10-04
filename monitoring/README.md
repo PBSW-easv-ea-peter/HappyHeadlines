@@ -17,31 +17,35 @@ comment-cache ─> redis-exporter-comment ─┴─> Prometheus ─────�
 
 ## Monitoring the application
 
-The app stack creates the network `happyheadlines`, and this compose joins it as an
-external network. Start the app first - otherwise Compose fails with
-`Could not attach to network happyheadlines: ... network happyheadlines not found`.
+The app stack creates its network - `happyheadlines-dev` or `happyheadlines-prod`, kept
+apart like the stacks' project names - and this compose joins it as an external network.
+`APP_NETWORK` picks which one (default: dev). Start the app first - otherwise Compose fails
+with `Could not attach to network happyheadlines-dev: ... not found`.
 
 ```sh
-docker compose -f docker-compose.dev.yaml up -d              # app (repo root)
-docker compose -f monitoring/docker-compose.yaml up -d       # monitoring
+# Dev (repo root)
+docker compose -f docker-compose.dev.yaml up -d
+docker compose -f monitoring/docker-compose.yaml up -d
+
+# Prod
+APP_NETWORK=happyheadlines-prod docker compose -f monitoring/docker-compose.yaml up -d
 ```
 
-On the shared network the services reach the collector as `otel-collector:4318`
-(see `appsettings.*.json`) and the exporters reach the caches by service name.
-Services you run on the host instead use `localhost:4318`.
+In PowerShell, set the variable first: `$env:APP_NETWORK = "happyheadlines-prod"`.
 
-The prod stack (`docker stack deploy`) uses the same network name. It's declared
-`attachable: true` in the root `docker-compose.yaml`, because Swarm overlay networks
-reject plain `docker compose` containers otherwise. Don't run the dev and prod stacks
-on the same machine - both would create `happyheadlines`.
+On the shared network the services reach the collector as `otel-collector:4318`
+(see `appsettings.*.json`) and the exporters reach `article-cache` and `comment-cache` by
+service name. Services you run on the host instead use `localhost:4318`.
+
+The prod network is declared `attachable: true` in the root `docker-compose.yaml`, because
+Swarm overlay networks (`docker stack deploy`) reject plain `docker compose` containers otherwise.
 
 - Grafana: http://localhost:3000 (admin/admin) - the cache dashboard is under *Dashboards > Caching*
 - Prometheus: http://localhost:9090 - *Status > Targets* shows both exporters
 
-CommentCache doesn't exist yet, so its exporter shows `Down`. Once it does, check that
-`REDIS_ADDR` in `docker-compose.yaml` matches its service name. The dashboard queries by
-the `cache` label from `prometheus/prometheus.yml` only, so container names can change
-freely as long as the labels stay.
+If a cache is renamed in the app compose, update `REDIS_ADDR` in `docker-compose.yaml`.
+The dashboard queries by the `cache` label from `prometheus/prometheus.yml` only, so
+container names can change freely as long as the labels stay.
 
 ## Monitoring on its own (dev)
 
@@ -171,7 +175,7 @@ in the graphs.
 
 | Path | Purpose |
 |---|---|
-| `docker-compose.yaml` | Full monitoring, joins the app's `happyheadlines` network |
+| `docker-compose.yaml` | Full monitoring, joins the app's network (`APP_NETWORK`, default `happyheadlines-dev`) |
 | `docker-compose.dev.yaml` | Same monitoring services plus dummy Redis and `traffic-simulator` (profile `simulate`) |
 | `otel-collector/config.yaml` | Receives OTLP from the services, forwards logs to Loki and traces to Tempo |
 | `loki/config.yaml`, `tempo/config.yaml` | Single-binary Loki and Tempo on the local filesystem |

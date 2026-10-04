@@ -1,0 +1,10 @@
+<span class="section-badge" style="@($"color:{Color};background-color:{Color}1F;")">
+    @Name
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    private string Color => Sections.ColorOfName(Name);
+}

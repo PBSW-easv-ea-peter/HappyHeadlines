@@ -13,11 +13,10 @@ public class ProfanityClient : IProfanityClient
         _logger = logger;
     }
 
+    // Fails closed: anything other than a successful answer from ProfanityService is
+    // reported as Unavailable, never as "no banned words".
     public async Task<ProfanityCheckResult> CheckAsync(string text, CancellationToken cancellationToken = default)
     {
-        List<string> bannedWords = [];
-        bool circuitIsOpen = false;
-
         try
         {
             var response = await _httpClient.PostAsJsonAsync(
@@ -27,23 +26,27 @@ public class ProfanityClient : IProfanityClient
 
             response.EnsureSuccessStatusCode();
 
-            bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken)
-                ?? [];
+            var bannedWords = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken);
+            if (bannedWords is null)
+            {
+                _logger.LogWarning("ProfanityService returned an empty response - treating the text as not checked");
+                return ProfanityCheckResult.NotChecked;
+            }
+
+            return new ProfanityCheckResult(bannedWords, Unavailable: false);
         }
         catch (BrokenCircuitException)
         {
             _logger.LogWarning("ProfanityService circuit is open - skipping profanity check");
-            circuitIsOpen = true;
+            return ProfanityCheckResult.NotChecked;
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogWarning("ProfanityService got a HttpRequestException");
+            // Unreachable, timed out (TaskCanceledException from HttpClient.Timeout), error
+            // status or unreadable body. Exception type only - the message can contain URLs.
+            _logger.LogWarning("ProfanityService call failed ({ExceptionType}) - treating the text as not checked",
+                ex.GetType().Name);
+            return ProfanityCheckResult.NotChecked;
         }
-        catch (TaskCanceledException)
-        {
-            _logger.LogWarning("TaskCanceledException was thrown.");
-        }
-
-        return new ProfanityCheckResult(bannedWords, circuitIsOpen);
     }
 }

@@ -4,7 +4,7 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 
-namespace ArticleService.Resilience;
+namespace ArticleService.Setup;
 
 // One retry + circuit breaker pipeline per article shard, so a failing shard (e.g. EU)
 // fails fast without affecting writes to the other shards.

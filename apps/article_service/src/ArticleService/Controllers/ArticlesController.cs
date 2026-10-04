@@ -1,3 +1,4 @@
+using ArticleService.Cache;
 using ArticleService.Models;
 using ArticleService.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,16 @@ public class ArticlesController : ControllerBase
 
     private readonly IArticleReadRepository _readRepository;
     private readonly IArticleWriteRepository _writeRepository;
+    private readonly IArticleCache _cache;
 
-    public ArticlesController(IArticleReadRepository readRepository, IArticleWriteRepository writeRepository)
+    public ArticlesController(
+        IArticleReadRepository readRepository,
+        IArticleWriteRepository writeRepository,
+        IArticleCache cache)
     {
         _readRepository = readRepository;
         _writeRepository = writeRepository;
+        _cache = cache;
     }
 
     [HttpGet("{location}")]
@@ -26,6 +32,12 @@ public class ArticlesController : ControllerBase
         if (!ValidLocations.Contains(location))
         {
             return BadRequest($"Unknown location '{location}'.");
+        }
+
+        IList<Article> cachedArticles = await _cache.GetArticlesAsync(location);
+        if (cachedArticles.Any())
+        {
+            return Ok(cachedArticles);
         }
 
         return Ok(await _readRepository.GetAllAsync(location));
@@ -39,7 +51,13 @@ public class ArticlesController : ControllerBase
             return BadRequest($"Unknown location '{location}'.");
         }
 
-        var article = await _readRepository.GetByIdAsync(location, id);
+        Article? cachedArticle = await _cache.GetArticleByIdAsync(location, id);
+        if (cachedArticle != null)
+        {
+            return Ok(cachedArticle);
+        }
+
+        Article? article = await _readRepository.GetByIdAsync(location, id);
         return article is null ? NotFound() : Ok(article);
     }
 
@@ -51,7 +69,7 @@ public class ArticlesController : ControllerBase
             return BadRequest($"Unknown location '{location}'.");
         }
 
-        var article = await _writeRepository.CreateAsync(location, request);
+        Article article = await _writeRepository.CreateAsync(location, request);
         return CreatedAtAction(nameof(GetById), new { location, id = article.Id }, article);
     }
 
@@ -63,7 +81,11 @@ public class ArticlesController : ControllerBase
             return BadRequest($"Unknown location '{location}'.");
         }
 
-        var updated = await _writeRepository.UpdateAsync(location, id, request);
+        bool updated = await _writeRepository.UpdateAsync(location, id, request);
+        if (updated)
+        {
+            await _cache.InvalidateArticleAsync(location, id);
+        }
         return updated ? NoContent() : NotFound();
     }
 
@@ -75,7 +97,11 @@ public class ArticlesController : ControllerBase
             return BadRequest($"Unknown location '{location}'.");
         }
 
-        var deleted = await _writeRepository.DeleteAsync(location, id);
+        bool deleted = await _writeRepository.DeleteAsync(location, id);
+        if (deleted)
+        {
+            await _cache.InvalidateArticleAsync(location, id);
+        }
         return deleted ? NoContent() : NotFound();
     }
 }

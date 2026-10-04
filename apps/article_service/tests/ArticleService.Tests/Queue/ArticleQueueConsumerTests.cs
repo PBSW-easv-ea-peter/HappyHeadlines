@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using ArticleService.Queue;
 using ArticleService.Repositories;
-using ArticleService.Resilience;
+using ArticleService.Setup;
 using Messaging.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;

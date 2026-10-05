@@ -31,12 +31,15 @@ public class CommentHandler : ICommentHandler
         {
             return cached;
         }
+        else
+        {
 
-        var entities = await _repository.GetApprovedByArticleIdAsync(articleLocation, articleId);
-        var comments = entities.Select(CommentDto.FromEntity).ToList();
+            var entities = await _repository.GetApprovedByArticleIdAsync(articleLocation, articleId);
+            var comments = entities.Select(CommentDto.FromEntity).ToList();
 
-        await _cache.SetAsync(articleLocation, articleId, comments);
-        return comments;
+            await _cache.SetAsync(articleLocation, articleId, comments);
+            return comments;
+        }
     }
 
     public async Task<(CommentDto Comment, CommentStatus Status)> PostAsync(string articleLocation, Guid articleId, PostCommentRequest request, CancellationToken ct = default)

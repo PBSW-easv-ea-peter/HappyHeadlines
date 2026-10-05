@@ -70,6 +70,7 @@ public class ArticlesController : ControllerBase
         }
 
         Article article = await _writeRepository.CreateAsync(location, request);
+        await _cache.RefreshArticleAsync(location, article.Id);
         return CreatedAtAction(nameof(GetById), new { location, id = article.Id }, article);
     }
 
@@ -84,7 +85,7 @@ public class ArticlesController : ControllerBase
         bool updated = await _writeRepository.UpdateAsync(location, id, request);
         if (updated)
         {
-            await _cache.InvalidateArticleAsync(location, id);
+            await _cache.RefreshArticleAsync(location, id);
         }
         return updated ? NoContent() : NotFound();
     }
@@ -100,7 +101,7 @@ public class ArticlesController : ControllerBase
         bool deleted = await _writeRepository.DeleteAsync(location, id);
         if (deleted)
         {
-            await _cache.InvalidateArticleAsync(location, id);
+            await _cache.RemoveArticleAsync(location, id);
         }
         return deleted ? NoContent() : NotFound();
     }

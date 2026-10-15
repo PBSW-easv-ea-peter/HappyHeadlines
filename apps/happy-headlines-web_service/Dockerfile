@@ -20,4 +20,10 @@ FROM nginx:alpine AS final
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 
+# Override the base appsettings.json with production values
+COPY --from=build /app/publish/wwwroot/appsettings.Production.json /usr/share/nginx/html/appsettings.json
+
+# Production file is now baked into appsettings.json — drop the duplicate
+RUN rm -f /usr/share/nginx/html/appsettings.Production.json
+
 EXPOSE 8000

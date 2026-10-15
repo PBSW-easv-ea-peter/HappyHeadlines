@@ -48,7 +48,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+            .AllowAnyOrigin()
+//            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

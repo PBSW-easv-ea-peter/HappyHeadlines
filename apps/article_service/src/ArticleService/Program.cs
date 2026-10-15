@@ -28,16 +28,16 @@ if(builder.Environment.IsDevelopment())
     builder.Services.AddHostedService<ArticleSeeder>();
 }
 
-var rabbitMq = builder.Configuration.GetSection("RabbitMQ");
-builder.Services.AddSingleton(new ConnectionFactory
-{
-    HostName = rabbitMq["HostName"] ?? throw new InvalidOperationException("RabbitMQ:HostName is not configured."),
-    UserName = rabbitMq["UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured."),
-    Password = rabbitMq["Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.")
-});
-
-builder.Services.AddHostedService<ArticleQueueConsumer>();
-builder.Services.AddHostedService<CacheRefreshService>();
+//var rabbitMq = builder.Configuration.GetSection("RabbitMQ");
+//builder.Services.AddSingleton(new ConnectionFactory
+//{
+//    HostName = rabbitMq["HostName"] ?? throw new InvalidOperationException("RabbitMQ:HostName is not configured."),
+//    UserName = rabbitMq["UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured."),
+//    Password = rabbitMq["Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.")
+//});
+//
+//builder.Services.AddHostedService<ArticleQueueConsumer>();
+//builder.Services.AddHostedService<CacheRefreshService>();
 
 
 var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
@@ -50,7 +50,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+//            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

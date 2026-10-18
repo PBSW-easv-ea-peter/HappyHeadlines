@@ -1,16 +1,19 @@
 services:
-  k8s-lb:
+  k8s-api-lb:
     image: nginx:stable
-    container_name: k8s-lb
+    container_name: k8s-api-lb
     restart: unless-stopped
     ports:
       - 6443:6443     # kube api
-      - 80:80         # services
-#      - 30010:30010   # blog
-#      - 31433:31433   # mssql
-#      - 30080:30080   # boligsom server
-#      - 30081:30081   # boligsom client
-#      - 30900:30900   # minio
-
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./kube-api-nginx.conf:/etc/nginx/nginx.conf:ro
+
+  k8s-services-lb:
+    image: nginx:stable
+    container_name: k8s-services-lb
+    restart: unless-stopped
+    ports:
+      - 80:80         # journalist ui
+      - 8080:8080   # blog
+    volumes:
+      - ./services-nginx.conf:/etc/nginx/nginx.conf:ro

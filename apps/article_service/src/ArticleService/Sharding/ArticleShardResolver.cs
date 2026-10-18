@@ -1,3 +1,5 @@
+using Npgsql;
+
 namespace ArticleService.Sharding;
 
 public class ArticleShardResolver : IArticleShardResolver
@@ -11,7 +13,8 @@ public class ArticleShardResolver : IArticleShardResolver
 
     public string GetConnectionString(string location)
     {
-        var connectionString = _configuration[$"ArticleShards:{location.ToUpperInvariant()}"];
+        string connectionString =
+            _configuration[$"ArticleShards:{location.ToUpperInvariant()}"];
 
         if (string.IsNullOrEmpty(connectionString))
         {
@@ -19,6 +22,14 @@ public class ArticleShardResolver : IArticleShardResolver
                 $"Unknown location '{location}'. Valid values: EU, NA, SA, AU, AS, AN, AF, GO.");
         }
 
-        return connectionString;
+        string dbPassword = _configuration["ARTICLE_DB_PWD"];
+
+        var connectionStringBuilder =
+            new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                Password = dbPassword
+            };
+
+        return connectionStringBuilder.ConnectionString;
     }
 }

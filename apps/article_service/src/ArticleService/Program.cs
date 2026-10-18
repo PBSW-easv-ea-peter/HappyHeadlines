@@ -9,6 +9,22 @@ using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsProduction())
+{
+    if (string.IsNullOrWhiteSpace(
+            builder.Configuration["ARTICLE_DB_PWD"]))
+    {
+        throw new InvalidOperationException(
+            "ARTICLE_DB_PWD must be configured in Production.");
+    }
+}
+else
+{
+    Environment.SetEnvironmentVariable(
+        "ARTICLE_DB_PWD",
+        "Postgres1234");
+}
+
 builder.AddObservability();
 
 builder.Services.AddControllers();

@@ -8,10 +8,14 @@ namespace ArticleService.Repositories;
 public class ArticleReadRepository : IArticleReadRepository
 {
     private readonly IArticleShardResolver _shardResolver;
+    private readonly ILogger<ArticleReadRepository> _logger;
 
-    public ArticleReadRepository(IArticleShardResolver shardResolver)
+    public ArticleReadRepository(
+            IArticleShardResolver shardResolver,
+            ILogger<ArticleReadRepository> logger)
     {
         _shardResolver = shardResolver;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<Article>> GetAllAsync(string location)

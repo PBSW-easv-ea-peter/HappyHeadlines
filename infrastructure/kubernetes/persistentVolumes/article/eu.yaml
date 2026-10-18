@@ -5,7 +5,7 @@ metadata:
   name: article-db-eu-pv
 spec:
   capacity:
-    storage: 20Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   storageClassName: local-storage

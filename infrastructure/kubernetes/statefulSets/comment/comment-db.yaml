@@ -1,0 +1,106 @@
+# Headless service: stable DNS "comment-db.prod.svc.cluster.local"
+apiVersion: v1
+kind: Service
+metadata:
+  name: comment-db
+  namespace: prod
+  labels:
+    app: comment-db
+#    region: eu
+spec:
+  type: NodePort
+  ports:
+  - name: pg
+    port: 5432
+    targetPort: 5432
+    nodePort: 31100
+  selector:
+    app: comment-db
+#spec:
+#  clusterIP: None
+#  selector:
+#    app: article-db-eu
+#  ports:
+#  - name: pg
+#    port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: comment-db
+  namespace: prod
+  labels:
+    app: comment-db
+#    region: eu
+spec:
+  serviceName: comment-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comment-db
+  template:
+    metadata:
+      labels:
+        app: comment-db
+#        region: eu
+    spec:
+      # pin to the node that hosts the EU PV's local path
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-003
+      tolerations:
+      - key: "allowSchedule"
+        operator: "Exists"
+        effect: "NoSchedule"
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 999  # postgres group; K8s fixes volume ownership
+      containers:
+      - name: postgres
+        image: postgres:18-trixie
+        ports:
+        - containerPort: 5432
+          name: pg
+        env:
+        - name: POSTGRES_DB
+          value: comments
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: server-secrets
+              key: ARTICLE_DB_PWD
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U postgres -d articles"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 10
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U postgres -d articles"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+        volumeMounts:
+        - name: commment-db-data
+          mountPath: /var/lib/postgresql
+
+  volumeClaimTemplates:
+  - metadata:
+      name: commment-db-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: local-storage
+      resources:
+        requests:
+          storage: 5Gi
+
+

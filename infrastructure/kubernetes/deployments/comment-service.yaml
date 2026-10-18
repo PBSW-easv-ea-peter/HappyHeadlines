@@ -1,0 +1,56 @@
+# backend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comment-service
+  namespace: prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: comment-service
+  template:
+    metadata:
+      labels:
+        app: comment-service
+    spec:
+      containers:
+        - name: comment-service
+          image: selgaard/boligsom:comment-service
+          ports:
+            - containerPort: 8082
+          imagePullPolicy: Always
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ASPNETCORE_URLS
+              value: http://+:8082
+          envFrom:
+            - secretRef:
+                name: server-secrets
+          volumeMounts:
+            - name: config
+              mountPath: /app/appsettings.Production.json
+              subPath: appsettings.Production.json
+              readOnly: true
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - name: config
+          configMap:
+            name: comment-service-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comment-service
+  namespace: prod
+spec:
+  selector:
+    app: comment-service
+  ports:
+    - port: 8082
+      targetPort: 8082
+      nodePort: 30020
+  type: NodePort
+

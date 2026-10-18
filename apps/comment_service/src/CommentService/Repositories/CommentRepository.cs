@@ -10,8 +10,19 @@ public class CommentRepository : ICommentRepository
 
     public CommentRepository(IConfiguration configuration)
     {
-        _connectionString = configuration.GetConnectionString("CommentDatabase")
+        string connectionString = configuration.GetConnectionString("CommentDatabase")
             ?? throw new InvalidOperationException("ConnectionStrings:CommentDatabase is not configured.");
+
+        string dbPassword = configuration["ARTICLE_DB_PWD"]
+            ?? throw new InvalidOperationException("Missing Comment DB password.");
+
+        NpgsqlConnectionStringBuilder connectionStringBuilder =
+            new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                Password = dbPassword
+            };
+
+        _connectionString = connectionStringBuilder.ConnectionString;
     }
 
     public async Task<IEnumerable<CommentEntity>> GetApprovedByArticleIdAsync(string articleLocation, Guid articleId)

@@ -20,11 +20,15 @@
   <Folder Name="/draft_service/tests/">
     <Project Path="draft_service/tests/DraftService.Tests/DraftService.Tests.csproj" />
   </Folder>
-  <Folder Name="/happy-headlines-web_service/" />
-  <Folder Name="/happy-headlines-web_service/src/">
-    <Project Path="happy-headlines-web_service/src/HappyHeadlines.reader.wasm/HappyHeadlines.reader.wasm.csproj" />
-    <Project Path="happy-headlines-web_service/src/HappyHeadlines.web.wasm/HappyHeadlines.web.wasm.csproj" />
-    <Project Path="happy-headlines-web_service/src/HappyHeadlinesPages.web/HappyHeadlinesPages.web.csproj" />
+  <Folder Name="/journalist-web_service/" />
+  <Folder Name="/journalist-web_service/src/">
+    <Project Path="journalist-web_service/src/Journalist.web.wasm/Journalist.web.wasm.csproj" />
+    <Project Path="journalist-web_service/src/JournalistPages.web/JournalistPages.web.csproj" />
+  </Folder>
+  <Folder Name="/reader-web_service/" />
+  <Folder Name="/reader-web_service/src/">
+    <Project Path="reader-web_service/src/HappyHeadlinesPages.web/HappyHeadlinesPages.web.csproj" />
+    <Project Path="reader-web_service/src/HappyHeadlines.reader.wasm/HappyHeadlines.reader.wasm.csproj" />
   </Folder>
   <Folder Name="/profanity_service/" />
   <Folder Name="/profanity_service/src/">
@@ -43,4 +47,5 @@
   <Folder Name="/shared/">
     <Project Path="shared/HappyHeadlines.Observability/HappyHeadlines.Observability.csproj" />
   </Folder>
+
 </Solution>

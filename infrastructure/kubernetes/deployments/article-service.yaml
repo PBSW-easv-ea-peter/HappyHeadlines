@@ -1,0 +1,50 @@
+# backend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: article-service
+  namespace: prod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: article-service
+  template:
+    metadata:
+      labels:
+        app: article-service
+    spec:
+      containers:
+        - name: article-service
+          image: selgaard/boligsom:article-service
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: server-secrets
+          volumeMounts:
+            - name: config
+              mountPath: /app/appsettings.Production.json
+              subPath: appsettings.Production.json
+              readOnly: true
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - name: config
+          configMap:
+            name: server-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: article-service
+  namespace: prod
+spec:
+  selector:
+    app: article-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30000
+  type: NodePort

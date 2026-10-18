@@ -1,0 +1,106 @@
+# Headless service: stable DNS "article-db-eu.prod.svc.cluster.local"
+apiVersion: v1
+kind: Service
+metadata:
+  name: article-db-eu
+  namespace: prod
+  labels:
+    app: article-db
+    region: eu
+spec:
+  type: NodePort
+  ports:
+  - name: pg
+    port: 5432
+    targetPort: 5432
+    nodePort: 31000
+  selector:
+    app: article-db-eu
+#spec:
+#  clusterIP: None
+#  selector:
+#    app: article-db-eu
+#  ports:
+#  - name: pg
+#    port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: article-db-eu
+  namespace: prod
+  labels:
+    app: article-db
+    region: eu
+spec:
+  serviceName: article-db-eu
+  replicas: 1
+  selector:
+    matchLabels:
+      app: article-db-eu
+  template:
+    metadata:
+      labels:
+        app: article-db-eu
+        region: eu
+    spec:
+      # pin to the node that hosts the EU PV's local path
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-002
+      tolerations:
+      - key: "allowSchedule"
+        operator: "Exists"
+        effect: "NoSchedule"
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 999  # postgres group; K8s fixes volume ownership
+      containers:
+      - name: postgres
+        image: postgres:18-trixie
+        ports:
+        - containerPort: 5432
+          name: pg
+        env:
+        - name: POSTGRES_DB
+          value: articles
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: server-secrets
+              key: ARTICLE_DB_PWD
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U postgres -d articles"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 10
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U postgres -d articles"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+        volumeMounts:
+        - name: article-db-eu-data
+          mountPath: /var/lib/postgresql
+
+  volumeClaimTemplates:
+  - metadata:
+      name: article-db-eu-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: local-storage
+      resources:
+        requests:
+          storage: 5Gi
+
+

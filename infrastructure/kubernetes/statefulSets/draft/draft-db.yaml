@@ -1,0 +1,94 @@
+# Headless service: stable DNS "draft-db.prod.svc.cluster.local"
+apiVersion: v1
+kind: Service
+metadata:
+  name: draft-db
+  namespace: prod
+  labels:
+    app: draft-db
+spec:
+  type: NodePort
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: 5432
+      nodePort: 31020
+  selector:
+    app: draft-db
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: draft-db
+  namespace: prod
+  labels:
+    app: draft-db
+spec:
+  serviceName: draft-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: draft-db
+  template:
+    metadata:
+      labels:
+        app: draft-db
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-003
+      tolerations:
+        - key: "allowSchedule"
+          operator: "Exists"
+          effect: "NoSchedule"
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: postgres
+          image: postgres:18-trixie
+          ports:
+            - containerPort: 5432
+              name: pg
+          env:
+            - name: POSTGRES_DB
+              value: drafts
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: POSTGRES_DB_PWD
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U postgres -d drafts"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U postgres -d drafts"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+          volumeMounts:
+            - name: draft-db-data
+              mountPath: /var/lib/postgresql
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: draft-db-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: local-storage
+      resources:
+        requests:
+          storage: 5Gi
+

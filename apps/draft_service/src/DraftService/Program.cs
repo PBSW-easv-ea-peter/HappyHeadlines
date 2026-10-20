@@ -13,8 +13,22 @@ builder.Services.AddOpenApi();
 // Swagger
 builder.Services.AddSwaggerGen();
 
-builder.AddObservability();
+if (builder.Environment.IsProduction())
+{
+    if (string.IsNullOrWhiteSpace(
+            builder.Configuration["POSTGRES_DB_PWD"]))
+    {
+        throw new InvalidOperationException(
+            "POSTGRES_DB_PWD must be configured in Production.");
+    }
+}
+else
+{
+    builder.Configuration["POSTGRES_DB_PWD"] = "Postgres1234";
+}
 
+//builder.AddObservability();
+builder.Services.AddLogging();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IDraftRepository, DraftRepository>();
 builder.Services.AddScoped<IJournalistRepository, JournalistRepository>();

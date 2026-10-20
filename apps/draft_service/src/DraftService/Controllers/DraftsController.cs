@@ -9,10 +9,14 @@ namespace DraftService.Controllers;
 public class DraftsController : ControllerBase
 {
     private readonly IDraftHandler _handler;
+    private readonly ILogger<DraftsController> _logger;
 
-    public DraftsController(IDraftHandler handler)
+    public DraftsController(
+        IDraftHandler handler,
+        ILogger<DraftsController> logger)
     {
         _handler = handler;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -24,11 +28,12 @@ public class DraftsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<Draft>> GetById(Guid id)
     {
+        _logger.LogWarning("Incomming requst for draft with id: {id}", id);
         var draft = await _handler.GetByIdAsync(id);
         return draft is null ? NotFound() : Ok(draft);
     }
-    
-    
+
+
     // The draft as PublishService needs it to build a PublishedArticleEvent.
     [HttpGet("filled-in-draft/{id:guid}")]
     public async Task<ActionResult<FilledInDraft>> GetFilledInDraftById(Guid id)

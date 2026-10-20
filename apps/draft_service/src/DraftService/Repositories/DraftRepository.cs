@@ -8,11 +8,28 @@ namespace DraftService.Repositories;
 public class DraftRepository : IDraftRepository
 {
     private readonly string _connectionString;
+    private readonly ILogger<DraftRepository> _logger;
 
-    public DraftRepository(IConfiguration configuration)
+    public DraftRepository(
+        IConfiguration configuration,
+        ILogger<DraftRepository> logger)
     {
-        _connectionString = configuration.GetConnectionString("DraftDatabase")
+        _logger = logger;
+
+        string connectionString = configuration.GetConnectionString("DraftDatabase")
             ?? throw new InvalidOperationException("ConnectionStrings:DraftDatabase is not configured.");
+
+        string dbPassword = configuration["POSTGRES_DB_PWD"]
+            ?? throw new InvalidOperationException("Missing Draft DB password.");
+
+        NpgsqlConnectionStringBuilder connectionStringBuilder =
+            new (connectionString)
+            {
+                Password = dbPassword
+            };
+
+        _connectionString = connectionStringBuilder.ConnectionString;
+        _logger.LogWarning("Draft CS: {cs}", _connectionString);
     }
 
     private const string SelectColumns = """

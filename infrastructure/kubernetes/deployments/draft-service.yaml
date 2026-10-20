@@ -1,0 +1,57 @@
+# backend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: draft-service
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: draft-service
+  template:
+    metadata:
+      labels:
+        app: draft-service
+    spec:
+      containers:
+        - name: draft-service
+          image: selgaard/boligsom:draft-service
+          ports:
+            - containerPort: 8083
+          imagePullPolicy: Always
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ASPNETCORE_URLS
+              value: http://+:8083
+          envFrom:
+            - secretRef:
+                name: postgres-password
+          volumeMounts:
+            - name: config
+              mountPath: /app/appsettings.Production.json
+              subPath: appsettings.Production.json
+              readOnly: true
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - name: config
+          configMap:
+            name: draft-service-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: draft-service
+  namespace: prod
+spec:
+  selector:
+    app: draft-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+      nodePort: 30030
+  type: NodePort
+
+

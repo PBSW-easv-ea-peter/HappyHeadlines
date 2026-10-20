@@ -27,8 +27,8 @@
   </Folder>
   <Folder Name="/reader-web_service/" />
   <Folder Name="/reader-web_service/src/">
-    <Project Path="reader-web_service/src/HappyHeadlinesPages.web/HappyHeadlinesPages.web.csproj" />
-    <Project Path="reader-web_service/src/HappyHeadlines.reader.wasm/HappyHeadlines.reader.wasm.csproj" />
+    <Project Path="reader-web_service\src\Reader.web.wasm\Reader.web.wasm.csproj" />
+    <Project Path="reader-web_service\src\ReaderPages.web\ReaderPages.web.csproj" />
   </Folder>
   <Folder Name="/profanity_service/" />
   <Folder Name="/profanity_service/src/">

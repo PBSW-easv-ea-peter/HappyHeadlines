@@ -14,7 +14,8 @@ services:
     restart: unless-stopped
     ports:
       - 80:80         # journalist ui
-      - 8080:8080   # blog
+      - 81:81         # journalist ui
+      - 8080:8080     # blog
     volumes:
       - ./services-nginx.conf:/etc/nginx/nginx.conf:ro
       - ./services-proxy.conf:/etc/nginx/snippets/proxy.conf:ro

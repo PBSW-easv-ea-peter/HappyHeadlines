@@ -1,12 +1,21 @@
 
-// Rember to change host
+// Rember to change host, port, database and be in './database'
 docker run --rm -it \
-  --network happy-headlines \
-  -v "$(pwd)/migrations/article:/flyway/sql:ro" \
-  -e FLYWAY_URL="jdbc:postgresql://article-stack_db-global:5432/articles" \
+  -v "$(pwd)/migrations/profanity:/flyway/sql:Z,ro" \
+  -e FLYWAY_URL="jdbc:postgresql://192.168.1.195:31030/profanity" \
   -e FLYWAY_USER="postgres" \
-  -e FLYWAY_PASSWORD="easv2026" \
+  -e FLYWAY_PASSWORD="" \
   -e FLYWAY_LOCATIONS="filesystem:/flyway/sql" \
   -e FLYWAY_CONNECT_RETRIES="10" \
-  flyway/flyway:10-alpine \
+  flyway/flyway:latest \
+  migrate
+
+docker run --rm -it \
+  -v "$(pwd)/migrations/article:/flyway/sql:Z,ro" \
+  -e FLYWAY_URL="jdbc:postgresql://10.100.0.5:31000/articles" \
+  -e FLYWAY_USER="postgres" \
+  -e FLYWAY_PASSWORD="" \
+  -e FLYWAY_LOCATIONS="filesystem:/flyway/sql" \
+  -e FLYWAY_CONNECT_RETRIES="10" \
+  flyway/flyway:latest \
   migrate

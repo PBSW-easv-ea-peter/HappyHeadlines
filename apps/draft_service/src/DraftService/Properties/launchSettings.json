@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "DraftService": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:61261;http://localhost:61262"
+    }
+  }
+}

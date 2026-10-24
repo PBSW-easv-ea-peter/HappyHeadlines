@@ -7,6 +7,7 @@ using ArticleService.Sharding;
 using HappyHeadlines.Observability;
 using RabbitMQ.Client;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservability();

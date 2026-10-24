@@ -18,49 +18,33 @@ jobs:
     # Only run if the PR was actually merged (not just closed/dismissed)
     # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       # ---- Checkout ----
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ---- Setup .NET ----
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      # ---- Lowercase repo name ----
+      - name: Set image name
+        run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/article-service" >> $GITHUB_ENV
+
+      # ---- Login to GHCR ----
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          dotnet-version: '10.0.x'   # adjust to match your TargetFramework
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ---- Restore ----
-      - name: Restore dependencies
-        run: dotnet restore apps/article_service/src/ArticleService/ArticleService.csproj
-
-      # ---- Build ----
-      - name: Build ArticleService
-        run: dotnet build apps/article_service/src/ArticleService/ArticleService.csproj --configuration Release --no-restore
-
-      # ---- Setup (example: Node.js — adjust to your stack) ----
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '20'
-      #     cache: 'npm'
-
-      # ---- Install ----
-      # - name: Install dependencies
-      #   working-directory: ./apps
-      #   run: npm ci
-
-      # ---- Lint ----
-      # - name: Lint
-      #   working-directory: ./apps
-      #   run: npm run lint
-
-      # ---- Test ----
-      # - name: Run tests
-      #   working-directory: ./apps
-      #   run: npm run test
-
-      # ---- Build ----
-      # - name: Build
-      #   working-directory: ./apps
-      #   run: npm run build
+      # ---- Docker Build & Push ----
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            -f apps/article_service/Dockerfile \
+            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            apps/
+          docker push ${{ env.IMAGE_NAME }} --all-tags

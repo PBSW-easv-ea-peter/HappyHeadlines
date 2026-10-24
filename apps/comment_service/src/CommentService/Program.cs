@@ -9,7 +9,6 @@ using Polly.CircuitBreaker;
 using Polly.Retry;
 using StackExchange.Redis;
 
-// This is a comment
 
 var builder = WebApplication.CreateBuilder(args);
 

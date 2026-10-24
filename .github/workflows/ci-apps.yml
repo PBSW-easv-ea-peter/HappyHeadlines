@@ -1,37 +1,82 @@
 name: Apps CI Pipeline
 
-# Trigger: runs only when a PR is merged into master
 on:
   push:
     branches:
       - feature/Add_CI_Pipeline
-  # pull_request:
-  #   types:
-  #     - closed
-  #   branches:
-  #     - master
-  #   paths:
-  #     - 'apps/**'
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
+    paths:
+      - 'apps/**'
 
 jobs:
+  # ---- Step 1: Detect which services changed ----
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.find.outputs.services }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history for diff
+
+
+      - name: Find changed services
+        id: find
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.event.after }}"
+          fi
+
+          echo "Comparing $BASE_SHA → $HEAD_SHA"
+
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" \
+            | grep '^apps/' \
+            | cut -d'/' -f2 \
+            | sort -u \
+            | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          echo "services=$CHANGED" >> $GITHUB_OUTPUT
+          echo "Changed services: $CHANGED"
+
+      # - name: Find changed services
+      #   id: find
+      #   run: |
+      #     CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
+      #       | grep '^apps/' \
+      #       | cut -d'/' -f2 \
+      #       | sort -u \
+      #       | jq -R -s -c 'split("\n") | map(select(length > 0))')
+      #     echo "services=$CHANGED" >> $GITHUB_OUTPUT
+      #     echo "Changed services: $CHANGED"
+
+  # ---- Step 2: Build & push only the changed ones ----
   build:
-    # Only run if the PR was actually merged (not just closed/dismissed)
-    # if: github.event.pull_request.merged == true
+    needs: detect-changes
+    if: needs.detect-changes.outputs.services != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
 
     steps:
-      # ---- Checkout ----
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ---- Lowercase repo name ----
       - name: Set image name
-        run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/article-service" >> $GITHUB_ENV
+        run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.service }}" >> $GITHUB_ENV
 
-      # ---- Login to GHCR ----
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -39,11 +84,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ---- Docker Build & Push ----
       - name: Build and push Docker image
         run: |
           docker build \
-            -f apps/article_service/Dockerfile \
+            -f apps/${{ matrix.service }}/Dockerfile \
             -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -t ${{ env.IMAGE_NAME }}:latest \
             apps/

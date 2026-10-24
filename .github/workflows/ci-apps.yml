@@ -1,0 +1,66 @@
+name: Apps CI Pipeline
+
+# Trigger: runs only when a PR is merged into master
+on:
+  push:
+    branches:
+      - feature/Add_CI_Pipeline
+  # pull_request:
+  #   types:
+  #     - closed
+  #   branches:
+  #     - master
+  #   paths:
+  #     - 'apps/**'
+
+jobs:
+  build:
+    # Only run if the PR was actually merged (not just closed/dismissed)
+    # if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---- Checkout ----
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---- Setup .NET ----
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'   # adjust to match your TargetFramework
+
+      # ---- Restore ----
+      - name: Restore dependencies
+        run: dotnet restore apps/article_service/src/ArticleService/ArticleService.csproj
+
+      # ---- Build ----
+      - name: Build ArticleService
+        run: dotnet build apps/article_service/src/ArticleService/ArticleService.csproj --configuration Release --no-restore
+
+      # ---- Setup (example: Node.js — adjust to your stack) ----
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '20'
+      #     cache: 'npm'
+
+      # ---- Install ----
+      # - name: Install dependencies
+      #   working-directory: ./apps
+      #   run: npm ci
+
+      # ---- Lint ----
+      # - name: Lint
+      #   working-directory: ./apps
+      #   run: npm run lint
+
+      # ---- Test ----
+      # - name: Run tests
+      #   working-directory: ./apps
+      #   run: npm run test
+
+      # ---- Build ----
+      # - name: Build
+      #   working-directory: ./apps
+      #   run: npm run build

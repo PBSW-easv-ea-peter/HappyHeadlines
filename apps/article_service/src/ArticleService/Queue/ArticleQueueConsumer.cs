@@ -143,7 +143,8 @@ public class ArticleQueueConsumer : BackgroundService
         catch (Exception ex) when (ex is JsonException or ArgumentException)
         {
             // Poison message (bad JSON, unknown location or section): retrying will never succeed.
-            _logger.LogWarning(ex, "Discarding unprocessable message {DeliveryTag}", delivery.DeliveryTag);
+            _logger.LogWarning("Discarding unprocessable message {DeliveryTag}. Reason: {Reason}",
+                delivery.DeliveryTag, ex.GetType().Name);
             await channel.BasicNackAsync(delivery.DeliveryTag, multiple: false, requeue: false);
         }
         catch (Exception ex)

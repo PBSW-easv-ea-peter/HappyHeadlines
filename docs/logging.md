@@ -45,6 +45,7 @@ Kun felter på denne liste må indgå i log-beskeder:
 - `Location` (kontinent-kode, fx `EU`)
 - `BannedWordCount`
 - `Pipeline`, `Reason`
+- `EventId` (id på et event i køen), `DeliveryTag` (RabbitMQ's id for en levering), `Queue` (kønavn) — tekniske id'er uden brugerdata
 
 Nye felter tilføjes her først og derefter i koden.
 

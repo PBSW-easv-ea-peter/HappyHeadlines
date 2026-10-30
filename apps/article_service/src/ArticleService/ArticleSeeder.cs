@@ -36,17 +36,17 @@ public partial class ArticleSeeder : IHostedService
             {
                 _logger.LogWarning(
                     "Could not connect to the {Location} article database. " +
-                    "Skipping seeding for this database. Error: {Message}",
+                    "Skipping seeding for this database. Reason: {Reason}",
                     location,
-                    ex.Message);
+                    ex.GetType().Name);
             }
             catch (SocketException ex)
             {
                 _logger.LogWarning(
                         "Could not connect to the {Location} article database. " +
-                        "Skipping seeding for this database. Error: {Message}",
+                        "Skipping seeding for this database. Reason: {Reason}",
                         location,
-                        ex.Message);
+                        ex.GetType().Name);
             }
         }
 

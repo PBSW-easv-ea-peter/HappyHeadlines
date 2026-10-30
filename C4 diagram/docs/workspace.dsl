@@ -14,7 +14,7 @@ workspace "Happy Headlines" "Positive news platform" {
             // Applications
             // Webapp and Website are one Blazor app in code (apps/happy-headlines-web_service),
             // kept as two containers to follow the architecture handout.
-            webapp = container "Webapp" "Editorial application used by publishers. Implemented: draft dashboard, create/edit, submit/approve/reject. Missing: publishing via PublisherService. Shares codebase with Website." "Web Application (Blazor)" "Partial"
+            webapp = container "Webapp" "Editorial application used by publishers. Implemented: draft dashboard, create/edit, submit/approve/reject, publishing via PublisherService. Shares codebase with Website." "Web Application (Blazor)" "Implemented"
             website = container "Website" "Public website for readers. Implemented: articles per region with comments. Missing: newsletter subscription. Shares codebase with Webapp." "Web Application (Blazor)" "Partial"
 
             // Swimlanes (fault isolation): each implemented service is grouped with its own
@@ -42,16 +42,17 @@ workspace "Happy Headlines" "Positive news platform" {
                     articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
                     articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
                     articleShardResolver = component "ArticleShardResolver" "Resolves a location code to the correct shard connection string." "Component"
-                    articleQueueConsumer = component "ArticleQueueConsumer" "Will consume ArticleQueue for Create/Update once wired up. Currently idle." "Background Service"
-                    articleCache = component "ArticleCache" "Implements IArticleCache: reads and writes cached articles (keys per location and per article) in Redis, with a 14-day expiry." "Component"
+                    articleQueueConsumer = component "ArticleQueueConsumer" "Consumes PublishedArticleEvent and stores the article in its shard. Replicas compete on one queue; storing is idempotent on DraftId. A circuit breaker per shard requeues messages while a shard is down." "Background Service"
+                    articleCache = component "ArticleCache" "Implements IArticleCache: each article is stored once per key, and the front page is an index (sorted set) of article ids per location. Only articles from the last 14 days." "Component"
                     cacheRefreshService = component "CacheRefreshService" "Refills the cache every hour. Currently only location GO (global)." "Background Service"
+                    articleObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     articlesController -> articleCache "Reads articles from cache first, invalidates on update/delete via"
                     articlesController -> articleReadRepository "Falls back to on cache miss"
                     articlesController -> articleWriteRepository "Delegates Create/Update/Delete REST stand-ins to"
                     articleReadRepository -> articleShardResolver "Resolves shard via"
                     articleWriteRepository -> articleShardResolver "Resolves shard via"
-                    articleQueueConsumer -> articleWriteRepository "Will persist consumed messages via (not yet wired)"
+                    articleQueueConsumer -> articleWriteRepository "Stores consumed articles via"
                     cacheRefreshService -> articleCache "Refreshes every hour via"
                     articleCache -> articleReadRepository "Loads articles for refresh via"
                 }
@@ -88,6 +89,21 @@ workspace "Happy Headlines" "Positive news platform" {
                 profanityDb = container "ProfanityDatabase" "Stores prohibited words." "PostgreSQL" "Database,Implemented"
             }
 
+            // No database of its own - it reads drafts from DraftService and writes to ArticleQueue.
+            group "Publisher" {
+                publisherService = container "PublisherService" "Publishes approved drafts as articles. Implemented: publishing via ArticleQueue. Missing: profanity check before publishing (required by the handout). Code lives in apps/publish_service (to be renamed)." "Service" "Partial" {
+                    publishDraftEndpoint = component "PublishDraftEndpoint" "Exposes REST endpoint POST /api/v1/publish-draft/{id}." "ASP.NET Core Minimal API"
+                    publishDraftHandler = component "PublishDraftHandler" "Checks that the draft is Approved, queues a PublishedArticleEvent, then marks the draft as published. Queues before marking, so publishing again after a failure is safe." "Component"
+                    publisherDraftClient = component "DraftClient" "Gets the draft and marks it as published in DraftService over HTTP." "Component"
+                    rabbitMqService = component "RabbitMqService" "Publishes events to RabbitMQ with publisher confirms." "Component"
+                    publisherObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
+
+                    publishDraftEndpoint -> publishDraftHandler "Delegates publishing to"
+                    publishDraftHandler -> publisherDraftClient "Gets and marks drafts via"
+                    publishDraftHandler -> rabbitMqService "Queues PublishedArticleEvent via"
+                }
+            }
+
             // Central logging and tracing (week 38). Runs in docker-compose.dev.yaml only;
             // services send telemetry asynchronously, so an outage here never stops a service.
             group "Observability" {
@@ -98,7 +114,6 @@ workspace "Happy Headlines" "Positive news platform" {
             }
 
             // Services (not yet implemented)
-            publisherService = container "PublisherService" "Publishes approved articles." "Service"
             articleServiceLB = container "ArticleService Load Balancer" "Docker Swarm's built-in routing mesh distributes requests across the ArticleService replicas. Not a separate container." "Docker Swarm routing mesh"
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
             newsletterService = container "NewsletterService" "Sends newsletters." "Service"
@@ -110,7 +125,9 @@ workspace "Happy Headlines" "Positive news platform" {
             subscriberDb = container "SubscriberDatabase" "Stores subscriber information." "Database" "Database"
 
             // Queues
-            articleQueue = container "ArticleQueue" "Queue for newly published articles." "Queue" "Queue"
+            // Each consumer binds its own named queue to the exchange, so every consumer gets
+            // every article. Replicas of one service share that service's queue (competing consumers).
+            articleQueue = container "ArticleQueue" "Exchange published_articles (routing key article.published) for newly published articles. ArticleService consumes from its own queue article_service.published_articles." "RabbitMQ" "Queue,Implemented"
             subscriberQueue = container "SubscriberQueue" "Queue for new newsletter subscriptions." "Queue" "Queue"
         }
 
@@ -123,24 +140,28 @@ workspace "Happy Headlines" "Positive news platform" {
         webapp -> draftsController "Saves and retrieves drafts"
         draftRepository -> draftDb "Reads and writes drafts in"
         // Known deviation: per the handout, PublisherService owns the profanity check before
-        // publishing. Kept here until PublisherService exists (docs/logging.md, open question 8).
+        // publishing. PublisherService exists, but the check has not been moved there yet - it stays
+        // here until it is (docs/logging.md, open question 8).
         // Declared at container level first: implied relationships do not copy tags, so without
         // this line the L2 view would not show the Deviation style.
         draftService -> profanityService "Checks draft text (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
         draftProfanityClient -> profanityService "Checks draft text via HTTP POST /api/profanity/check (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
 
-        webapp -> publisherService "Publishes article"
+        // PublisherService component-level relations (imply the container-level
+        // Webapp -> PublisherService -> DraftService/ArticleQueue relations)
+        webapp -> publishDraftEndpoint "Publishes approved draft via POST /api/v1/publish-draft/{id}" "HTTP"
+        publisherDraftClient -> draftsController "Gets draft (GET api/drafts/filled-in-draft/{id}) and marks it published (POST api/drafts/{id}/publish)" "HTTP"
+        rabbitMqService -> articleQueue "Publishes PublishedArticleEvent to" "AMQP"
 
-        publisherService -> profanityService "Checks article content"
-
-        publisherService -> articleQueue "Publishes approved article"
+        // Required by the handout, but not implemented yet - the check still runs in DraftService (see above).
+        publisherService -> profanityService "Checks article content before publishing (MISSING - not implemented yet)" "HTTP" "Missing"
 
         // ArticleService component-level relations (imply the ArticleService container-level
         // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
         articleServiceLB -> articlesController "Routes requests to"
         articleReadRepository -> articleDb "Reads articles from"
         articleWriteRepository -> articleDb "Writes articles to"
-        articleQueueConsumer -> articleQueue "Subscribes to (idle - not wired up yet)"
+        articleQueueConsumer -> articleQueue "Consumes published articles from" "AMQP"
         articleCache -> articleCacheDb "Reads and writes cached articles in" "Redis"
 
         // ProfanityService component-level relations (imply the ProfanityService
@@ -187,8 +208,10 @@ workspace "Happy Headlines" "Positive news platform" {
 
 
         // Observability (week 38). Component-level relations imply the container-level
-        // DraftService/CommentService/ProfanityService -> OTel Collector relations.
+        // DraftService/CommentService/ProfanityService/ArticleService/PublisherService -> OTel Collector relations.
         draftObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        articleObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        publisherObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
         commentObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
         profanityObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
         otelCollector -> loki "Forwards logs to" "OTLP/HTTP"
@@ -272,7 +295,7 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // C4 Level 2 - Observability only (week 38), so it does not drown in "Containers"
         container happyHeadlines "Observability" {
-            include draftService commentService profanityService otelCollector loki tempo grafana developer
+            include draftService commentService profanityService articleService publisherService otelCollector loki tempo grafana developer
             autolayout lr
         }
 
@@ -293,6 +316,11 @@ workspace "Happy Headlines" "Positive news platform" {
         }
 
         component draftService "DraftServiceComponents" {
+            include *
+            autolayout lr
+        }
+
+        component publisherService "PublisherServiceComponents" {
             include *
             autolayout lr
         }
@@ -330,6 +358,10 @@ workspace "Happy Headlines" "Positive news platform" {
             }
             relationship "Deviation" {
                 color "#E8710A"
+                dashed true
+            }
+            relationship "Missing" {
+                color "#D32F2F"
                 dashed true
             }
         }

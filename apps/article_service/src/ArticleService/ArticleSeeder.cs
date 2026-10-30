@@ -22,7 +22,7 @@ public partial class ArticleSeeder : IHostedService
     {
         _logger.LogInformation("Seeding articles...");
 
-        await Task.Delay(10000);
+        await Task.Delay(10000, cancellationToken);
 
         foreach (var location in AllArticles
                      .Select(article => article.Location)

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ArticleService.Repositories;
 using ArticleService.Setup;
+using Messaging.Connections;
 using Messaging.Events;
 using Messaging.Exchanges;
 using Messaging.RoutingKeys;
@@ -48,7 +49,12 @@ public class ArticleQueueConsumer : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Long-lived connection/channel: the broker pushes messages to us for as long as we run.
-        await using var connection = await _connectionFactory.CreateConnectionAsync(stoppingToken);
+        // Retried, because an unhandled exception here stops the whole host - the HTTP API too.
+        await using var connection = await RabbitMqConnection.CreateWithRetryAsync(
+            _connectionFactory,
+            ex => _logger.LogWarning("Could not reach {Pipeline} - retrying. Reason: {Reason}",
+                "RabbitMQ", ex.GetType().Name),
+            stoppingToken);
         await using var channel = await connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
         await PublishedArticlesExchange.ConfigureAsync(channel);

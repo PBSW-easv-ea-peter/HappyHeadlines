@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Messaging.Exchanges;
 using RabbitMQ.Client;
 
 namespace PublishService.Shared;
@@ -41,6 +42,11 @@ public class RabbitMqService(
 
         await using var connection = await connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync(ConfirmedChannel);
+
+        // Declared on every publish instead of at startup, so the service starts - and answers
+        // 503 on publish - while RabbitMQ is down. Declaring an existing exchange is a no-op.
+        await PublishedArticlesExchange.ConfigureAsync(channel);
+
         await channel.BasicPublishAsync(
             exchange: exchange,
             routingKey: routingKey,

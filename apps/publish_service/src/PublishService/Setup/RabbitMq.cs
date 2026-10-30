@@ -1,5 +1,4 @@
 using RabbitMQ.Client;
-using Messaging.Exchanges;
 using Microsoft.Extensions.Options;
 using PublishService.Shared;
 using PublishService.Shared.Options;
@@ -35,17 +34,5 @@ public static class RabbitMq
                 Password = options.Password
             };
         });
-    }
-
-    public static async Task ConfigureExchangesAsync(
-        this WebApplication app)
-    {
-        var factory = app.Services
-            .GetRequiredService<ConnectionFactory>();
-
-        await using var connection = await factory.CreateConnectionAsync();
-        await using var channel = await connection.CreateChannelAsync();
-
-        await PublishedArticlesExchange.ConfigureAsync(channel);
     }
 }

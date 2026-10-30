@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ArticleService.Cache;
 using ArticleService.Repositories;
 using ArticleService.Setup;
 using Messaging.Connections;
@@ -107,12 +108,17 @@ public class ArticleQueueConsumer : BackgroundService
                 throw new ArgumentException($"Unknown location '{published.Location}'.");
             }
 
-            var created = await pipeline.ExecuteAsync(
+            var articleId = await pipeline.ExecuteAsync(
                 async _ => await repository.CreatePublishedAsync(published));
-            if (created)
+            if (articleId is Guid id)
             {
                 _logger.LogInformation("Stored article for draft {DraftId} in {Location}",
                     published.DraftId, published.Location);
+
+                // Put it on the cached front page now instead of at the next hourly refresh.
+                // Never throws - a cache failure must not requeue an article that is already stored.
+                var cache = scope.ServiceProvider.GetRequiredService<IArticleCache>();
+                await cache.RefreshArticleAsync(published.Location.ToUpperInvariant(), id);
             }
             else
             {

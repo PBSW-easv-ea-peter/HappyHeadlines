@@ -3,6 +3,7 @@
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning",
+      "Polly": "None",
       "System.Net.Http.HttpClient.OtlpLogExporter": "Warning"
     }
   },

@@ -10,9 +10,11 @@ repositories are already covered by the L3 component views.
 | CommentService | [comment.md](comment.md) | `CommentServiceComponents` |
 | DraftService | [draft.md](draft.md) | `DraftServiceComponents` |
 | ProfanityService | – (see below) | `ProfanityServiceComponents` |
-| Observability (shared library) | [observability.md](observability.md) | `Observability` component in the three views above, plus the L2 view `Observability` |
+| PublisherService | – (see below) | `PublisherServiceComponents` |
+| Messaging (shared library) | `PublishedArticleEvent` in [article.md](article.md) | – |
+| Observability (shared library) | [observability.md](observability.md) | `Observability` component in the L3 views, plus the L2 view `Observability` |
 
-The shared library has no model layer, so its L4 shows the one extension method and what it configures.
+The Observability library has no model layer, so its L4 shows the one extension method and what it configures.
 
 ## Stereotypes
 
@@ -28,10 +30,16 @@ The model layer is a single class, `ProfanityCheckRequest { string Text }`, so i
 The service returns a plain `List<string>` of banned words found in the text; callers wrap it in
 their own `ProfanityCheckResult` (see [comment.md](comment.md) and [draft.md](draft.md)).
 
+## PublisherService
+
+No model layer of its own: it reads DraftService's `FilledInDraft` (mirrored as `DraftDTO`, see
+[draft.md](draft.md)), sends `PublishedArticleEvent` (see [article.md](article.md)) and answers with
+`PublishDraftResponse(Guid DraftId, Guid EventId, DateTime PublishDate)`.
+
 ## Missing: UserService (suggested)
 
-The original design has no service that owns users. Today `Journalist` lives in ArticleService
-(`<<prepared>>`, unused), and DraftService references journalists by id only.
+The original design has no service that owns users. Today `Journalist` lives in DraftService
+(`journalists` table), and ArticleService only stores the byline as text.
 
 A **UserService** is suggested (tagged `Suggested` in the Structurizr model) owning the user types:
 
@@ -42,8 +50,8 @@ A **UserService** is suggested (tagged `Suggested` in the Structurizr model) own
 **Why:**
 - DraftService assumes *many* journalists per article (created by, last edited by, approved by),
   which the original design does not account for.
-- DraftService stores journalist ids that are owned by ArticleService, without ever calling it –
-  nothing guarantees the ids are valid.
+- Journalists are owned by the service that drafts articles, but readers (who comment and subscribe)
+  and publishers are users too – and they have no owner at all.
 
 **Open question:** in L1, *Publisher* is a separate person, but in DraftService a *journalist*
 approves drafts (`ApprovedByJournalistId`). Are Publisher and Journalist separate user types,

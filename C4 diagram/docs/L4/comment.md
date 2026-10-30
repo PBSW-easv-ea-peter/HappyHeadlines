@@ -17,7 +17,7 @@ classDiagram
     class CommentEntity {
         <<entity>>
         +long Id
-        +long ArticleId
+        +Guid ArticleId
         +string ArticleLocation
         +string AuthorName
         +string Text
@@ -28,7 +28,7 @@ classDiagram
     class CommentDto {
         <<dto>>
         +long Id
-        +long ArticleId
+        +Guid ArticleId
         +string ArticleLocation
         +string AuthorName
         +string Text
@@ -47,7 +47,7 @@ classDiagram
     class ProfanityCheckResult {
         <<record>>
         +IReadOnlyList~string~ BannedWords
-        +bool CircuitOpen
+        +bool Unavailable
         +bool IsProfane
     }
 
@@ -57,7 +57,7 @@ classDiagram
     CommentDto --> CommentStatus
     ProfanityCheckResult ..> CommentStatus : determines (via CommentHandler)
 
-    note for ProfanityCheckResult "CircuitOpen = true means ProfanityService could not be asked -> PendingProfanityCheck, not Approved."
+    note for ProfanityCheckResult "Unavailable = true means ProfanityService gave no answer (circuit open, unreachable, timeout, error) -> PendingProfanityCheck, not Approved."
 ```
 
 ## Notes
@@ -66,6 +66,6 @@ classDiagram
   They are identical today, but the split keeps the API contract independent of the table layout.
 - **`CommentStatus`** values are persisted as numbers and guarded by a CHECK constraint in
   `database/init/comment/comment_baseline.sql` – do not reorder the members.
-- **`ProfanityCheckResult`** keeps `CircuitOpen` separate from `IsProfane`: "could not check" and
+- **`ProfanityCheckResult`** keeps `Unavailable` separate from `IsProfane`: "could not check" and
   "checked and clean" are different outcomes. This is what makes the fault-isolation fallback possible.
-- `ArticleId` + `ArticleLocation` together identify an article across the ArticleService shards.
+- `ArticleId` is a `Guid` and unique across all shards. `ArticleLocation` is kept because it is part of the API route (`api/comments/{location}/{articleId}`) and of the cache key.

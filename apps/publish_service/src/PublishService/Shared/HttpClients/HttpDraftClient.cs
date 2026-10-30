@@ -38,4 +38,20 @@ public class HttpDraftClient(
         response.EnsureSuccessStatusCode();
         return true;
     }
+
+    public async Task<bool> FlagProfanityAsync(Guid id, IReadOnlyList<string> flaggedWords)
+    {
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/drafts/{id}/flagged-words",
+            new { FlaggedWords = flaggedWords });
+
+        if (response.StatusCode == HttpStatusCode.Conflict)
+        {
+            logger.LogWarning("DraftService refused to flag draft {DraftId}", id);
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
 }

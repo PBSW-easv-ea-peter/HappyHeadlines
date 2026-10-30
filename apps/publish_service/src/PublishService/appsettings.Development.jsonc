@@ -25,6 +25,11 @@
     "BaseUrl": "http://localhost:8083"
   },
 
+  "ProfanityService": {
+    //"BaseUrl": "http://profanityservice:8081",
+    "BaseUrl": "http://localhost:8081"
+  },
+
   "OpenTelemetry": {
     //    "Endpoint": "http://otel-collector:4318"
     "Endpoint": "http://localhost:4318"

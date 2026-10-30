@@ -395,6 +395,7 @@ services:
       # appsettings.Development.jsonc targets a locally run service - point it at the containers.
       RabbitMQ__HostName: rabbitmq
       DraftService__BaseUrl: http://draftservice:8083
+      ProfanityService__BaseUrl: http://profanityservice:8081
       OpenTelemetry__Endpoint: http://otel-collector:4318
     ports:
       - "8084:8084"

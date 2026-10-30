@@ -1,5 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http.Resilience;
+using Polly;
 using PublishService.Features.Publish;
 using PublishService.Shared;
 using PublishService.Shared.External;
@@ -25,6 +27,78 @@ public static class ServiceRegistration
             client.Timeout = TimeSpan.FromSeconds(5);
         });
 
+        builder.AddProfanityClient();
+    }
+
+    // Same retry + circuit breaker as DraftService and CommentService use for ProfanityService.
+    private static void AddProfanityClient(this WebApplicationBuilder builder)
+    {
+        builder.Services
+            .AddHttpClient<IProfanityClient, ProfanityClient>(client =>
+            {
+                var baseUrl = builder.Configuration["ProfanityService:BaseUrl"]
+                              ?? throw new InvalidOperationException(
+                                  "ProfanityService:BaseUrl is not configured.");
+
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(2);
+            })
+            .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+            .AddResilienceHandler("ProfanityService", (pipeline, context) =>
+            {
+                // Circuit state changes go through ILogger so they reach Loki (docs/logging.md).
+                var logger = context.ServiceProvider
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("ProfanityService.CircuitBreaker");
+
+                pipeline.AddRetry(new HttpRetryStrategyOptions
+                {
+                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                        .Handle<HttpRequestException>()
+                        .Handle<TaskCanceledException>(),
+
+                    // Initial request + 2 retries = 3 total attempts.
+                    MaxRetryAttempts = 2
+                });
+
+                pipeline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+                {
+                    // Two failed operations out of two -> open circuit.
+                    FailureRatio = 1.0,
+                    MinimumThroughput = 2,
+
+                    SamplingDuration = TimeSpan.FromSeconds(30),
+                    BreakDuration = TimeSpan.FromSeconds(10),
+
+                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                        .Handle<HttpRequestException>()
+                        .Handle<TaskCanceledException>(),
+
+                    OnOpened = args =>
+                    {
+                        // Exception type only - the message can contain URLs or payload details.
+                        logger.LogWarning(
+                            "Circuit {Pipeline} opened. Reason: {Reason}",
+                            "ProfanityService", args.Outcome.Exception?.GetType().Name);
+
+                        return ValueTask.CompletedTask;
+                    },
+
+                    OnClosed = _ =>
+                    {
+                        logger.LogInformation("Circuit {Pipeline} closed. Calls will resume.", "ProfanityService");
+
+                        return ValueTask.CompletedTask;
+                    },
+
+                    OnHalfOpened = _ =>
+                    {
+                        logger.LogInformation("Circuit {Pipeline} half-open. Next request is a trial.", "ProfanityService");
+
+                        return ValueTask.CompletedTask;
+                    }
+                });
+            });
     }
     
     // Add endpoints

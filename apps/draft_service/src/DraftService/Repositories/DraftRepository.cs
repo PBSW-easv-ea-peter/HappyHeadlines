@@ -217,6 +217,26 @@ public class DraftRepository : IDraftRepository
         });
     }
 
+    // Status is left alone: the check is part of the publish attempt, not a workflow transition.
+    public async Task<Draft?> FlagProfanityAsync(Guid id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        var sql = $"""
+            update drafts
+            set flagged_words = @FlaggedWords,
+                profanity_check_skipped = false
+            where id = @Id and status = @ExpectedCurrentStatus
+            returning {SelectColumns}
+            """;
+
+        return await connection.QueryFirstOrDefaultAsync<Draft>(sql, new
+        {
+            Id = id,
+            FlaggedWords = flaggedWords.ToArray(),
+            ExpectedCurrentStatus = (short)expectedCurrentStatus
+        });
+    }
+
     private static async Task<List<Journalist>> GetJournalistsAsync(NpgsqlConnection connection, IReadOnlyList<long> journalistIds)
     {
         if (journalistIds.Count == 0)

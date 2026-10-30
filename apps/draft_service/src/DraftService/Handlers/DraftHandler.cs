@@ -170,6 +170,33 @@ public class DraftHandler : IDraftHandler
 
     public Task<DraftActionResult> ReactivateAsync(Guid id) => TransitionAsync(id, DraftAction.Reactivate);
 
+    // PublisherService' check before publishing found banned words. Only an Approved draft can be
+    // published, so only an Approved draft can be flagged this way.
+    public async Task<DraftActionResult> FlagProfanityAsync(Guid id, FlagProfanityRequest request)
+    {
+        var draft = await _repository.GetByIdAsync(id);
+        if (draft is null)
+        {
+            return DraftActionResult.NotFound();
+        }
+
+        if (draft.Status != DraftStatus.Approved)
+        {
+            return DraftActionResult.IllegalTransition($"Only approved drafts can be flagged. This draft is {draft.Status}.");
+        }
+
+        var updated = await _repository.FlagProfanityAsync(id, draft.Status, request.FlaggedWords);
+        if (updated is null)
+        {
+            _logger.LogWarning("Draft {DraftId} was changed concurrently while in {Status}", id, draft.Status);
+            return DraftActionResult.ConcurrentChange();
+        }
+
+        _logger.LogInformation("Draft {DraftId} flagged before publishing. {BannedWordCount} banned words found",
+            id, request.FlaggedWords.Count);
+        return DraftActionResult.Success(updated);
+    }
+
     private async Task<DraftActionResult> TransitionAsync(Guid id, DraftAction action)
     {
         var draft = await _repository.GetByIdAsync(id);

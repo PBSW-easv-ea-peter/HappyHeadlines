@@ -89,3 +89,10 @@ public class RejectDraftRequest
 {
     public string? Note { get; set; }
 }
+
+// Sent by PublisherService when its profanity check stops a publish. The draft is kept as it is
+// (still Approved) - only the words are stored, so the editor can see why it wasn't published.
+public class FlagProfanityRequest
+{
+    public List<string> FlaggedWords { get; set; } = [];
+}

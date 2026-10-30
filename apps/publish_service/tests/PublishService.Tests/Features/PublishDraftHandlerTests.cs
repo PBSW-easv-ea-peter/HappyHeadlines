@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using PublishService.Features.Publish;
 using PublishService.Shared;
 using PublishService.Shared.Exceptions;
@@ -123,6 +125,23 @@ public class PublishDraftHandlerTests
     public async Task PublishAsync_DraftServiceDown_ThrowsInfrastructureException()
     {
         _draftClient.Setup(c => c.GetAsync(DraftId)).ThrowsAsync(new HttpRequestException("refused"));
+
+        await Assert.ThrowsAsync<InfrastructureException>(() => _handler.PublishAsync(DraftId));
+        VerifyNothingPublished();
+    }
+
+    public static TheoryData<Exception> ResilienceFailures => new()
+    {
+        new BrokenCircuitException(),
+        new TimeoutRejectedException()
+    };
+
+    [Theory]
+    [MemberData(nameof(ResilienceFailures))]
+    public async Task PublishAsync_DraftServicePipelineGivesUp_ThrowsInfrastructureException(Exception failure)
+    {
+        // Without these in the catch, an open circuit would surface as a 500 instead of a 503.
+        _draftClient.Setup(c => c.GetAsync(DraftId)).ThrowsAsync(failure);
 
         await Assert.ThrowsAsync<InfrastructureException>(() => _handler.PublishAsync(DraftId));
         VerifyNothingPublished();

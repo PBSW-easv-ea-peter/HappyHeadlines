@@ -1,6 +1,8 @@
 using Messaging.Events;
 using Messaging.Exchanges;
 using Messaging.RoutingKeys;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using PublishService.Shared;
 using PublishService.Shared.Exceptions;
 using PublishService.Shared.External;
@@ -33,7 +35,7 @@ public class PublishDraftHandler(
         {
             draft = await draftClient.GetAsync(id);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (IsDraftServiceFailure(ex))
         {
             logger.LogError(ex, "Could not get draft {DraftId} from DraftService", id);
             throw new InfrastructureException("DraftService is unavailable. Please try again.", ex);
@@ -100,7 +102,7 @@ public class PublishDraftHandler(
         {
             await draftClient.MarkPublishedAsync(id);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (IsDraftServiceFailure(ex))
         {
             logger.LogError(ex, "Draft {DraftId} was queued but could not be marked as published", id);
             throw new InfrastructureException(
@@ -122,7 +124,7 @@ public class PublishDraftHandler(
         {
             await draftClient.FlagProfanityAsync(draftId, bannedWords);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (IsDraftServiceFailure(ex))
         {
             logger.LogWarning("Could not store flagged words on draft {DraftId}. Reason: {Reason}",
                 draftId, ex.GetType().Name);
@@ -132,4 +134,8 @@ public class PublishDraftHandler(
             detail: $"Not published: the article contains {bannedWords.Count} banned word(s): {string.Join(", ", bannedWords)}. The draft is kept with the words flagged.",
             statusCode: StatusCodes.Status422UnprocessableEntity);
     }
+
+    // DraftService unreachable, error status after retries, circuit open, or an attempt timed out.
+    private static bool IsDraftServiceFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or BrokenCircuitException or TimeoutRejectedException;
 }

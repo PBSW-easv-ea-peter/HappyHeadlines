@@ -15,50 +15,53 @@ public static class ServiceRegistration
     {
         // Handlers
         builder.Services.AddScoped<IPublishDraftHandler, PublishDraftHandler>();
-        
+
         // HttpClients
-        builder.Services.AddHttpClient<IHttpDraftClient, HttpDraftClient>(client =>
-        {
-            var baseUrl = builder.Configuration["DraftService:BaseUrl"]
-                          ?? throw new InvalidOperationException(
-                              "DraftService:BaseUrl is not configured.");
+        builder.Services
+            .AddHttpClient<IHttpDraftClient, HttpDraftClient>(client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["DraftService:BaseUrl"]
+                    ?? throw new InvalidOperationException("DraftService:BaseUrl is not configured."));
+                client.Timeout = OverallTimeout;
+            })
+            .AddDependencyResilience("DraftService");
 
-            client.BaseAddress = new Uri(baseUrl);
-            client.Timeout = TimeSpan.FromSeconds(5);
-        });
-
-        builder.AddProfanityClient();
-    }
-
-    // Same retry + circuit breaker as DraftService and CommentService use for ProfanityService.
-    private static void AddProfanityClient(this WebApplicationBuilder builder)
-    {
         builder.Services
             .AddHttpClient<IProfanityClient, ProfanityClient>(client =>
             {
-                var baseUrl = builder.Configuration["ProfanityService:BaseUrl"]
-                              ?? throw new InvalidOperationException(
-                                  "ProfanityService:BaseUrl is not configured.");
-
-                client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromSeconds(2);
+                client.BaseAddress = new Uri(builder.Configuration["ProfanityService:BaseUrl"]
+                    ?? throw new InvalidOperationException("ProfanityService:BaseUrl is not configured."));
+                client.Timeout = OverallTimeout;
             })
+            .AddDependencyResilience("ProfanityService");
+    }
+
+    // HttpClient.Timeout covers all attempts together, so it only backstops the pipeline.
+    // The per-attempt timeout is what actually cuts a slow call short.
+    private static readonly TimeSpan OverallTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(2);
+
+    // Retry + circuit breaker + per-attempt timeout, like DraftService and CommentService use for
+    // ProfanityService. Unlike theirs, the default ShouldHandle is kept, so 5xx responses and
+    // attempt timeouts count as failures too - not only exceptions.
+    private static void AddDependencyResilience(this IHttpClientBuilder client, string pipelineName)
+    {
+        client
             .SetHandlerLifetime(TimeSpan.FromMinutes(5))
-            .AddResilienceHandler("ProfanityService", (pipeline, context) =>
+            .AddResilienceHandler(pipelineName, (pipeline, context) =>
             {
                 // Circuit state changes go through ILogger so they reach Loki (docs/logging.md).
                 var logger = context.ServiceProvider
                     .GetRequiredService<ILoggerFactory>()
-                    .CreateLogger("ProfanityService.CircuitBreaker");
+                    .CreateLogger($"{pipelineName}.CircuitBreaker");
 
                 pipeline.AddRetry(new HttpRetryStrategyOptions
                 {
-                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-                        .Handle<HttpRequestException>()
-                        .Handle<TaskCanceledException>(),
-
-                    // Initial request + 2 retries = 3 total attempts.
-                    MaxRetryAttempts = 2
+                    // Initial request + 2 retries = 3 total attempts, close together so the
+                    // caller isn't kept waiting.
+                    MaxRetryAttempts = 2,
+                    Delay = TimeSpan.FromMilliseconds(200),
+                    BackoffType = DelayBackoffType.Exponential
                 });
 
                 pipeline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
@@ -70,34 +73,34 @@ public static class ServiceRegistration
                     SamplingDuration = TimeSpan.FromSeconds(30),
                     BreakDuration = TimeSpan.FromSeconds(10),
 
-                    ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-                        .Handle<HttpRequestException>()
-                        .Handle<TaskCanceledException>(),
-
                     OnOpened = args =>
                     {
-                        // Exception type only - the message can contain URLs or payload details.
+                        // Exception type or status code only - an exception message can contain
+                        // URLs or payload details.
                         logger.LogWarning(
                             "Circuit {Pipeline} opened. Reason: {Reason}",
-                            "ProfanityService", args.Outcome.Exception?.GetType().Name);
+                            pipelineName,
+                            args.Outcome.Exception?.GetType().Name ?? $"HTTP {(int?)args.Outcome.Result?.StatusCode}");
 
                         return ValueTask.CompletedTask;
                     },
 
                     OnClosed = _ =>
                     {
-                        logger.LogInformation("Circuit {Pipeline} closed. Calls will resume.", "ProfanityService");
+                        logger.LogInformation("Circuit {Pipeline} closed. Calls will resume.", pipelineName);
 
                         return ValueTask.CompletedTask;
                     },
 
                     OnHalfOpened = _ =>
                     {
-                        logger.LogInformation("Circuit {Pipeline} half-open. Next request is a trial.", "ProfanityService");
+                        logger.LogInformation("Circuit {Pipeline} half-open. Next request is a trial.", pipelineName);
 
                         return ValueTask.CompletedTask;
                     }
                 });
+
+                pipeline.AddTimeout(AttemptTimeout);
             });
     }
     

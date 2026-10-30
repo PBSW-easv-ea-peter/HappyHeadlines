@@ -45,7 +45,7 @@ public class ProfanityClient : IProfanityClient
         {
             // Unreachable, timed out (TaskCanceledException from HttpClient.Timeout), error
             // status or unreadable body. Exception type only - the message can contain URLs.
-            _logger.LogWarning("ProfanityService call failed ({ExceptionType}) - treating the text as not checked",
+            _logger.LogWarning("ProfanityService call failed ({Reason}) - treating the text as not checked",
                 ex.GetType().Name);
             return ProfanityCheckResult.NotChecked;
         }

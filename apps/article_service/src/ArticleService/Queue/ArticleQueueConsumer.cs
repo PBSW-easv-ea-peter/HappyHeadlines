@@ -1,6 +1,8 @@
 using System.Text.Json;
+using ArticleService.Cache;
 using ArticleService.Repositories;
 using ArticleService.Setup;
+using Messaging.Connections;
 using Messaging.Events;
 using Messaging.Exchanges;
 using Messaging.RoutingKeys;
@@ -48,7 +50,12 @@ public class ArticleQueueConsumer : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Long-lived connection/channel: the broker pushes messages to us for as long as we run.
-        await using var connection = await _connectionFactory.CreateConnectionAsync(stoppingToken);
+        // Retried, because an unhandled exception here stops the whole host - the HTTP API too.
+        await using var connection = await RabbitMqConnection.CreateWithRetryAsync(
+            _connectionFactory,
+            ex => _logger.LogWarning("Could not reach {Pipeline} - retrying. Reason: {Reason}",
+                "RabbitMQ", ex.GetType().Name),
+            stoppingToken);
         await using var channel = await connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
         await PublishedArticlesExchange.ConfigureAsync(channel);
@@ -101,12 +108,17 @@ public class ArticleQueueConsumer : BackgroundService
                 throw new ArgumentException($"Unknown location '{published.Location}'.");
             }
 
-            var created = await pipeline.ExecuteAsync(
+            var articleId = await pipeline.ExecuteAsync(
                 async _ => await repository.CreatePublishedAsync(published));
-            if (created)
+            if (articleId is Guid id)
             {
                 _logger.LogInformation("Stored article for draft {DraftId} in {Location}",
                     published.DraftId, published.Location);
+
+                // Put it on the cached front page now instead of at the next hourly refresh.
+                // Never throws - a cache failure must not requeue an article that is already stored.
+                var cache = scope.ServiceProvider.GetRequiredService<IArticleCache>();
+                await cache.RefreshArticleAsync(published.Location.ToUpperInvariant(), id);
             }
             else
             {
@@ -131,7 +143,8 @@ public class ArticleQueueConsumer : BackgroundService
         catch (Exception ex) when (ex is JsonException or ArgumentException)
         {
             // Poison message (bad JSON, unknown location or section): retrying will never succeed.
-            _logger.LogWarning(ex, "Discarding unprocessable message {DeliveryTag}", delivery.DeliveryTag);
+            _logger.LogWarning("Discarding unprocessable message {DeliveryTag}. Reason: {Reason}",
+                delivery.DeliveryTag, ex.GetType().Name);
             await channel.BasicNackAsync(delivery.DeliveryTag, multiple: false, requeue: false);
         }
         catch (Exception ex)

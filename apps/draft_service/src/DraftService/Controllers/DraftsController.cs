@@ -97,6 +97,10 @@ public class DraftsController : ControllerBase
     public async Task<ActionResult<Draft>> Reactivate(Guid id) =>
         ToActionResult(await _handler.ReactivateAsync(id));
 
+    [HttpPut("{id:guid}/flagged-words")]
+    public async Task<ActionResult<Draft>> FlagProfanity(Guid id, FlagProfanityRequest request) =>
+        ToActionResult(await _handler.FlagProfanityAsync(id, request));
+
     private ActionResult<Draft> ToActionResult(DraftActionResult result) => result.Outcome switch
     {
         DraftActionOutcome.Success => Ok(result.Draft),

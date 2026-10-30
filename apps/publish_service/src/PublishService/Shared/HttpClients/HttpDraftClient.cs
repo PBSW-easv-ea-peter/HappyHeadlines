@@ -15,7 +15,7 @@ public class HttpDraftClient(
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
-            logger.LogInformation("Draft not found for id: {id}", id);
+            logger.LogInformation("Draft {DraftId} not found", id);
             return null;
         }
         
@@ -30,8 +30,24 @@ public class HttpDraftClient(
 
         if (response.StatusCode == HttpStatusCode.Conflict)
         {
-            logger.LogWarning("DraftService refused to mark draft {DraftId} as published: {Reason}",
-                id, await response.Content.ReadAsStringAsync());
+            // Not the response body: Reason is the exception type only (docs/logging.md).
+            logger.LogWarning("DraftService refused to mark draft {DraftId} as published", id);
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
+
+    public async Task<bool> FlagProfanityAsync(Guid id, IReadOnlyList<string> flaggedWords)
+    {
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/drafts/{id}/flagged-words",
+            new { FlaggedWords = flaggedWords });
+
+        if (response.StatusCode == HttpStatusCode.Conflict)
+        {
+            logger.LogWarning("DraftService refused to flag draft {DraftId}", id);
             return false;
         }
 

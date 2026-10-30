@@ -96,7 +96,7 @@ public class ArticleCache : IArticleCache
         }
         catch (Exception ex) when (ex is RedisException or RedisTimeoutException)
         {
-            _logger.LogWarning("ArticleCache read failed ({ExceptionType}) - falling back to the database",
+            _logger.LogWarning("ArticleCache read failed ({Reason}) - falling back to the database",
                 ex.GetType().Name);
             return [];
         }
@@ -123,7 +123,7 @@ public class ArticleCache : IArticleCache
         }
         catch (Exception ex) when (ex is RedisException or RedisTimeoutException)
         {
-            _logger.LogWarning("ArticleCache read failed ({ExceptionType}) - falling back to the database",
+            _logger.LogWarning("ArticleCache read failed ({Reason}) - falling back to the database",
                 ex.GetType().Name);
             return RedisValue.Null;
         }
@@ -131,7 +131,7 @@ public class ArticleCache : IArticleCache
 
     public async Task RefreshCacheAsync(params string[] locations)
     {
-        _logger.LogInformation("Starting full cache refresh of locations: {locations}", string.Join(", ", locations));
+        _logger.LogInformation("Starting full cache refresh of locations: {Location}", string.Join(", ", locations));
 
         foreach (string location in locations)
         {
@@ -183,11 +183,11 @@ public class ArticleCache : IArticleCache
                 UpsertScript,
                 [ArticleKey(location, id.ToString()), IndexKey(location)],
                 [JsonSerializer.Serialize(article), (long)CacheDuration.TotalSeconds, Score(article), id.ToString()]);
-            _logger.LogDebug("Refreshed single article cache for {Location}:{Id}", location, id);
+            _logger.LogDebug("Refreshed single article cache for {Location}:{ArticleId}", location, id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to refresh article cache for {Location}:{Id}", location, id);
+            _logger.LogError(ex, "Failed to refresh article cache for {Location}:{ArticleId}", location, id);
         }
     }
 
@@ -199,11 +199,11 @@ public class ArticleCache : IArticleCache
                 RemoveScript,
                 [ArticleKey(location, id.ToString()), IndexKey(location)],
                 [id.ToString()]);
-            _logger.LogDebug("Removed article {Location}:{Id} from the cache", location, id);
+            _logger.LogDebug("Removed article {Location}:{ArticleId} from the cache", location, id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to remove article {Location}:{Id} from the cache", location, id);
+            _logger.LogError(ex, "Failed to remove article {Location}:{ArticleId} from the cache", location, id);
         }
     }
 

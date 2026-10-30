@@ -2,7 +2,8 @@
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
+      "Microsoft.AspNetCore": "Warning",
+      "Polly": "None"
     }
   },
 
@@ -20,6 +21,10 @@
 
   "DraftService": {
     "BaseUrl": "http://draftservice:8083"
+  },
+
+  "ProfanityService": {
+    "BaseUrl": "http://profanityservice:8081"
   },
 
   "OpenTelemetry": {

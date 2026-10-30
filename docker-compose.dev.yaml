@@ -265,11 +265,11 @@ services:
 
   article-cache:
     image: redis:8.8.3-alpine
-    container_name: redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     command: redis-server --save "" --appendonly no
+
 # ──────────────────────────────────────────────────────────────────────────────
 #        Comments
 # ──────────────────────────────────────────────────────────────────────────────
@@ -325,6 +325,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8082
+      # appsettings.Development.json targets a locally run service - point it at the containers.
+      ConnectionStrings__CommentDatabase: Host=commentdb;Port=5432;Database=comments;Username=postgres;Password=Postgres1234
+      ProfanityService__BaseUrl: http://profanityservice:8081
+      Cache__RedisConnection: comment-cache:6379
+      OpenTelemetry__Endpoint: http://otel-collector:4318
     ports:
       - "8082:8082"
 
@@ -390,6 +395,7 @@ services:
       # appsettings.Development.jsonc targets a locally run service - point it at the containers.
       RabbitMQ__HostName: rabbitmq
       DraftService__BaseUrl: http://draftservice:8083
+      ProfanityService__BaseUrl: http://profanityservice:8081
       OpenTelemetry__Endpoint: http://otel-collector:4318
     ports:
       - "8084:8084"

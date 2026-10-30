@@ -28,7 +28,6 @@ builder.Services.AddEndpoints(typeof(Program).Assembly);
 
 var app = builder.Build();
 
-await app.ConfigureExchangesAsync();
 app.UseOpenApi();
 app.UseCors(CorsPolicies.AllowWebApp);
 

@@ -3,6 +3,7 @@
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning",
+      "Polly": "None",
       "System.Net.Http.HttpClient.OtlpLogExporter": "Warning"
     }
   },
@@ -23,6 +24,11 @@
   "DraftService": {
     //"BaseUrl": "http://draftservice:8083",
     "BaseUrl": "http://localhost:8083"
+  },
+
+  "ProfanityService": {
+    //"BaseUrl": "http://profanityservice:8081",
+    "BaseUrl": "http://localhost:8081"
   },
 
   "OpenTelemetry": {

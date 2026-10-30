@@ -41,7 +41,9 @@ builder.Services
             ?? throw new InvalidOperationException("ProfanityService:BaseUrl is not configured.");
 
         client.BaseAddress = new Uri(baseUrl);
-        client.Timeout = TimeSpan.FromSeconds(2);
+        // Covers all attempts together, so it only backstops the pipeline - the per-attempt
+        // timeout at the end of the pipeline is what cuts a slow call short.
+        client.Timeout = TimeSpan.FromSeconds(10);
     })
     .SetHandlerLifetime(TimeSpan.FromMinutes(5))
     .AddResilienceHandler("ProfanityService", (pipeline, context) =>
@@ -53,12 +55,12 @@ builder.Services
 
         pipeline.AddRetry(new HttpRetryStrategyOptions
         {
-            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-                .Handle<HttpRequestException>()
-                .Handle<TaskCanceledException>(),
-
+            // Default ShouldHandle: exceptions, 5xx, 408, 429 and attempt timeouts - the circuit
+            // breaker uses the same, so an erroring ProfanityService also opens the circuit.
             // Initial request + 2 retries = 3 total attempts.
-            MaxRetryAttempts = 2
+            MaxRetryAttempts = 2,
+            Delay = TimeSpan.FromMilliseconds(200),
+            BackoffType = DelayBackoffType.Exponential
         });
 
         pipeline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
@@ -70,16 +72,13 @@ builder.Services
             SamplingDuration = TimeSpan.FromSeconds(30),
             BreakDuration = TimeSpan.FromSeconds(10),
 
-            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-                .Handle<HttpRequestException>()
-                .Handle<TaskCanceledException>(),
-
             OnOpened = args =>
             {
                 // Exception type only - the message can contain URLs or payload details.
                 logger.LogWarning(
                     "Circuit {Pipeline} opened. Reason: {Reason}",
-                    "ProfanityService", args.Outcome.Exception?.GetType().Name);
+                    "ProfanityService",
+                    args.Outcome.Exception?.GetType().Name ?? $"HTTP {(int?)args.Outcome.Result?.StatusCode}");
 
                 return ValueTask.CompletedTask;
             },
@@ -98,6 +97,8 @@ builder.Services
                 return ValueTask.CompletedTask;
             }
         });
+
+        pipeline.AddTimeout(TimeSpan.FromSeconds(2));
     });
 
 var app = builder.Build();

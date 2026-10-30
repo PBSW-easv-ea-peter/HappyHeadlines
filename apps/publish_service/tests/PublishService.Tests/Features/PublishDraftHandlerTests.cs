@@ -1,9 +1,12 @@
 using Messaging.Events;
 using Messaging.Exchanges;
 using Messaging.RoutingKeys;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using PublishService.Features.Publish;
 using PublishService.Shared;
 using PublishService.Shared.Exceptions;
@@ -20,12 +23,19 @@ public class PublishDraftHandlerTests
 
     private readonly Mock<IHttpDraftClient> _draftClient = new();
     private readonly Mock<IRabbitMqService> _rabbitMq = new();
+    private readonly Mock<IProfanityClient> _profanityClient = new();
     private readonly PublishDraftHandler _handler;
 
     public PublishDraftHandlerTests()
     {
-        _handler = new PublishDraftHandler(_draftClient.Object, Mock.Of<ILogger<PublishDraftHandler>>(), _rabbitMq.Object);
+        _handler = new PublishDraftHandler(
+            _draftClient.Object, Mock.Of<ILogger<PublishDraftHandler>>(), _rabbitMq.Object, _profanityClient.Object);
         _draftClient.Setup(c => c.MarkPublishedAsync(DraftId)).ReturnsAsync(true);
+
+        // Default: the text is clean. Profanity tests override this.
+        _profanityClient
+            .Setup(p => p.CheckAsync(It.IsAny<string>()))
+            .ReturnsAsync(new ProfanityCheckResult([], Unavailable: false));
     }
 
     private static DraftDTO MakeDraft(DraftStatus status) => new()
@@ -120,6 +130,23 @@ public class PublishDraftHandlerTests
         VerifyNothingPublished();
     }
 
+    public static TheoryData<Exception> ResilienceFailures => new()
+    {
+        new BrokenCircuitException(),
+        new TimeoutRejectedException()
+    };
+
+    [Theory]
+    [MemberData(nameof(ResilienceFailures))]
+    public async Task PublishAsync_DraftServicePipelineGivesUp_ThrowsInfrastructureException(Exception failure)
+    {
+        // Without these in the catch, an open circuit would surface as a 500 instead of a 503.
+        _draftClient.Setup(c => c.GetAsync(DraftId)).ThrowsAsync(failure);
+
+        await Assert.ThrowsAsync<InfrastructureException>(() => _handler.PublishAsync(DraftId));
+        VerifyNothingPublished();
+    }
+
     [Fact]
     public async Task PublishAsync_BrokerDown_ThrowsAndLeavesDraftApproved()
     {
@@ -152,5 +179,78 @@ public class PublishDraftHandlerTests
         var result = await _handler.PublishAsync(DraftId);
 
         Assert.IsType<Accepted<PublishDraftResponse>>(result);
+    }
+
+    [Fact]
+    public async Task PublishAsync_ChecksTitleAndBodyBeforeQueueing()
+    {
+        var calls = new List<string>();
+        string? checkedText = null;
+        _draftClient.Setup(c => c.GetAsync(DraftId)).ReturnsAsync(MakeDraft(DraftStatus.Approved));
+        _profanityClient
+            .Setup(p => p.CheckAsync(It.IsAny<string>()))
+            .Callback((string text) => { checkedText = text; calls.Add("check"); })
+            .ReturnsAsync(new ProfanityCheckResult([], Unavailable: false));
+        _rabbitMq
+            .Setup(r => r.PublishAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Callback(() => calls.Add("queue"))
+            .Returns(Task.CompletedTask);
+
+        await _handler.PublishAsync(DraftId);
+
+        Assert.Equal(["check", "queue"], calls);
+        Assert.Contains("Title", checkedText);
+        Assert.Contains("Body", checkedText);
+    }
+
+    [Fact]
+    public async Task PublishAsync_ProfanityFound_RefusesAndFlagsDraft()
+    {
+        _draftClient.Setup(c => c.GetAsync(DraftId)).ReturnsAsync(MakeDraft(DraftStatus.Approved));
+        _profanityClient
+            .Setup(p => p.CheckAsync(It.IsAny<string>()))
+            .ReturnsAsync(new ProfanityCheckResult(["stupid"], Unavailable: false));
+        _draftClient.Setup(c => c.FlagProfanityAsync(DraftId, It.IsAny<IReadOnlyList<string>>())).ReturnsAsync(true);
+
+        var result = await _handler.PublishAsync(DraftId);
+
+        var problem = Assert.IsType<ProblemHttpResult>(result);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, problem.StatusCode);
+        Assert.Contains("stupid", problem.ProblemDetails.Detail);
+        _draftClient.Verify(c => c.FlagProfanityAsync(DraftId,
+            It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" }))), Times.Once);
+        VerifyNothingPublished();
+    }
+
+    [Fact]
+    public async Task PublishAsync_ProfanityFoundAndFlaggingFails_StillRefuses()
+    {
+        // Storing the words is best effort - the article must not be published either way.
+        _draftClient.Setup(c => c.GetAsync(DraftId)).ReturnsAsync(MakeDraft(DraftStatus.Approved));
+        _profanityClient
+            .Setup(p => p.CheckAsync(It.IsAny<string>()))
+            .ReturnsAsync(new ProfanityCheckResult(["stupid"], Unavailable: false));
+        _draftClient
+            .Setup(c => c.FlagProfanityAsync(DraftId, It.IsAny<IReadOnlyList<string>>()))
+            .ThrowsAsync(new HttpRequestException("refused"));
+
+        var result = await _handler.PublishAsync(DraftId);
+
+        var problem = Assert.IsType<ProblemHttpResult>(result);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, problem.StatusCode);
+        VerifyNothingPublished();
+    }
+
+    [Fact]
+    public async Task PublishAsync_ProfanityServiceDown_FailsClosed()
+    {
+        _draftClient.Setup(c => c.GetAsync(DraftId)).ReturnsAsync(MakeDraft(DraftStatus.Approved));
+        _profanityClient
+            .Setup(p => p.CheckAsync(It.IsAny<string>()))
+            .ReturnsAsync(ProfanityCheckResult.NotChecked);
+
+        await Assert.ThrowsAsync<InfrastructureException>(() => _handler.PublishAsync(DraftId));
+        VerifyNothingPublished();
+        _draftClient.Verify(c => c.FlagProfanityAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyList<string>>()), Times.Never);
     }
 }

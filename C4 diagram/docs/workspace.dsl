@@ -91,15 +91,17 @@ workspace "Happy Headlines" "Positive news platform" {
 
             // No database of its own - it reads drafts from DraftService and writes to ArticleQueue.
             group "Publisher" {
-                publisherService = container "PublisherService" "Publishes approved drafts as articles. Implemented: publishing via ArticleQueue. Missing: profanity check before publishing (required by the handout). Code lives in apps/publish_service (to be renamed)." "Service" "Partial" {
+                publisherService = container "PublisherService" "Checks approved drafts for profanity and publishes them as articles via ArticleQueue. Code lives in apps/publish_service (to be renamed)." "Service" "Implemented" {
                     publishDraftEndpoint = component "PublishDraftEndpoint" "Exposes REST endpoint POST /api/v1/publish-draft/{id}." "ASP.NET Core Minimal API"
-                    publishDraftHandler = component "PublishDraftHandler" "Checks that the draft is Approved, queues a PublishedArticleEvent, then marks the draft as published. Queues before marking, so publishing again after a failure is safe." "Component"
-                    publisherDraftClient = component "DraftClient" "Gets the draft and marks it as published in DraftService over HTTP." "Component"
+                    publishDraftHandler = component "PublishDraftHandler" "Checks that the draft is Approved and free of profanity, queues a PublishedArticleEvent, then marks the draft as published. Banned words: 422, words stored on the draft. ProfanityService down: 503 (fail-closed). Queues before marking, so publishing again after a failure is safe." "Component"
+                    publisherDraftClient = component "DraftClient" "Gets the draft, stores flagged words and marks it as published in DraftService over HTTP." "Component"
+                    publisherProfanityClient = component "ProfanityClient" "Calls ProfanityService over HTTP, wrapped in a Polly retry + circuit breaker. Reports 'not checked' on any failure, so the handler can fail closed." "Component"
                     rabbitMqService = component "RabbitMqService" "Publishes events to RabbitMQ with publisher confirms." "Component"
                     publisherObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     publishDraftEndpoint -> publishDraftHandler "Delegates publishing to"
-                    publishDraftHandler -> publisherDraftClient "Gets and marks drafts via"
+                    publishDraftHandler -> publisherDraftClient "Gets, flags and marks drafts via"
+                    publishDraftHandler -> publisherProfanityClient "Checks title and body via"
                     publishDraftHandler -> rabbitMqService "Queues PublishedArticleEvent via"
                 }
             }
@@ -139,22 +141,16 @@ workspace "Happy Headlines" "Positive news platform" {
         // Webapp -> DraftService, DraftService -> DraftDatabase/ProfanityService)
         webapp -> draftsController "Saves and retrieves drafts"
         draftRepository -> draftDb "Reads and writes drafts in"
-        // Known deviation: per the handout, PublisherService owns the profanity check before
-        // publishing. PublisherService exists, but the check has not been moved there yet - it stays
-        // here until it is (docs/logging.md, open question 8).
-        // Declared at container level first: implied relationships do not copy tags, so without
-        // this line the L2 view would not show the Deviation style.
-        draftService -> profanityService "Checks draft text (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
-        draftProfanityClient -> profanityService "Checks draft text via HTTP POST /api/profanity/check (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
+        // Early feedback for the editor on submit. The gate before publishing is PublisherService's
+        // check below (docs/logging.md, open question 8).
+        draftProfanityClient -> profanityService "Pre-checks draft text on submit via HTTP POST /api/profanity/check" "HTTP"
 
         // PublisherService component-level relations (imply the container-level
-        // Webapp -> PublisherService -> DraftService/ArticleQueue relations)
+        // Webapp -> PublisherService -> DraftService/ProfanityService/ArticleQueue relations)
         webapp -> publishDraftEndpoint "Publishes approved draft via POST /api/v1/publish-draft/{id}" "HTTP"
-        publisherDraftClient -> draftsController "Gets draft (GET api/drafts/filled-in-draft/{id}) and marks it published (POST api/drafts/{id}/publish)" "HTTP"
+        publisherDraftClient -> draftsController "Gets draft, flags banned words (PUT api/drafts/{id}/flagged-words) and marks it published" "HTTP"
+        publisherProfanityClient -> profanityService "Checks title and body before publishing via HTTP POST /api/profanity/check" "HTTP"
         rabbitMqService -> articleQueue "Publishes PublishedArticleEvent to" "AMQP"
-
-        // Required by the handout, but not implemented yet - the check still runs in DraftService (see above).
-        publisherService -> profanityService "Checks article content before publishing (MISSING - not implemented yet)" "HTTP" "Missing"
 
         // ArticleService component-level relations (imply the ArticleService container-level
         // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
@@ -358,10 +354,6 @@ workspace "Happy Headlines" "Positive news platform" {
             }
             relationship "Deviation" {
                 color "#E8710A"
-                dashed true
-            }
-            relationship "Missing" {
-                color "#D32F2F"
                 dashed true
             }
         }

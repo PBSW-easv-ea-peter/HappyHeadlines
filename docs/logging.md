@@ -113,7 +113,7 @@ Listen over tilladte felter er en konvention og håndhæves ved code review, ikk
 5. **Gælder policyen også for traces?** Uge 39-noten viser `Activity.Current?.AddTag(...)` og baggage. Bør de samme tilladte og forbudte felter gælde for span-tags og baggage? Baggage sendes videre i headers til alle efterfølgende services.
 6. **Sampling i produktion:** Instrumentering koster performance (uge 39). Skal vi sample traces ned i `Production`, eller er alt fint i projektets skala?
 7. **Observability i prod-compose:** Collector, Loki, Tempo og Grafana ligger kun i `docker-compose.dev.yaml`. Skal de også med i `docker-compose.yaml`?
-8. **Kendt afvigelse fra arkitekturen:** DraftService kalder ProfanityService, men ifølge handoutet er det PublisherService' ansvar. Er vi enige om at beholde det midlertidigt og flytte det, når PublisherService bygges?
+8. ~~**Kendt afvigelse fra arkitekturen:** DraftService kalder ProfanityService, men ifølge handoutet er det PublisherService' ansvar.~~ **Besluttet:** begge tjekker. PublisherService er gaten før publicering (fail-closed: fund giver 422 og ordene gemmes på draftet, nede giver 503). DraftService' tjek ved submit er tidlig feedback til redaktøren (fail-open med `profanityCheckSkipped`).
 9. **Dubletter fra Polly:** `Microsoft.Extensions.Http.Resilience` logger selv circuit breaker-events og retries (`Resilience event occurred. EventName: 'OnCircuitOpened'`, inkl. fulde exceptions). Vores egne `OnOpened`-, `OnHalfOpened`- og `OnClosed`-callbacks giver derfor dubletter. Skal vi beholde vores egne (de følger policyen) og dæmpe Pollys via `LogLevel`, eller omvendt? Pollys logs indeholder exception-beskeder, som strider mod reglen for `Reason`.
 
 ## Kendte fejl (ny opgave, ikke en del af logging)

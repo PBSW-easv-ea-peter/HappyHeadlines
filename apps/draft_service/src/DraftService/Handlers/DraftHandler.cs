@@ -109,9 +109,8 @@ public class DraftHandler : IDraftHandler
             return DraftActionResult.IllegalTransition($"Cannot submit for approval a draft in {draft.Status} status.");
         }
 
-        // Known deviation from the architecture handout: the profanity check before publishing
-        // belongs to PublisherService. It lives here until PublisherService is built, and nothing
-        // new should be built on top of it (see docs/logging.md, open question 8).
+        // Early feedback for the editor, not the gate: PublisherService checks again before
+        // publishing and refuses profane articles (docs/logging.md, open question 8).
         var profanityResult = await _profanityClient.CheckAsync(draft.Breadtext, cancellationToken);
 
         // Fault isolation, same principle as CommentService: if ProfanityService can't be

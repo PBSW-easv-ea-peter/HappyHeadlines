@@ -1,6 +1,6 @@
 ## Caches: Redis
 ## ArticleCache:
-- Refresh at midnight
+- Refresh every hour
 - Batch-refresh
 - Articles cached: Last 14 days
 

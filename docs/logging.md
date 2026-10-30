@@ -2,7 +2,7 @@
 
 Denne fil beskriver, hvordan services i HappyHeadlines logger: hvad der logges, hvornår, i hvilket format, og hvad der aldrig må logges. Formatet for et log-entry er beskrevet i [Logging-template.json](Logging-template.json).
 
-Policyen gælder for DraftService, CommentService og ProfanityService. Øvrige services følger, når de får OpenTelemetry.
+Policyen gælder for alle backend-services, der kalder `AddObservability()`: ArticleService, DraftService, CommentService, ProfanityService og PublishService.
 
 ## Hvor logs og traces ender
 
@@ -113,13 +113,13 @@ Listen over tilladte felter er en konvention og håndhæves ved code review, ikk
 4. **Refleksion:** Hvorfor skal policyen ligge før koden?
 5. **Gælder policyen også for traces?** Uge 39-noten viser `Activity.Current?.AddTag(...)` og baggage. Bør de samme tilladte og forbudte felter gælde for span-tags og baggage? Baggage sendes videre i headers til alle efterfølgende services.
 6. **Sampling i produktion:** Instrumentering koster performance (uge 39). Skal vi sample traces ned i `Production`, eller er alt fint i projektets skala?
-7. **Observability i prod-compose:** Collector, Loki, Tempo og Grafana ligger kun i `docker-compose.dev.yaml`. Skal de også med i `docker-compose.yaml`?
+7. ~~**Observability i prod-compose:** Collector, Loki, Tempo og Grafana ligger kun i `docker-compose.dev.yaml`. Skal de også med i `docker-compose.yaml`?~~ **Løst:** de ligger i en separat monitoring-stack i `monitoring/` (`monitoring/docker-compose.yaml`), der kan køre mod både dev- og prod-stacken.
 8. ~~**Kendt afvigelse fra arkitekturen:** DraftService kalder ProfanityService, men ifølge handoutet er det PublisherService' ansvar.~~ **Besluttet:** begge tjekker. PublisherService er gaten før publicering (fail-closed: fund giver 422 og ordene gemmes på draftet, nede giver 503). DraftService' tjek ved submit er tidlig feedback til redaktøren (fail-open med `profanityCheckSkipped`).
 9. **Dubletter fra Polly:** `Microsoft.Extensions.Http.Resilience` logger selv circuit breaker-events og retries (`Resilience event occurred. EventName: 'OnCircuitOpened'`, inkl. fulde exceptions). Vores egne `OnOpened`-, `OnHalfOpened`- og `OnClosed`-callbacks giver derfor dubletter. Skal vi beholde vores egne (de følger policyen) og dæmpe Pollys via `LogLevel`, eller omvendt? Pollys logs indeholder exception-beskeder, som strider mod reglen for `Reason`.
 
 ## Kendte fejl (ny opgave, ikke en del af logging)
 
-- **Profanity-tjek regnes som "rent", når ProfanityService fejler, før circuit breakeren er åben.** I begge `ProfanityClient`-klasser returnerer `catch (HttpRequestException)` og `catch (TaskCanceledException)` en tom ordliste med `CircuitOpen = false`. Handleren tolker det som "tjekket og ingen forbudte ord".
+- ~~**Profanity-tjek regnes som "rent", når ProfanityService fejler, før circuit breakeren er åben.** I begge `ProfanityClient`-klasser returnerer `catch (HttpRequestException)` og `catch (TaskCanceledException)` en tom ordliste med `CircuitOpen = false`. Handleren tolker det som "tjekket og ingen forbudte ord".~~ **Løst** i commit `3a8ef48`: begge `ProfanityClient`-klasser fejler nu lukket. Enhver fejl i kaldet (circuit åben, ikke tilgængelig, timeout, fejlstatus, tomt eller ulæseligt svar) giver `ProfanityCheckResult.NotChecked` (`Unavailable = true`). Dækket af `ProfanityClientTests` i både CommentService og DraftService.
   - Konsekvens: drafts submittes uden flag, og kommentarer godkendes uden tjek i de første fejlede kald.
   - Fundet under test i uge 38: drafts 8 og 9 blev submittet uden fallback-warning, mens ProfanityService var stoppet.
   - Det strider mod kommentaren i `CommentService/Profanity/IProfanityClient.cs` og mod fault isolation fra uge 37.

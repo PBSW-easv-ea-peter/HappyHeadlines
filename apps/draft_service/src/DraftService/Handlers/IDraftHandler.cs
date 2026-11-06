@@ -14,4 +14,5 @@ public interface IDraftHandler
     Task<DraftActionResult> PublishAsync(Guid id);
     Task<DraftActionResult> ArchiveAsync(Guid id);
     Task<DraftActionResult> ReactivateAsync(Guid id);
+    Task<DraftActionResult> FlagProfanityAsync(Guid id, FlagProfanityRequest request);
 }

@@ -1,7 +1,7 @@
 # L4 – Observability: shared library
 
 Code-level view of `apps/shared/HappyHeadlines.Observability/ObservabilityExtensions.cs`.
-The library is referenced by DraftService, CommentService and ProfanityService (the
+The library is referenced by all five services - Article, Comment, Draft, Profanity and Publisher (the
 `Observability` component in their L3 views) and is called once in each `Program.cs`:
 
 ```csharp
@@ -34,6 +34,7 @@ classDiagram
         AspNetCoreInstrumentation
         HttpClientInstrumentation
         Npgsql
+        RabbitMQ.Client Publisher + Subscriber sources
         OtlpExporter to Endpoint + v1-traces
     }
 
@@ -62,3 +63,7 @@ classDiagram
   `traceparent` header, and the ASP.NET Core instrumentation in the receiving service reads it.
 - **`Npgsql.OpenTelemetry` is pinned to `8.*`** to match the Npgsql version the services use.
 - What may be logged is defined in `docs/logging.md` in the repository root.
+- **Traces across RabbitMQ:** no manual `traceparent` handling. RabbitMQ.Client 7 puts the trace context
+  in the message headers itself when a listener is registered on its `RabbitMQ.Client.Publisher`/`Subscriber`
+  sources, and the consumer's span gets the publisher as parent. Not yet verified end to end in Tempo
+  (PublisherService -> RabbitMQ -> ArticleService -> Npgsql).

@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using ArticleService.Cache;
 using ArticleService.Queue;
 using ArticleService.Repositories;
 using ArticleService.Setup;
@@ -23,8 +24,10 @@ namespace ArticleService.Tests.Queue;
 public class ArticleQueueConsumerTests
 {
     private const ulong DeliveryTag = 42;
+    private static readonly Guid ArticleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
     private readonly Mock<IArticleWriteRepository> _repository = new();
+    private readonly Mock<IArticleCache> _cache = new();
     private readonly Mock<IChannel> _channel = new();
     private readonly ArticleQueueConsumer _consumer;
 
@@ -32,6 +35,7 @@ public class ArticleQueueConsumerTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(_repository.Object);
+        services.AddSingleton(_cache.Object);
         var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
 
         // Pass-through pipeline for EU only, so an unknown location has no pipeline -
@@ -46,7 +50,7 @@ public class ArticleQueueConsumerTests
     [Fact]
     public async Task HandleAsync_NewArticle_Acks()
     {
-        _repository.Setup(r => r.CreatePublishedAsync(It.IsAny<PublishedArticleEvent>())).ReturnsAsync(true);
+        _repository.Setup(r => r.CreatePublishedAsync(It.IsAny<PublishedArticleEvent>())).ReturnsAsync(ArticleId);
 
         await _consumer.HandleAsync(_channel.Object, Delivery(Event()));
 
@@ -57,11 +61,31 @@ public class ArticleQueueConsumerTests
     public async Task HandleAsync_AlreadyStored_AcksWithoutError()
     {
         // Redelivered message: the article exists, so there is nothing left to do.
-        _repository.Setup(r => r.CreatePublishedAsync(It.IsAny<PublishedArticleEvent>())).ReturnsAsync(false);
+        _repository.Setup(r => r.CreatePublishedAsync(It.IsAny<PublishedArticleEvent>())).ReturnsAsync((Guid?)null);
 
         await _consumer.HandleAsync(_channel.Object, Delivery(Event()));
 
         VerifyAcked();
+    }
+
+    [Fact]
+    public async Task HandleAsync_NewArticle_PutsItOnTheCachedFrontPage()
+    {
+        _repository.Setup(r => r.CreatePublishedAsync(It.IsAny<PublishedArticleEvent>())).ReturnsAsync(ArticleId);
+
+        await _consumer.HandleAsync(_channel.Object, Delivery(Event(location: "eu")));
+
+        _cache.Verify(c => c.RefreshArticleAsync("EU", ArticleId), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AlreadyStored_LeavesTheCacheAlone()
+    {
+        _repository.Setup(r => r.CreatePublishedAsync(It.IsAny<PublishedArticleEvent>())).ReturnsAsync((Guid?)null);
+
+        await _consumer.HandleAsync(_channel.Object, Delivery(Event()));
+
+        _cache.Verify(c => c.RefreshArticleAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Never);
     }
 
     [Fact]

@@ -12,4 +12,5 @@ public interface IDraftRepository
     Task<Draft?> UpdateStatusAsync(Guid id, DraftStatus expectedCurrentStatus, DraftStatus newStatus);
     Task<Draft?> ApproveAsync(Guid id, DraftStatus expectedCurrentStatus, long approvedByJournalistId, string? note);
     Task<Draft?> RejectAsync(Guid id, DraftStatus expectedCurrentStatus, string? note);
+    Task<Draft?> FlagProfanityAsync(Guid id, DraftStatus expectedCurrentStatus, IReadOnlyList<string> flaggedWords);
 }

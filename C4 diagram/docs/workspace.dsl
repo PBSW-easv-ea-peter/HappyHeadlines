@@ -12,10 +12,11 @@ workspace "Happy Headlines" "Positive news platform" {
         happyHeadlines = softwareSystem "Happy Headlines" "Positive news platform." {
 
             // Applications
-            // Webapp and Website are one Blazor app in code (apps/happy-headlines-web_service),
-            // kept as two containers to follow the architecture handout.
-            webapp = container "Webapp" "Editorial application used by publishers. Implemented: draft dashboard, create/edit, submit/approve/reject, publishing via PublisherService. Shares codebase with Website." "Web Application (Blazor)" "Implemented"
-            website = container "Website" "Public website for readers. Implemented: articles per region with comments. Missing: newsletter subscription. Shares codebase with Webapp." "Web Application (Blazor)" "Partial"
+            // Webapp and Website are two Blazor WebAssembly apps (apps/happy-headlines-web_service:
+            // HappyHeadlines.web.wasm on 8000, HappyHeadlines.reader.wasm on 8001) sharing the page
+            // library HappyHeadlinesPages.web. They call the services directly from the browser.
+            webapp = container "Webapp" "Editorial application used by publishers (port 8000). Implemented: draft dashboard, create/edit, submit/approve/reject, publishing via PublisherService, article overview with comments." "Web Application (Blazor WebAssembly)" "Implemented"
+            website = container "Website" "Public website for readers (port 8001). Implemented: articles per region with comments. Missing: newsletter subscription." "Web Application (Blazor WebAssembly)" "Partial"
 
             // Swimlanes (fault isolation): each implemented service is grouped with its own
             // database, so a failure in one lane cannot take down another lane's data.
@@ -25,7 +26,7 @@ workspace "Happy Headlines" "Positive news platform" {
                     draftHandler = component "DraftHandler" "Orchestrates draft business rules, profanity pre-check on submit, and persistence. Logs every status transition (docs/logging.md)." "Component"
                     draftStatusTransitions = component "DraftStatusTransitions" "Single source of truth for legal draft status transitions." "Component"
                     draftRepository = component "DraftRepository" "Reads and writes drafts via Dapper." "Repository"
-                    draftProfanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker. Fallback: submission succeeds without flagged words." "Component"
+                    draftProfanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker + per-attempt timeout. Fallback: submission succeeds and the draft is marked profanityCheckSkipped, so the editor is warned instead of told 'no issues found'." "Component"
                     draftObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     draftsController -> draftHandler "Delegates requests to"
@@ -54,6 +55,7 @@ workspace "Happy Headlines" "Positive news platform" {
                     articleWriteRepository -> articleShardResolver "Resolves shard via"
                     articleQueueConsumer -> articleWriteRepository "Stores consumed articles via"
                     cacheRefreshService -> articleCache "Refreshes every hour via"
+                    articleQueueConsumer -> articleCache "Puts newly published articles on the cached front page via"
                     articleCache -> articleReadRepository "Loads articles for refresh via"
                 }
                 articleDb = container "ArticleDatabase" "Stores published articles. (z-axis split: sharded per continent, 8 instances)" "PostgreSQL" "Database,Implemented"
@@ -65,12 +67,14 @@ workspace "Happy Headlines" "Positive news platform" {
                     commentsController = component "CommentsController" "Exposes REST endpoints for posting and retrieving comments, scoped by article location." "ASP.NET Core Controller"
                     commentHandler = component "CommentHandler" "Classifies comment text via ProfanityService (Approved / Rejected / PendingProfanityCheck) and orchestrates persistence." "Component"
                     commentRepository = component "CommentRepository" "Reads and writes comments (incl. article_id/article_location) via Dapper." "Repository"
-                    profanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker. Fallback: comment is stored as PendingProfanityCheck." "Component"
+                    profanityClient = component "ProfanityClient" "Calls ProfanityService directly over HTTP, wrapped in a Polly retry + circuit breaker + per-attempt timeout. Fallback: comment is stored as PendingProfanityCheck." "Component"
+                    commentCacheClient = component "RedisCommentCache" "Cache-aside per article: filled on a miss, write-through for approved comments, LRU over the 30 most recently read articles. Falls back to the database if Redis is down." "Component"
                     commentObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     commentsController -> commentHandler "Delegates classification and persistence to"
                     commentHandler -> profanityClient "Checks comment text via"
                     commentHandler -> commentRepository "Persists and reads comments via"
+                    commentHandler -> commentCacheClient "Reads cached comments first, fills and writes through via"
                 }
                 commentDb = container "CommentDatabase" "Stores comments." "PostgreSQL" "Database,Implemented"
                 commentCache = container "CommentCache" "Cache-aside: filled on a miss, keeps comments for the 30 most recently used articles (LRU). The service falls back to the database if it is down." "Redis" "Database,Implemented"
@@ -91,21 +95,24 @@ workspace "Happy Headlines" "Positive news platform" {
 
             // No database of its own - it reads drafts from DraftService and writes to ArticleQueue.
             group "Publisher" {
-                publisherService = container "PublisherService" "Publishes approved drafts as articles. Implemented: publishing via ArticleQueue. Missing: profanity check before publishing (required by the handout). Code lives in apps/publish_service (to be renamed)." "Service" "Partial" {
+                publisherService = container "PublisherService" "Checks approved drafts for profanity and publishes them as articles via ArticleQueue. Code lives in apps/publish_service (to be renamed)." "Service" "Implemented" {
                     publishDraftEndpoint = component "PublishDraftEndpoint" "Exposes REST endpoint POST /api/v1/publish-draft/{id}." "ASP.NET Core Minimal API"
-                    publishDraftHandler = component "PublishDraftHandler" "Checks that the draft is Approved, queues a PublishedArticleEvent, then marks the draft as published. Queues before marking, so publishing again after a failure is safe." "Component"
-                    publisherDraftClient = component "DraftClient" "Gets the draft and marks it as published in DraftService over HTTP." "Component"
+                    publishDraftHandler = component "PublishDraftHandler" "Checks that the draft is Approved and free of profanity, queues a PublishedArticleEvent, then marks the draft as published. Banned words: 422, words stored on the draft. ProfanityService down: 503 (fail-closed). Queues before marking, so publishing again after a failure is safe." "Component"
+                    publisherDraftClient = component "DraftClient" "Gets the draft, stores flagged words and marks it as published in DraftService over HTTP." "Component"
+                    publisherProfanityClient = component "ProfanityClient" "Calls ProfanityService over HTTP, wrapped in a Polly retry + circuit breaker. Reports 'not checked' on any failure, so the handler can fail closed." "Component"
                     rabbitMqService = component "RabbitMqService" "Publishes events to RabbitMQ with publisher confirms." "Component"
                     publisherObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing (ASP.NET Core, HttpClient, Npgsql)." "Shared library"
 
                     publishDraftEndpoint -> publishDraftHandler "Delegates publishing to"
-                    publishDraftHandler -> publisherDraftClient "Gets and marks drafts via"
+                    publishDraftHandler -> publisherDraftClient "Gets, flags and marks drafts via"
+                    publishDraftHandler -> publisherProfanityClient "Checks title and body via"
                     publishDraftHandler -> rabbitMqService "Queues PublishedArticleEvent via"
                 }
             }
 
-            // Central logging and tracing (week 38). Runs in docker-compose.dev.yaml only;
-            // services send telemetry asynchronously, so an outage here never stops a service.
+            // Central logging and tracing (week 38). Runs as its own stack (monitoring/docker-compose.yaml)
+            // that joins the app network; services send telemetry asynchronously, so an outage here
+            // never stops a service.
             group "Observability" {
                 otelCollector = container "OTel Collector" "Receives logs and traces over OTLP and routes them to Loki and Tempo." "OpenTelemetry Collector" "Implemented"
                 loki = container "Loki" "Stores logs, incl. trace_id per log line." "Grafana Loki" "Database,Implemented"
@@ -113,8 +120,10 @@ workspace "Happy Headlines" "Positive news platform" {
                 grafana = container "Grafana" "UI for searching logs and traces; links a log line to its trace." "Grafana" "Implemented"
             }
 
+            // x-axis split (week 36): not a container of its own, but part of the Swarm deployment.
+            articleServiceLB = container "ArticleService Load Balancer" "Docker Swarm's built-in routing mesh distributes requests across the ArticleService replicas. Not a separate container." "Docker Swarm routing mesh" "Implemented"
+
             // Services (not yet implemented)
-            articleServiceLB = container "ArticleService Load Balancer" "Docker Swarm's built-in routing mesh distributes requests across the ArticleService replicas. Not a separate container." "Docker Swarm routing mesh"
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
             newsletterService = container "NewsletterService" "Sends newsletters." "Service"
 
@@ -139,22 +148,19 @@ workspace "Happy Headlines" "Positive news platform" {
         // Webapp -> DraftService, DraftService -> DraftDatabase/ProfanityService)
         webapp -> draftsController "Saves and retrieves drafts"
         draftRepository -> draftDb "Reads and writes drafts in"
-        // Known deviation: per the handout, PublisherService owns the profanity check before
-        // publishing. PublisherService exists, but the check has not been moved there yet - it stays
-        // here until it is (docs/logging.md, open question 8).
-        // Declared at container level first: implied relationships do not copy tags, so without
-        // this line the L2 view would not show the Deviation style.
-        draftService -> profanityService "Checks draft text (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
-        draftProfanityClient -> profanityService "Checks draft text via HTTP POST /api/profanity/check (known deviation - belongs to PublisherService)" "HTTP" "Deviation"
+        // Early feedback for the editor on submit. The gate before publishing is PublisherService's
+        // check below (docs/logging.md, open question 8).
+        draftProfanityClient -> profanityService "Pre-checks draft text on submit via HTTP POST /api/profanity/check" "HTTP"
 
         // PublisherService component-level relations (imply the container-level
-        // Webapp -> PublisherService -> DraftService/ArticleQueue relations)
+        // Webapp -> PublisherService -> DraftService/ProfanityService/ArticleQueue relations)
         webapp -> publishDraftEndpoint "Publishes approved draft via POST /api/v1/publish-draft/{id}" "HTTP"
-        publisherDraftClient -> draftsController "Gets draft (GET api/drafts/filled-in-draft/{id}) and marks it published (POST api/drafts/{id}/publish)" "HTTP"
+        // Article overview page in the editorial app (Pages/Articles) - same reads as the Website.
+        webapp -> articleServiceLB "Lists published articles per region" "HTTP"
+        webapp -> commentService "Reads comments on published articles" "HTTP"
+        publisherDraftClient -> draftsController "Gets draft, flags banned words (PUT api/drafts/{id}/flagged-words) and marks it published" "HTTP"
+        publisherProfanityClient -> profanityService "Checks title and body before publishing via HTTP POST /api/profanity/check" "HTTP"
         rabbitMqService -> articleQueue "Publishes PublishedArticleEvent to" "AMQP"
-
-        // Required by the handout, but not implemented yet - the check still runs in DraftService (see above).
-        publisherService -> profanityService "Checks article content before publishing (MISSING - not implemented yet)" "HTTP" "Missing"
 
         // ArticleService component-level relations (imply the ArticleService container-level
         // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
@@ -183,7 +189,7 @@ workspace "Happy Headlines" "Positive news platform" {
         // relations to ProfanityService/CommentDatabase, so no separate container-level ones here)
         profanityClient -> profanityService "Checks comment text via HTTP POST /api/profanity/check"
         commentRepository -> commentDb "Reads and writes comments in"
-        commentService -> commentCache "Reads and fills cached comments in" "Redis"
+        commentCacheClient -> commentCache "Reads and fills cached comments in" "Redis"
 
 
         // Reader - newsletter subscription
@@ -358,10 +364,6 @@ workspace "Happy Headlines" "Positive news platform" {
             }
             relationship "Deviation" {
                 color "#E8710A"
-                dashed true
-            }
-            relationship "Missing" {
-                color "#D32F2F"
                 dashed true
             }
         }

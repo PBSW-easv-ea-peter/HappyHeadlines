@@ -5,7 +5,7 @@ using Messaging.RoutingKeys;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace NewsletterService.Queues;
+namespace NewsletterService.Queues.NewSubscriber;
 
 /// <summary>
 /// Background service that consumes new subscriber messages from RabbitMQ.

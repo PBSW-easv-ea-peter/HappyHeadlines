@@ -1,4 +1,4 @@
-namespace NewsletterService.DeliverNewsletters.EmailService;
+namespace NewsletterService.NewsletterDistributors.EmailService;
 
 public class Email
 {

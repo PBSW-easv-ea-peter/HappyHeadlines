@@ -1,7 +1,7 @@
 using Messaging.Events;
-using NewsletterService.DeliverNewsletters.EmailService;
+using NewsletterService.NewsletterDistributors.EmailService;
 
-namespace NewsletterService.Queues;
+namespace NewsletterService.Queues.NewSubscriber;
 
 /// <summary>
 /// Handles new subscriber messages by sending welcome emails.
@@ -10,13 +10,16 @@ namespace NewsletterService.Queues;
 public class NewSubscriberMessageHandler : IMessageHandler<NewSubscriberEvent>
 {
     private readonly IEmailService _emailService;
+    private readonly IEmailFactory _emailFactory;
     private readonly ILogger<NewSubscriberMessageHandler> _logger;
 
     public NewSubscriberMessageHandler(
         IEmailService emailService,
+        IEmailFactory emailFactory,
         ILogger<NewSubscriberMessageHandler> logger)
     {
         _emailService = emailService;
+        _emailFactory = emailFactory;
         _logger = logger;
     }
 
@@ -24,13 +27,7 @@ public class NewSubscriberMessageHandler : IMessageHandler<NewSubscriberEvent>
     {
         _logger.LogInformation("Subscriber email: {Email}", newSubscriber.Email);
 
-        Email welcomeEmail = new()
-        {
-            EmailAddress = newSubscriber.Email,
-            NameOfReceiver = newSubscriber.Username,
-            Subject = "Welcome to Happy Headlines",
-            Content = $"We're happy to have you onboard our newsletter {newSubscriber.Username}!"
-        };
+        Email welcomeEmail = _emailFactory.CreateWelcomeEmail(newSubscriber.Email, newSubscriber.Username);
 
         bool sent = _emailService.SendEmail(welcomeEmail);
 

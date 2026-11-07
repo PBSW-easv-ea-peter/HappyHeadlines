@@ -1,8 +1,10 @@
-namespace NewsletterService.DeliverNewsletters.EmailService;
+namespace NewsletterService.NewsletterDistributors.EmailService;
 
 public interface IEmailSink
 {
     public void AddEmail(Email email);
+    
+    // Used for testing
     public int SentEmailsCount { get; }
 }
 

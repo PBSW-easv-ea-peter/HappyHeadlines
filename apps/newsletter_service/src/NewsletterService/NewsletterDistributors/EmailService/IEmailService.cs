@@ -1,10 +1,12 @@
 using System.Text.Json;
 
-namespace NewsletterService.DeliverNewsletters.EmailService;
+namespace NewsletterService.NewsletterDistributors.EmailService;
 
 public interface IEmailService
 {
     public bool SendEmail(Email email);
+    
+    public bool SendEmails(IEnumerable<Email> emails);
 }
 
 public class FakeEmailService : IEmailService
@@ -31,6 +33,18 @@ public class FakeEmailService : IEmailService
 
         _logger.LogInformation("FakeEmailService captured email:\n{Email}", json);
 
+        
+        return true;
+    }
+    
+    public bool SendEmails(IEnumerable<Email> emails)
+    {
+        foreach (Email email in emails)
+        {
+            _emailSink.AddEmail(email);
+        }
+
+        _logger.LogInformation("FakeEmailService captured emails count: {Count}", emails.Count());
         
         return true;
     }

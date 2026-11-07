@@ -1,32 +1,45 @@
 using Messaging.Events;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using NewsletterService.DeliverNewsletters.EmailService;
-using NewsletterService.Queues;
+using NewsletterService.NewsletterDistributors.EmailService;
+using NewsletterService.Queues.NewSubscriber;
 
 namespace NewsletterService.Tests.Queue;
 
 public class NewSubscriberMessageHandlerTests
 {
     private readonly Mock<IEmailService> _emailService = new();
+    private readonly Mock<IEmailFactory> _emailFactory = new();
     private readonly NewSubscriberMessageHandler _handler;
 
     public NewSubscriberMessageHandlerTests()
     {
-        _handler = new NewSubscriberMessageHandler(_emailService.Object, NullLogger<NewSubscriberMessageHandler>.Instance);
+        _handler = new NewSubscriberMessageHandler(
+            _emailService.Object, 
+            _emailFactory.Object, 
+            NullLogger<NewSubscriberMessageHandler>.Instance);
     }
 
     [Fact]
     public async Task HandleAsync_SendsWelcomeEmail()
     {
         // Arrange
+        _emailFactory
+            .Setup(f => f.CreateWelcomeEmail(
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .Returns((string email, string nameOfReceiver) => new Email
+            {
+                EmailAddress = email,
+                NameOfReceiver = nameOfReceiver,
+                Subject = "Welcome to Happy Headlines",
+                Content = $"We're happy to have you onboard our newsletter {nameOfReceiver}!"
+            });
+        
         var testEvent = new NewSubscriberEvent
         {
             Username = "TestUser",
-            Email = "test@example.com",
-            Intervals = [1, 2, 3],
-            SectionIds = [1, 2],
-            RegionIds = [1]
+            Email = "test@example.com"
         };
 
         _emailService.Setup(e => e.SendEmail(It.IsAny<Email>())).Returns(true);
@@ -49,10 +62,7 @@ public class NewSubscriberMessageHandlerTests
         var testEvent = new NewSubscriberEvent
         {
             Username = "TestUser",
-            Email = "test@example.com",
-            Intervals = [1],
-            SectionIds = [1],
-            RegionIds = [1]
+            Email = "test@example.com"
         };
 
         _emailService.Setup(e => e.SendEmail(It.IsAny<Email>())).Returns(false);

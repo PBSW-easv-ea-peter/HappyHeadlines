@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NewsletterService.Queues;
+using NewsletterService.Queues.NewSubscriber;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -105,10 +106,7 @@ public class NewSubscriberConsumerTests
     private static NewSubscriberEvent Event() => new()
     {
         Username = "Test User",
-        Email = "test@example.com",
-        Intervals = [1, 2, 3],
-        SectionIds = [1, 2],
-        RegionIds = [1]
+        Email = "test@example.com"
     };
 
     private static BasicDeliverEventArgs Delivery(NewSubscriberEvent newSubscriber) =>

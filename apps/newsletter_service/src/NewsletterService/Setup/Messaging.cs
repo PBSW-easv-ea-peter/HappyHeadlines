@@ -2,6 +2,7 @@ using Messaging.Events;
 using Messaging.Exchanges;
 using Microsoft.Extensions.Options;
 using NewsletterService.Queues;
+using NewsletterService.Queues.NewSubscriber;
 using NewsletterService.Shared.Options;
 using RabbitMQ.Client;
 

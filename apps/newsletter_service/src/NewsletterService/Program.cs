@@ -3,8 +3,10 @@ using NewsletterService.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Email
+// Services
 builder.Services.AddEmailServices();
+builder.Services.AddSubscriberServices();
+builder.Services.AddArticleServices();
 
 // Observability from shared/HappyHeadlines.Observability
 builder.AddObservability();

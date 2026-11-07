@@ -7,7 +7,7 @@ public class NewsletterOptions
 
 public class IntervalOptions
 {
-    public required string IntervalName { get; init; }
+    public required NewsletterIntervals Interval { get; init; }
 
     public DayOfWeek? DayOfWeek { get; init; }
 

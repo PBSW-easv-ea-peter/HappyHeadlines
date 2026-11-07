@@ -248,6 +248,12 @@ services:
       articledb-global-migrate:
         condition: service_completed_successfully
 
+  # ArticleCache - articles from the last 14 days, refilled every hour (docs/Caching.md).
+  # Shared by all ArticleService replicas. No persistence: the next refresh fills it again.
+  article-cache:
+    image: redis:8.8.3-alpine
+    command: redis-server --save "" --appendonly no
+
 # ──────────────────────────────────────────────────────────────────────────────
 #        Comments
 # ──────────────────────────────────────────────────────────────────────────────

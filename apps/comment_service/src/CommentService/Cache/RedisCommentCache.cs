@@ -101,8 +101,8 @@ public class RedisCommentCache : ICommentCache
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "CommentCache read failed for article {ArticleId} in {Location}. Falling back to the database.",
-                articleId, articleLocation);
+            _logger.LogWarning("CommentCache read failed for article {ArticleId} in {Location}. Falling back to the database. Reason: {Reason}",
+                articleId, articleLocation, ex.GetType().Name);
             return null;
         }
     }
@@ -122,8 +122,8 @@ public class RedisCommentCache : ICommentCache
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "CommentCache fill failed for article {ArticleId} in {Location}.",
-                articleId, articleLocation);
+            _logger.LogWarning("CommentCache fill failed for article {ArticleId} in {Location}. Reason: {Reason}",
+                articleId, articleLocation, ex.GetType().Name);
         }
     }
 
@@ -139,8 +139,8 @@ public class RedisCommentCache : ICommentCache
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "CommentCache write-through failed for article {ArticleId} in {Location}. Dropping the cached entry.",
-                articleId, articleLocation);
+            _logger.LogWarning("CommentCache write-through failed for article {ArticleId} in {Location}. Dropping the cached entry. Reason: {Reason}",
+                articleId, articleLocation, ex.GetType().Name);
 
             // A cached list without the new comment would hide it until eviction. Best
             // effort: if Redis is down this fails too, and the LRU entry left behind is
@@ -151,8 +151,8 @@ public class RedisCommentCache : ICommentCache
             }
             catch (Exception deleteEx)
             {
-                _logger.LogWarning(deleteEx, "Could not drop cached comments for article {ArticleId} in {Location}.",
-                    articleId, articleLocation);
+                _logger.LogWarning("Could not drop cached comments for article {ArticleId} in {Location}. Reason: {Reason}",
+                    articleId, articleLocation, deleteEx.GetType().Name);
             }
         }
     }

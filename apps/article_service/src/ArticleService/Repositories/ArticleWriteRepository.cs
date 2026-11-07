@@ -36,7 +36,7 @@ public class ArticleWriteRepository : IArticleWriteRepository
         });
     }
 
-    public async Task<bool> CreatePublishedAsync(PublishedArticleEvent published)
+    public async Task<Guid?> CreatePublishedAsync(PublishedArticleEvent published)
     {
         await using var connection = new NpgsqlConnection(_shardResolver.GetConnectionString(published.Location));
 
@@ -49,9 +49,11 @@ public class ArticleWriteRepository : IArticleWriteRepository
             insert into articles (draft_id, byline, title, breadtext, created_date, publish_date, location, section_id)
             values (@DraftId, @Byline, @Title, @Breadtext, @CreatedDate, @PublishDate, @Location, @SectionId)
             on conflict (draft_id) do nothing
+            returning id
             """;
 
-        var rowsAffected = await connection.ExecuteAsync(sql, new
+        // No row comes back when the insert hit the conflict.
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(sql, new
         {
             published.DraftId,
             Byline = published.JournalistName,
@@ -62,8 +64,6 @@ public class ArticleWriteRepository : IArticleWriteRepository
             Location = published.Location.ToUpperInvariant(),
             SectionId = sectionId
         });
-
-        return rowsAffected > 0;
     }
 
     public async Task<bool> UpdateAsync(string location, Guid id, UpsertArticleRequest request)

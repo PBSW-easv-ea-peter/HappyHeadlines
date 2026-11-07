@@ -40,7 +40,7 @@ Målet er, at ArticleService lytter på køen og gemmer artiklen i den rigtige s
 7. **Docs:** opdatér `docs/services/article_service.md` (Afhænger af, Afvigelse og Endpoint-map).
 
 ## Fault isolation: circuit breaker pr. shard
-Skrivninger fra consumeren går gennem en Polly-pipeline pr. shard (`Resilience/ShardResilience.cs`). Pipelinen har en kort retry og en circuit breaker. Er ét shard nede (fx EU), fejler dets skrivninger hurtigt, mens de andre shards fortsætter som normalt. Køen isolerer i forvejen PublishService fra fejl i ArticleService.
+Skrivninger fra consumeren går gennem en Polly-pipeline pr. shard (`Setup/ShardResilience.cs`). Pipelinen har en kort retry og en circuit breaker. Er ét shard nede (fx EU), fejler dets skrivninger hurtigt, mens de andre shards fortsætter som normalt. Køen isolerer i forvejen PublishService fra fejl i ArticleService.
 
 **Beslutning (nuværende løsning):** Når et shard's circuit er åbent, bliver beskeden requeued med det samme (`Nack(requeue: true)`). Beskeden ryger så frem og tilbage mellem RabbitMQ og consumeren, indtil circuiten går half-open (højst 30s). Databasen bliver ikke ramt imens. Det er acceptabelt, fordi ArticleService kun får få beskeder i minuttet.
 

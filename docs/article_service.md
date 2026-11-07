@@ -45,25 +45,22 @@ uge 36) at CUD ikke er tre ligeværdige REST-operationer:
 - **Delete**: bekræftet af underviseren som en direkte REST-operation — "tager et Id og
   sletter artiklen baseret på det Id".
 
-**Konsekvens for denne uges implementering:** hverken PublisherService eller en rigtig
-ArticleQueue findes endnu, så Create og Update kan ikke reelt trigges via kø-forbrug i
-denne omgang. Opgaveteksten kræver stadig fire REST-endpoints, så `POST` og `PUT` er
-bevaret som **midlertidige REST-stand-ins**, der skriver direkte til den relevante
-shard-database — men den egentlige, tiltænkte trigger for Create og Update er en
-kø-konsument. Boilerplate-seamet er derfor lavet som en konsument (`ArticleQueueConsumer`,
-en `BackgroundService`), ikke en publisher: når ArticleQueue og PublisherService findes,
-er planen at `ArticleQueueConsumer` kalder ind i de samme `IArticleWriteRepository`-
-metoder (`CreateAsync`/`UpdateAsync`), som `ArticlesController` også bruger til
-stand-in-endpointsne. Den er idle nu, da der intet er at konsumere endnu.
+**Implementering:** Create sker nu via kø: PublishService lægger publicerede artikler på
+RabbitMQ-exchangen `published_articles` (routing key `article.published`), og
+`ArticleQueueConsumer` (en `BackgroundService`) konsumerer køen
+`article_service.published_articles` og gemmer artiklen i den rigtige shard via
+`IArticleWriteRepository.CreatePublishedAsync`. Update er endnu ikke kø-drevet.
+Opgaveteksten kræver stadig fire REST-endpoints, så `POST` og `PUT` er bevaret som
+REST-endpoints, der skriver direkte til den relevante shard-database.
 
 `DELETE` er upåvirket af ovenstående — den er og forbliver en ægte, direkte REST-operation.
 
 ## Sharding
 
 `articles.location` (CHECK-constrained til `EU, NA, SA, AU, AS, AN, AF, GO`) er
-sharding-nøglen. Fordi hver shard har sin egen identity-sekvens, er artikel-ID'er **ikke**
-globalt unikke på tværs af de 8 databaser — et ID skal derfor altid læses sammen med en
-`location`.
+sharding-nøglen. Artikel-ID'er er GUIDs (siden migrationen `V5__article_id_to_uuid.sql`)
+og dermed globalt unikke, men en artikel findes kun i én shard, så `location` skal stadig
+bruges til at finde den rigtige database.
 
 REST-ressourcen inkluderer derfor `location` eksplicit i stien:
 
@@ -80,7 +77,7 @@ REST-ressourcen inkluderer derfor `location` eksplicit i stien:
 åbner en ny `NpgsqlConnection` pr. kald ud fra den resolverede connection string.
 
 **Kendt gæld:** de gyldige location-koder findes nu tre steder — CHECK-constrainten i
-`relational_baseline.sql`, `ArticleShards`-nøglerne i `appsettings.json`, og
+`database/migrations/article/V1__baseline_schema.sql`, `ArticleShards`-nøglerne i `appsettings.json`, og
 `ValidLocations` i `ArticlesController`. Det er fint for denne uges omfang, men bør
 konsolideres til én kilde (fx et enum delt mellem validering og konfiguration), hvis
 flere shards eller en ny service skal bruge samme liste.
@@ -96,12 +93,13 @@ Kørslen sker via Docker Swarm (`docker stack deploy`), ikke almindelig
   container — den er kun tegnet for at visualisere Swarms indbyggede load-balancering.
   Der bygges ingen separat LB-container.
 - `docker stack deploy` bygger ikke images. Workflowet er:
-  1. `docker compose build` (eller `docker build -t happyheadlines/articleservice ./HappyHeadlines/ArticleService/`)
+  1. `docker compose build` (eller `docker build -t happyheadlines/article_service -f apps/article_service/Dockerfile ./apps/`)
   2. `docker swarm init` (én gang)
   3. `docker stack deploy -c docker-compose.yaml happyheadlines`
 - De 8 shard-databaser (`articledb-eu`, `articledb-na`, `articledb-sa`, `articledb-au`,
   `articledb-as`, `articledb-an`, `articledb-af`, `articledb-global`) kører hver som sin
-  egen Postgres-container, alle initialiseret med samme `relational_baseline.sql`.
+  egen Postgres-container, alle migreret med Flyway ud fra de samme migrationer i
+  `database/migrations/article/` (én `articledb-*-migrate`-container pr. shard).
 
 ## Teknologivalg
 

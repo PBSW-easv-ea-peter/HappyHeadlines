@@ -22,7 +22,7 @@ public class ArticleShardResolver : IArticleShardResolver
                 $"Unknown location '{location}'. Valid values: EU, NA, SA, AU, AS, AN, AF, GO.");
         }
 
-        string dbPassword = _configuration["ARTICLE_DB_PWD"];
+        string dbPassword = _configuration["POSTGRES_DB_PWD"];
 
         var connectionStringBuilder =
             new NpgsqlConnectionStringBuilder(connectionString)

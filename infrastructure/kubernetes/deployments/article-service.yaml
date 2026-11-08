@@ -27,7 +27,7 @@ spec:
               value: http://+:8080
           envFrom:
             - secretRef:
-                name: server-secrets
+                name: postgres-password
           volumeMounts:
             - name: config
               mountPath: /app/appsettings.Production.json
@@ -38,7 +38,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: server-config
+            name: article-service-config
 ---
 apiVersion: v1
 kind: Service

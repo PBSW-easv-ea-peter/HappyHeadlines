@@ -12,16 +12,16 @@ var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsProduction())
 {
     if (string.IsNullOrWhiteSpace(
-            builder.Configuration["ARTICLE_DB_PWD"]))
+            builder.Configuration["POSTGRES_DB_PWD"]))
     {
         throw new InvalidOperationException(
-            "ARTICLE_DB_PWD must be configured in Production.");
+            "POSTGRES_DB_PWD must be configured in Production.");
     }
 }
 else
 {
     Environment.SetEnvironmentVariable(
-        "ARTICLE_DB_PWD",
+        "POSTGRES_DB_PWD",
         "Postgres1234");
 }
 
@@ -56,8 +56,8 @@ if(builder.Environment.IsDevelopment())
 //builder.Services.AddHostedService<CacheRefreshService>();
 
 
-var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
-    ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+var webAppBaseUrl = builder.Configuration["JournalistWeb:BaseUrl"]
+    ?? throw new InvalidOperationException("JournalistWeb:BaseUrl is not configured.");
 var readerWebBaseUrl = builder.Configuration["ReaderWeb:BaseUrl"]
     ?? throw new InvalidOperationException("ReaderWeb:BaseUrl is not configured.");
 

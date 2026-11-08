@@ -246,4 +246,59 @@ public class DraftHandlerTests
 
         Assert.Equal(DraftActionOutcome.NotFound, result.Outcome);
     }
+
+    [Fact]
+    public async Task FlagProfanityAsync_ApprovedDraft_StoresWordsAndKeepsStatus()
+    {
+        var draft = MakeDraft(DraftId, DraftStatus.Approved);
+        var flagged = MakeDraft(DraftId, DraftStatus.Approved);
+        flagged.FlaggedWords = ["stupid"];
+        _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(draft);
+        _repository
+            .Setup(r => r.FlagProfanityAsync(DraftId, DraftStatus.Approved, It.Is<IReadOnlyList<string>>(w => w.SequenceEqual(new[] { "stupid" }))))
+            .ReturnsAsync(flagged);
+
+        var result = await _handler.FlagProfanityAsync(DraftId, new FlagProfanityRequest { FlaggedWords = ["stupid"] });
+
+        Assert.Equal(DraftActionOutcome.Success, result.Outcome);
+        Assert.Equal(DraftStatus.Approved, result.Draft!.Status);
+        Assert.Equal(["stupid"], result.Draft.FlaggedWords);
+    }
+
+    [Theory]
+    [InlineData(DraftStatus.WorkInProgress)]
+    [InlineData(DraftStatus.PendingApproval)]
+    [InlineData(DraftStatus.Published)]
+    public async Task FlagProfanityAsync_NotApproved_ReturnsIllegalTransition(DraftStatus status)
+    {
+        _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, status));
+
+        var result = await _handler.FlagProfanityAsync(DraftId, new FlagProfanityRequest { FlaggedWords = ["stupid"] });
+
+        Assert.Equal(DraftActionOutcome.IllegalTransition, result.Outcome);
+        _repository.Verify(r => r.FlagProfanityAsync(It.IsAny<Guid>(), It.IsAny<DraftStatus>(), It.IsAny<IReadOnlyList<string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FlagProfanityAsync_NotFound_ReturnsNotFound()
+    {
+        _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync((Draft?)null);
+
+        var result = await _handler.FlagProfanityAsync(DraftId, new FlagProfanityRequest());
+
+        Assert.Equal(DraftActionOutcome.NotFound, result.Outcome);
+    }
+
+    [Fact]
+    public async Task FlagProfanityAsync_ChangedConcurrently_ReturnsConcurrentChange()
+    {
+        _repository.Setup(r => r.GetByIdAsync(DraftId)).ReturnsAsync(MakeDraft(DraftId, DraftStatus.Approved));
+        _repository
+            .Setup(r => r.FlagProfanityAsync(DraftId, DraftStatus.Approved, It.IsAny<IReadOnlyList<string>>()))
+            .ReturnsAsync((Draft?)null);
+
+        var result = await _handler.FlagProfanityAsync(DraftId, new FlagProfanityRequest { FlaggedWords = ["stupid"] });
+
+        Assert.Equal(DraftActionOutcome.ConcurrentChange, result.Outcome);
+    }
 }

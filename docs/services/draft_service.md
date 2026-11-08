@@ -16,7 +16,8 @@ service: DraftService
 - **Queries:** Alle drafts (evt. filtreret på `createdBy`), én draft, "filled-in" draft til publicering, alle journalister.
 - **Publicerer:** –
 - **Afhænger af:** ProfanityService (`POST /api/profanity/check`) ved submit-for-approval → markerede ord. Fortsætter uden, hvis circuit er åben.
-- **Afvigelse:** Profanity-tjek ligger her i stedet for i PublishService. Sektionsnavne er hardkodet i `Models/Sections.cs` og skal matche ArticleServices `sections`-tabel.
+- **Profanity:** Tjek ved submit er tidlig feedback til redaktøren. Gaten før publicering ligger i PublishService, som gemmer sine fund via `flagged-words`.
+- **Afvigelse:** Sektionsnavne er hardkodet i `Models/Sections.cs` og skal matche ArticleServices `sections`-tabel.
 
 ## Endpoint-map
 
@@ -33,6 +34,7 @@ Base-URL (lokalt): `http://localhost:8083`
 | REST | POST   | /api/drafts/{id}/approve                  | PendingApproval → Approved |
 | REST | POST   | /api/drafts/{id}/reject                   | PendingApproval → WorkInProgress |
 | REST | POST   | /api/drafts/{id}/publish                  | Approved → Published |
+| REST | PUT    | /api/drafts/{id}/flagged-words            | Gem forbudte ord fundet af PublishService (kun Approved, status uændret) |
 | REST | POST   | /api/drafts/{id}/archive                  | → Archived |
 | REST | POST   | /api/drafts/{id}/reactivate               | Archived → WorkInProgress |
 | REST | GET    | /api/journalists                          | Alle journalister |

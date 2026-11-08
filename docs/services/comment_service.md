@@ -15,7 +15,7 @@ service: CommentService
 - **Commands:** Post en kommentar på en artikel.
 - **Queries:** Godkendte kommentarer for en artikel.
 - **Publicerer:** –
-- **Afhænger af:** ProfanityService (`POST /api/profanity/check`) → liste af forbudte ord. Kaldt direkte bag en circuit breaker.
+- **Afhænger af:** ProfanityService (`POST /api/profanity/check`) → liste af forbudte ord. Kaldt direkte bag en circuit breaker. CommentCache (Redis, `comment-cache`) – cache-aside pr. artikel; falder tilbage til databasen, hvis Redis er nede.
 - **Afvigelse:** –
 
 ## Endpoint-map

@@ -31,6 +31,7 @@ CommentsController (HTTP only)
     -> CommentHandler (orkestrering: ét klassificeringskald pr. kommentar)
         -> IProfanityClient (Polly retry + circuit breaker)
         -> ICommentRepository
+        -> ICommentCache (RedisCommentCache, se docs/Caching.md)
 ```
 
 **ProfanityService:**
@@ -62,16 +63,20 @@ Circuit breakeren er den kompensering, som VMware-artiklen ("Should That Be a Mi
 tværs af en grænse ikke kan undgås, er en circuit breaker det værktøj, der forhindrer en
 fejlende ProfanityService i at brede sig (cascading failure) til CommentService.
 
-`ProfanityClient` (i `CommentService/Profanity/`) bruger Polly til at kombinere to
-policies, sammensat med `WrapAsync`:
+`ProfanityClient` (i `CommentService/Profanity/`) bruger en Polly resilience-pipeline
+(`AddResilienceHandler` i `Program.cs`) med tre strategier:
 
-1. **Retry**: op til 2 forsøg med kort backoff (200 ms, 400 ms) for at overleve et
-   kortvarigt netværksudsving.
-2. **Circuit breaker**: efter 3 fejl i træk "tripper" kredsløbet og blokerer alle kald til
-   ProfanityService i 30 sekunder.
+1. **Retry**: op til 2 genforsøg med eksponentiel backoff fra 200 ms for at overleve et
+   kortvarigt netværksudsving. Standard-`ShouldHandle` bruges: exceptions, 5xx, 408, 429
+   og timeouts på det enkelte forsøg.
+2. **Circuit breaker**: når 2 ud af 2 kald inden for 30 sekunder fejler (samme
+   `ShouldHandle` som retry), "tripper" kredsløbet og blokerer alle kald til
+   ProfanityService i 10 sekunder.
+3. **Timeout pr. forsøg**: 2 sekunder, så et hængende kald til ProfanityService aldrig kan
+   blokere CommentService's egen swim lane på ubestemt tid.
 
-Derudover har `HttpClient` en 2-sekunders timeout, så et hængende kald til ProfanityService
-aldrig kan blokere CommentService's egen swim lane på ubestemt tid.
+`HttpClient.Timeout` er sat til 10 sekunder og dækker alle forsøg samlet — den er kun en
+backstop bag pipelinen.
 
 ### Hvad sker der, når kredsløbet er åbent?
 
@@ -100,10 +105,9 @@ andet end verificeringen af nye kommentarer).
 
 ## Data model & article-reference
 
-ArticleService er Z-akse-shardet per kontinent (8 uafhængige databaser, hver med egen
-identity-sekvens) — `article_id` alene er derfor **ikke globalt unikt**. En kommentar
-gemmer derfor både `article_id` og `article_location`, så den entydigt kan spores til den
-rigtige artikel, uanset hvilken shard den kom fra. `location` valideres i
+ArticleService er Z-akse-shardet per kontinent (8 uafhængige databaser). `article_id` er
+en GUID (`UUID`) og dermed globalt unik, men en kommentar gemmer både `article_id` og
+`article_location`, så det er kendt, hvilken shard artiklen ligger i. `location` valideres i
 `CommentsController` med samme `ValidLocations`-mønster som `ArticlesController` i
 ArticleService (`EU, NA, SA, AU, AS, AN, AF, GO`) — samme kendte duplikation som i
 ArticleService selv, konsolidering er ude af scope.
@@ -165,11 +169,7 @@ integrationstests. Kør med `dotnet test CommentService.Tests` /
 - **Kun unit-tests, ingen integrationstests:** `CommentService.Tests`/
   `ProfanityService.Tests` dækker handler-/checker-/controller-logik med mocks (se
   "Tests" ovenfor), men `CommentRepository`/`ProfanityRepository` og det faktiske
-  HTTP-flow mellem de to services er utestet. ArticleService har fortsat ingen tests
-  overhovedet.
-- **`C4 diagram/docs/workspace.dsl`** indeholder stadig relationen
-  `publisherService -> profanityService`, som ikke er implementeret — kun CommentService
-  kalder i praksis ProfanityService. Opdateres i en separat, kommende omgang.
+  HTTP-flow mellem de to services er utestet.
 
 ## Deployment
 
@@ -177,20 +177,19 @@ Ligesom ArticleService kører CommentService og ProfanityService via Docker Swar
 (`docker stack deploy`), ikke almindelig `docker compose up` — hele stacken deles med
 ArticleService i samme `happyheadlines`-stack.
 
-- `commentservice` publiceres på host-port `8083` (ændret fra oprindeligt `8081`, som var
-  optaget af en lokal Structurizr-instans), `profanityservice` på `8082`.
+- `commentservice` publiceres på host-port `8082`, `profanityservice` på `8081`.
 - Hver service har sin egen Postgres-database (`commentdb`, `profanitydb`), initialiseret
   via `database/init/comment/comment_baseline.sql` og
   `database/init/profanity/profanity_baseline.sql` (seed-data i `database/queries/`).
-- `commentservice` afhænger af `profanitydb` (i `depends_on`), men det styrer kun
-  opstartsrækkefølgen, ikke om ProfanityService faktisk er klar til at modtage kald —
-  det er netop derfor retry- og circuit breaker-logikken er relevant fra første opstart.
+- `commentservice` har ingen `depends_on` på ProfanityService eller `profanitydb`, så
+  CommentService kan starte, før ProfanityService er klar til at modtage kald — det er
+  netop derfor retry- og circuit breaker-logikken er relevant fra første opstart.
 - Ingen af de to services er x- eller z-akse-splittet — det er ikke et krav denne uge.
 
 ## Teknologivalg
 
 - Samme stack som ArticleService: ASP.NET Core Web API (controller-baseret), Npgsql +
   Dapper.
-- **Polly** (v7-syntaks) til retry + circuit breaker i CommentService — det eneste sted i
-  systemet, hvor et service-til-service-kald skal kunne håndtere, at modparten er nede,
-  uden at fejle hele requesten.
+- **Polly 8** (via `Microsoft.Extensions.Http.Resilience`) til retry + circuit breaker i CommentService, så kaldet til
+  ProfanityService kan håndtere, at modparten er nede, uden at fejle hele requesten.
+  Samme mønster bruges i DraftService og PublishService.

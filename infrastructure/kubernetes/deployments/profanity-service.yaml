@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: profanity-service
-          image: selgaard/boligsom:profanity-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/profanity_service:latest
           ports:
             - containerPort: 8081
           imagePullPolicy: Always

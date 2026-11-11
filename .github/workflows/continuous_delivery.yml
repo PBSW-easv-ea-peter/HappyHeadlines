@@ -11,6 +11,8 @@ on:
       - master
     paths:
       - 'apps/**'
+  # Manual run from the Actions tab: builds and pushes every service
+  workflow_dispatch:
 
 jobs:
   # ---- Step 1: Detect which services changed ----
@@ -52,10 +54,15 @@ jobs:
       - name: Find changed services
         id: find
         run: |
-          CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
-            | grep '^apps/' \
-            | cut -d'/' -f2 \
-            | sort -u)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual run: treat every folder under apps/ as changed
+            CHANGED_DIRS=$(ls apps)
+          else
+            CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
+              | grep '^apps/' \
+              | cut -d'/' -f2 \
+              | sort -u)
+          fi
 
           SERVICES=""
           for dockerfile in apps/*/Dockerfile; do

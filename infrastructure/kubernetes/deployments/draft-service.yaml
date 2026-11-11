@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: draft-service
-          image: selgaard/boligsom:draft-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/draft_service:latest
           ports:
             - containerPort: 8083
           imagePullPolicy: Always

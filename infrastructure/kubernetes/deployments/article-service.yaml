@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: article-service
-          image: selgaard/boligsom:article-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/article_service:latest
           ports:
             - containerPort: 8080
           imagePullPolicy: Always

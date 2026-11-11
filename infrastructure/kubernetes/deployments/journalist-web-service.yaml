@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: journalist-web
-          image: selgaard/boligsom:journalist-web-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/journalist-web_service:latest
           imagePullPolicy: Always
           ports:
             - name: http

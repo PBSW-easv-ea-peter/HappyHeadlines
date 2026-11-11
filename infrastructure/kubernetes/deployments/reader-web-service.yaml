@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: reader-web
-          image: selgaard/boligsom:reader-web-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/reader-web_service:latest
           imagePullPolicy: Always
           ports:
             - name: http

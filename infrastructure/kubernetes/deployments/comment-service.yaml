@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: comment-service
-          image: selgaard/boligsom:comment-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/comment_service:latest
           ports:
             - containerPort: 8082
           imagePullPolicy: Always

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: publish-service
-          image: selgaard/boligsom:publish-service
+          image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/publish_service:latest
           ports:
             - containerPort: 8084
           imagePullPolicy: Always

@@ -2,6 +2,7 @@ using DraftService.Controllers;
 using DraftService.Handlers;
 using DraftService.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -16,7 +17,7 @@ public class DraftsControllerTests
 
     public DraftsControllerTests()
     {
-        _controller = new DraftsController(_handler.Object);
+        _controller = new DraftsController(_handler.Object, NullLogger<DraftsController>.Instance);
     }
 
     private static Draft MakeDraft(Guid id, DraftStatus status) => new()

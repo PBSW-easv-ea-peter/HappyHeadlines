@@ -50,5 +50,11 @@
   <Folder Name="/shared/">
     <Project Path="shared/HappyHeadlines.Observability/HappyHeadlines.Observability.csproj" />
   </Folder>
-
+  <Folder Name="/newsletter_service/" />
+  <Folder Name="/newsletter_service/src/">
+    <Project Path="newsletter_service/src/NewsletterService/NewsletterService.csproj" />
+  </Folder>
+  <Folder Name="/newsletter_service/tests/">
+    <Project Path="newsletter_service/tests/NewsletterService.Tests/NewsletterService.Tests.csproj" />
+  </Folder>
 </Solution>

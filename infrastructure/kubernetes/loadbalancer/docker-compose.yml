@@ -1,0 +1,21 @@
+services:
+  k8s-api-lb:
+    image: nginx:stable
+    container_name: k8s-api-lb
+    restart: unless-stopped
+    ports:
+      - 6443:6443     # kube api
+    volumes:
+      - ./kube-api-nginx.conf:/etc/nginx/nginx.conf:ro
+
+  k8s-services-lb:
+    image: nginx:stable
+    container_name: k8s-services-lb
+    restart: unless-stopped
+    ports:
+      - 80:80         # journalist ui
+      - 81:81         # journalist ui
+      - 8080:8080     # blog
+    volumes:
+      - ./services-nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./services-proxy.conf:/etc/nginx/snippets/proxy.conf:ro

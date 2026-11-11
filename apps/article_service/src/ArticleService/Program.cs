@@ -10,6 +10,22 @@ using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsProduction())
+{
+    if (string.IsNullOrWhiteSpace(
+            builder.Configuration["POSTGRES_DB_PWD"]))
+    {
+        throw new InvalidOperationException(
+            "POSTGRES_DB_PWD must be configured in Production.");
+    }
+}
+else
+{
+    Environment.SetEnvironmentVariable(
+        "POSTGRES_DB_PWD",
+        "Postgres1234");
+}
+
 builder.AddObservability();
 
 builder.Services.AddControllers();
@@ -29,20 +45,20 @@ if(builder.Environment.IsDevelopment())
     builder.Services.AddHostedService<ArticleSeeder>();
 }
 
-var rabbitMq = builder.Configuration.GetSection("RabbitMQ");
-builder.Services.AddSingleton(new ConnectionFactory
-{
-    HostName = rabbitMq["HostName"] ?? throw new InvalidOperationException("RabbitMQ:HostName is not configured."),
-    UserName = rabbitMq["UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured."),
-    Password = rabbitMq["Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.")
-});
+//var rabbitMq = builder.Configuration.GetSection("RabbitMQ");
+//builder.Services.AddSingleton(new ConnectionFactory
+//{
+//    HostName = rabbitMq["HostName"] ?? throw new InvalidOperationException("RabbitMQ:HostName is not configured."),
+//    UserName = rabbitMq["UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured."),
+//    Password = rabbitMq["Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.")
+//});
+//
+//builder.Services.AddHostedService<ArticleQueueConsumer>();
+//builder.Services.AddHostedService<CacheRefreshService>();
 
-builder.Services.AddHostedService<ArticleQueueConsumer>();
-builder.Services.AddHostedService<CacheRefreshService>();
 
-
-var webAppBaseUrl = builder.Configuration["WebApp:BaseUrl"]
-    ?? throw new InvalidOperationException("WebApp:BaseUrl is not configured.");
+var webAppBaseUrl = builder.Configuration["JournalistWeb:BaseUrl"]
+    ?? throw new InvalidOperationException("JournalistWeb:BaseUrl is not configured.");
 var readerWebBaseUrl = builder.Configuration["ReaderWeb:BaseUrl"]
     ?? throw new InvalidOperationException("ReaderWeb:BaseUrl is not configured.");
 
@@ -51,7 +67,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+//            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

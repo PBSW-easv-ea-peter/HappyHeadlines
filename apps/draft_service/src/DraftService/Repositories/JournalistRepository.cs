@@ -8,11 +8,28 @@ namespace DraftService.Repositories;
 public class JournalistRepository : IJournalistRepository
 {
     private readonly string _connectionString;
+    private readonly ILogger<JournalistRepository> _logger;
 
-    public JournalistRepository(IConfiguration configuration)
+    public JournalistRepository(
+        IConfiguration configuration,
+        ILogger<JournalistRepository> logger)
     {
-        _connectionString = configuration.GetConnectionString("DraftDatabase")
-            ?? throw new InvalidOperationException("ConnectionStrings:DraftDatabase is not configured.");
+        _logger = logger;
+        
+        string connectionString = configuration.GetConnectionString("DraftDatabase") 
+                                  ?? throw new InvalidOperationException("ConnectionStrings:DraftDatabase is not configured.");
+
+        string dbPassword = configuration["POSTGRES_DB_PWD"]
+                            ?? throw new InvalidOperationException("Missing Draft DB password.");
+
+        NpgsqlConnectionStringBuilder connectionStringBuilder =
+            new (connectionString)
+            {
+                Password = dbPassword
+            };
+
+        _connectionString = connectionStringBuilder.ConnectionString;
+        _logger.LogWarning("Draft CS: {cs}", _connectionString);
     }
 
     public async Task<IEnumerable<Journalist>> GetAllAsync()

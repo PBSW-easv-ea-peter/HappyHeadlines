@@ -1,0 +1,94 @@
+# Headless service: stable DNS "profanity-db.prod.svc.cluster.local"
+apiVersion: v1
+kind: Service
+metadata:
+  name: profanity-db
+  namespace: prod
+  labels:
+    app: profanity-db
+spec:
+  type: NodePort
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: 5432
+      nodePort: 31030
+  selector:
+    app: profanity-db
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: profanity-db
+  namespace: prod
+  labels:
+    app: profanity-db
+spec:
+  serviceName: profanity-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: profanity-db
+  template:
+    metadata:
+      labels:
+        app: profanity-db
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-003
+      tolerations:
+        - key: "allowSchedule"
+          operator: "Exists"
+          effect: "NoSchedule"
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: postgres
+          image: postgres:18-trixie
+          ports:
+            - containerPort: 5432
+              name: pg
+          env:
+            - name: POSTGRES_DB
+              value: profanity
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: POSTGRES_DB_PWD
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U postgres -d drafts"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U postgres -d drafts"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+          volumeMounts:
+            - name: profanity-db-data
+              mountPath: /var/lib/postgresql
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: profanity-db-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: local-storage
+      resources:
+        requests:
+          storage: 5Gi
+

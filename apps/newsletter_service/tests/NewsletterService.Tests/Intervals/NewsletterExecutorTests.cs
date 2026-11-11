@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using NewsletterService.NewsletterDistributors.EmailService;
 using NewsletterService.NewsletterManager;
@@ -17,6 +18,7 @@ public class NewsletterExecutorTests
     private readonly Mock<IEmailService> _emailServiceMock = new();
     private readonly Mock<IEmailFactory> _emailFactoryMock = new();
     private readonly Mock<IArticleService> _articleServiceMock = new();
+    private readonly Mock<IOptionsMonitor<FeatureTogglesOptions>> _togglesMock = new();
     private readonly FakeTimeProvider _fakeTimeProvider;
 
     public NewsletterExecutorTests()
@@ -25,6 +27,16 @@ public class NewsletterExecutorTests
         // Using November 6, 2026 at 07:00:00 AM
         _fakeTimeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 11, 6, 7, 0, 0, TimeSpan.Zero));
+
+        // Set up default feature toggles
+        var featureToggles = new FeatureTogglesOptions
+        {
+            Toggles = new List<FeatureToggle>
+            {
+                new FeatureToggle { Name = "UseSubscriberService", State = true }
+            }
+        };
+        _togglesMock.Setup(x => x.CurrentValue).Returns(featureToggles);
     }
 
     [Fact]
@@ -42,6 +54,7 @@ public class NewsletterExecutorTests
             _loggerMock.Object,
             _fakeTimeProvider,
             _subscriberServiceMock.Object,
+            _togglesMock.Object,
             _emailServiceMock.Object,
             _emailFactoryMock.Object,
             _articleServiceMock.Object);
@@ -68,6 +81,7 @@ public class NewsletterExecutorTests
             _loggerMock.Object,
             _fakeTimeProvider,
             _subscriberServiceMock.Object,
+            _togglesMock.Object,
             _emailServiceMock.Object,
             _emailFactoryMock.Object,
             _articleServiceMock.Object);
@@ -95,6 +109,7 @@ public class NewsletterExecutorTests
             _loggerMock.Object,
             _fakeTimeProvider,
             _subscriberServiceMock.Object,
+            _togglesMock.Object,
             _emailServiceMock.Object,
             _emailFactoryMock.Object,
             _articleServiceMock.Object);
@@ -123,6 +138,7 @@ public class NewsletterExecutorTests
             _loggerMock.Object,
             _fakeTimeProvider,
             _subscriberServiceMock.Object,
+            _togglesMock.Object,
             _emailServiceMock.Object,
             _emailFactoryMock.Object,
             _articleServiceMock.Object);
@@ -150,6 +166,7 @@ public class NewsletterExecutorTests
             _loggerMock.Object,
             _fakeTimeProvider,
             _subscriberServiceMock.Object,
+            _togglesMock.Object,
             _emailServiceMock.Object,
             _emailFactoryMock.Object,
             _articleServiceMock.Object);
@@ -178,6 +195,7 @@ public class NewsletterExecutorTests
             _loggerMock.Object,
             _fakeTimeProvider,
             _subscriberServiceMock.Object,
+            _togglesMock.Object,
             _emailServiceMock.Object,
             _emailFactoryMock.Object,
             _articleServiceMock.Object);
@@ -187,5 +205,112 @@ public class NewsletterExecutorTests
             () => executor.ShouldExecuteNow());
 
         Assert.Equal("DayOfWeek", exception.ParamName);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenUseSubscriberServiceToggleIsEnabled_CallsSubscriberService()
+    {
+        // Arrange
+        var options = new IntervalOptions
+        {
+            Interval = NewsletterIntervals.Daily,
+            HourOfDay = 7
+        };
+
+        // Set up feature toggle to be enabled
+        var featureToggles = new FeatureTogglesOptions
+        {
+            Toggles = new List<FeatureToggle>
+            {
+                new FeatureToggle { Name = "UseSubscriberService", State = true }
+            }
+        };
+        _togglesMock.Setup(x => x.CurrentValue).Returns(featureToggles);
+
+        // Set up mocks for dependencies
+        var subscriptions = Array.Empty<Subscriber>();
+        _subscriberServiceMock
+            .Setup(x => x.GetSubscriptionsAsync((int)NewsletterIntervals.Daily))
+            .ReturnsAsync(subscriptions);
+
+        var articles = Array.Empty<Article>();
+        _articleServiceMock
+            .Setup(x => x.GetArticlesSinceAsync(It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync(articles);
+
+        var executor = new NewsletterExecutor(
+            options,
+            _loggerMock.Object,
+            _fakeTimeProvider,
+            _subscriberServiceMock.Object,
+            _togglesMock.Object,
+            _emailServiceMock.Object,
+            _emailFactoryMock.Object,
+            _articleServiceMock.Object);
+
+        // Act
+        await executor.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        _subscriberServiceMock.Verify(
+            x => x.GetSubscriptionsAsync((int)NewsletterIntervals.Daily),
+            Times.Once);
+        _articleServiceMock.Verify(
+            x => x.GetArticlesSinceAsync(It.IsAny<DateTimeOffset>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenUseSubscriberServiceToggleIsDisabled_DoesNotCallSubscriberService()
+    {
+        // Arrange
+        var options = new IntervalOptions
+        {
+            Interval = NewsletterIntervals.Daily,
+            HourOfDay = 7
+        };
+
+        // Set up feature toggle to be disabled
+        var featureToggles = new FeatureTogglesOptions
+        {
+            Toggles = new List<FeatureToggle>
+            {
+                new FeatureToggle { Name = "UseSubscriberService", State = false }
+            }
+        };
+        _togglesMock.Setup(x => x.CurrentValue).Returns(featureToggles);
+
+        var executor = new NewsletterExecutor(
+            options,
+            _loggerMock.Object,
+            _fakeTimeProvider,
+            _subscriberServiceMock.Object,
+            _togglesMock.Object,
+            _emailServiceMock.Object,
+            _emailFactoryMock.Object,
+            _articleServiceMock.Object);
+
+        // Act
+        await executor.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        _subscriberServiceMock.Verify(
+            x => x.GetSubscriptionsAsync(It.IsAny<int>()),
+            Times.Never);
+        _articleServiceMock.Verify(
+            x => x.GetArticlesSinceAsync(It.IsAny<DateTimeOffset>()),
+            Times.Never);
+        _emailServiceMock.Verify(
+            x => x.SendEmails(It.IsAny<IEnumerable<Email>>()),
+            Times.Never);
+
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v != null && v.ToString()!.Contains("SubscriberService is turned off")),
+                null,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }

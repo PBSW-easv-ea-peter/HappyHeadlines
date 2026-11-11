@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using NewsletterService.NewsletterDistributors.EmailService;
 using NewsletterService.Services.ArticleService;
 using NewsletterService.Services.SubscriberService;
@@ -16,6 +17,8 @@ public class NewsletterExecutor
     private readonly TimeProvider _timeProvider;
     
     private readonly ISubscriberService _subscriberService;
+    private readonly IOptionsMonitor<FeatureTogglesOptions> _toggles;
+    
     private readonly IEmailService _emailService;
     private readonly IEmailFactory _emailFactory;
     
@@ -26,6 +29,7 @@ public class NewsletterExecutor
         ILogger<NewsletterExecutor> logger,
         TimeProvider timeProvider,
         ISubscriberService subscriberService,
+        IOptionsMonitor<FeatureTogglesOptions> toggles,
         IEmailService emailService,
         IEmailFactory emailFactory,
         IArticleService articleService)
@@ -35,6 +39,8 @@ public class NewsletterExecutor
         _timeProvider = timeProvider;
         
         _subscriberService = subscriberService;
+        _toggles = toggles;
+        
         _emailService = emailService;
         _emailFactory = emailFactory;
         
@@ -77,23 +83,35 @@ public class NewsletterExecutor
             _options.Interval,
             now);
 
-        // Get subscriptions
-        Subscriber[] subscriptions = await _subscriberService.GetSubscriptionsAsync((int)_options.Interval);
+        var toggles = _toggles.CurrentValue.Toggles;
 
-        // Get Articles since last newsletter
-        int offsetDays = (_options.Interval) switch
+        var subscriberToggle = toggles
+            .FirstOrDefault(x => x.Name == "UseSubscriberService");
+
+        if (subscriberToggle is { State: true })
         {
-            NewsletterIntervals.Daily => 1,
-            NewsletterIntervals.Weekly => 7,
-            _ => throw new InvalidOperationException($"Unknown interval: {_options.Interval}")
-        };
-        DateTimeOffset lastNewsletter = now - new TimeSpan(offsetDays);
-        
-        IReadOnlyCollection<Article> articles = await _articleService.GetArticlesSinceAsync(lastNewsletter);
-        
-        IEnumerable<Email> emails = [.. subscriptions.Select(sub => _emailFactory.CreateDailyNewsletterAsync(sub, articles).Result)];
+            // Get subscriptions
+            Subscriber[] subscriptions = await _subscriberService.GetSubscriptionsAsync((int)_options.Interval);
 
-        _emailService.SendEmails(emails);
+            // Get Articles since last newsletter
+            int offsetDays = (_options.Interval) switch
+            {
+                NewsletterIntervals.Daily => 1,
+                NewsletterIntervals.Weekly => 7,
+                _ => throw new InvalidOperationException($"Unknown interval: {_options.Interval}")
+            };
+            DateTimeOffset lastNewsletter = now - new TimeSpan(offsetDays);
+            
+            IReadOnlyCollection<Article> articles = await _articleService.GetArticlesSinceAsync(lastNewsletter);
+            
+            IEnumerable<Email> emails = [.. subscriptions.Select(sub => _emailFactory.CreateDailyNewsletterAsync(sub, articles).Result)];
+
+            _emailService.SendEmails(emails);
+        }
+        else
+        {
+            _logger.LogInformation("SubscriberService is turned off");
+        }
         
         _logger.LogInformation(
             "Completed {Interval} newsletter task at {Time}",

@@ -14,6 +14,7 @@ public class NewsletterBackgroundService : BackgroundService
 {
     private readonly ILogger<NewsletterBackgroundService> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IOptionsMonitor<FeatureTogglesOptions> _toggles;
     private readonly NewsletterOptions _newsletterOptions;
     private List<IntervalOptions> Intervals =>
         _newsletterOptions.Intervals ?? [];
@@ -23,12 +24,14 @@ public class NewsletterBackgroundService : BackgroundService
         ILogger<NewsletterBackgroundService> logger,
         IServiceProvider serviceProvider,
         IOptions<NewsletterOptions> options,
+        IOptionsMonitor<FeatureTogglesOptions> toggles,
         TimeProvider timeProvider)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _timeProvider = timeProvider;
         _newsletterOptions = options.Value;
+        _toggles = toggles;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,7 +67,7 @@ public class NewsletterBackgroundService : BackgroundService
             {
                 // Create a scope for each execution
                 using var scope = _serviceProvider.CreateScope();
-                var executor = CreateExecutor(scope, interval);
+                var executor = CreateExecutor(scope, interval, _toggles);
                     
                 if (executor.ShouldExecuteNow())
                 {
@@ -93,7 +96,7 @@ public class NewsletterBackgroundService : BackgroundService
         }
     }
 
-    private NewsletterExecutor CreateExecutor(IServiceScope scope, IntervalOptions interval)
+    private NewsletterExecutor CreateExecutor(IServiceScope scope, IntervalOptions interval, IOptionsMonitor<FeatureTogglesOptions> toggles)
     {
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<NewsletterExecutor>>();
         var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
@@ -109,6 +112,7 @@ public class NewsletterBackgroundService : BackgroundService
             logger,
             timeProvider,
             subscriberService,
+            toggles,
             emailService,
             emailFactory,
             articleService);

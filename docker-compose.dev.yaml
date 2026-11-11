@@ -404,6 +404,27 @@ services:
         condition: service_healthy
 
 # ──────────────────────────────────────────────────────────────────────────────
+#        Newsletter
+# ──────────────────────────────────────────────────────────────────────────────
+
+  newsletter-service:
+    build:
+      context: ./apps/
+      dockerfile: newsletter_service/Dockerfile
+    image: happyheadlines/newsletter_service:dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8086
+      # appsettings.Development.jsonc targets a locally run service - point it at the containers.
+      RabbitMQ__HostName: rabbitmq
+      OpenTelemetry__Endpoint: http://otel-collector:4318
+    ports:
+      - "8086:8086"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+# ──────────────────────────────────────────────────────────────────────────────
 #        Clients
 # ──────────────────────────────────────────────────────────────────────────────
 

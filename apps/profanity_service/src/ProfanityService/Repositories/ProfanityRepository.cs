@@ -6,11 +6,27 @@ namespace ProfanityService.Repositories;
 public class ProfanityRepository : IProfanityRepository
 {
     private readonly string _connectionString;
+    private readonly ILogger<ProfanityRepository> _logger;
 
-    public ProfanityRepository(IConfiguration configuration)
+    public ProfanityRepository(
+        IConfiguration configuration,
+        ILogger<ProfanityRepository> logger)
     {
-        _connectionString = configuration.GetConnectionString("ProfanityDatabase")
+        _logger = logger;
+
+        string connectionString = configuration.GetConnectionString("ProfanityDatabase")
             ?? throw new InvalidOperationException("ConnectionStrings:ProfanityDatabase is not configured.");
+
+        string dbPassword = configuration["POSTGRES_DB_PWD"]
+            ?? throw new InvalidOperationException("Missing profanity DB password.");
+
+        NpgsqlConnectionStringBuilder connectionStringBuilder =
+            new (connectionString)
+            {
+                Password = dbPassword
+            };
+
+        _connectionString = connectionStringBuilder.ConnectionString;
     }
 
     public async Task<IReadOnlyList<string>> FindBannedWordsAsync(IEnumerable<string> words)

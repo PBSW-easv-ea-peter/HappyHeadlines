@@ -407,18 +407,17 @@ services:
 #        Clients
 # ──────────────────────────────────────────────────────────────────────────────
 
-  happyheadlines:
+  journalist-web:
     build:
-      context: ./apps/happy-headlines-web_service
-    image: happyheadlines/happyheadlines_web:dev
+      context: ./apps/journalist-web_service/
+    image: happyheadlines/journalist-web-service:dev
     ports:
       - "8000:8000"
 
-  happyheadlines-reader:
+  reader-web:
     build:
-      context: ./apps/happy-headlines-web_service
-      dockerfile: Dockerfile.reader
-    image: happyheadlines/happyheadlines_reader:dev
+      context: ./apps/reader-web_service/
+    image: happyheadlines/reader-web-service:dev
     ports:
       - "8001:8001"
 

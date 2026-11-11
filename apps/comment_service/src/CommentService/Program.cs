@@ -49,7 +49,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+            .AllowAnyOrigin()
+//            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -122,6 +123,22 @@ builder.Services
 
         pipeline.AddTimeout(TimeSpan.FromSeconds(2));
     });
+
+if (builder.Environment.IsProduction())
+{
+    if (string.IsNullOrWhiteSpace(
+            builder.Configuration["ARTICLE_DB_PWD"]))
+    {
+        throw new InvalidOperationException(
+            "ARTICLE_DB_PWD must be configured in Production.");
+    }
+}
+else
+{
+    Environment.SetEnvironmentVariable(
+        "ARTICLE_DB_PWD",
+        "Postgres1234");
+}
 
 var app = builder.Build();
 

@@ -15,4 +15,4 @@ RUN dotnet publish "draft_service/src/DraftService/DraftService.csproj" -c Relea
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app .
-ENTRYPOINT ["dotnet", "DraftService.dll"]
+ENTRYPOINT ["dotnet", "DraftService.dll"] 

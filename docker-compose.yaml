@@ -247,6 +247,11 @@ services:
         condition: service_completed_successfully
       articledb-global-migrate:
         condition: service_completed_successfully
+      # ArticleQueueConsumer connects once at startup and doesn't retry.
+      rabbitmq:
+        condition: service_healthy
+      article-cache:
+        condition: service_started
 
   # ArticleCache - articles from the last 14 days, refilled every hour (docs/Caching.md).
   # Shared by all ArticleService replicas. No persistence: the next refresh fills it again.

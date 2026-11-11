@@ -1,0 +1,37 @@
+name: Continuous Integration
+
+# Builds and tests the whole solution on every pull request to master and on
+# every push to master. One job on the whole solution (no matrix), so a change
+# in apps/shared also builds and tests every project that depends on it.
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'apps/**'
+      - '.github/workflows/continuous_integration.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'apps/**'
+      - '.github/workflows/continuous_integration.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore apps/HappyHeadlines.slnx
+
+      - name: Build
+        run: dotnet build apps/HappyHeadlines.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test apps/HappyHeadlines.slnx --no-build -c Release

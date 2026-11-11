@@ -1,0 +1,57 @@
+# article-cache.yaml - Redis deployment for article service caching
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: article-cache
+  namespace: prod
+  labels:
+    app: article-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: article-cache
+  template:
+    metadata:
+      labels:
+        app: article-cache
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+              name: redis
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: article-cache
+  namespace: prod
+  labels:
+    app: article-cache
+spec:
+  selector:
+    app: article-cache
+  ports:
+    - port: 6379
+      targetPort: 6379
+      name: redis
+  type: ClusterIP

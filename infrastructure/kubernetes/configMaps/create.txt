@@ -1,0 +1,3 @@
+kubectl create configmap server-config \
+  -n prod \
+  --from-file=appsettings.Production.json=[appsettings file]

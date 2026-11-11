@@ -1,6 +1,5 @@
 services:
   structurizr:
-    container_name: structurizr
     image: structurizr/structurizr
     command: local
     ports:

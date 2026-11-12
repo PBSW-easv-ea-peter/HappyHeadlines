@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Reduce Transmitted Data</title>
+<link rel="stylesheet" href="poster.css">
+<style>pre{font-size:14.2px} .head h1{font-size:50px}</style>
+</head>
+<body>
+
+<div class="box head">
+  <div class="brand">
+    <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 54C8 30 24 10 56 8c0 30-18 46-46 46z" fill="#4cb36a" stroke="#14212b" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 52C24 38 34 28 48 18" fill="none" stroke="#14212b" stroke-width="3.5" stroke-linecap="round"/></svg>
+    <div><b>GAF</b><small>Sustainability</small></div>
+  </div>
+  <h1>Reduce Transmitted Data</h1>
+  <span class="tag">Færre felter</span>
+</div>
+
+<div class="box measure">
+  <h3>Hvordan måler man det?</h3>
+  <div class="cmd">
+    <div><span class="l">Før (hel tekst)</span><code class="c">curl ... "localhost:8080/api/articles/EU/frontpage?top=6&amp;perSection=3"</code></div>
+    <div><span class="l">Efter (kun uddrag)</span><code class="c">curl ... "...frontpage?top=6&amp;perSection=3&amp;excerpt=0&amp;heroExcerpt=400"</code></div>
+  </div>
+  <div style="font-size:15.5px;line-height:1.4">→ Samme 15 artikler begge gange (efter Defer Fetching). Kun brødteksten er forskellig. Gennemsnit af 50 kald.</div>
+</div>
+
+<div class="box panel">
+  <div class="ph"><h2>Før</h2><span class="tag">Hel brødtekst til alle 15</span></div>
+  <div class="pb">
+    <div class="codewrap"><pre><span class="cm">@* HeroArticle.razor: viser 400 tegn *@</span>
+@ArticleDisplay.Excerpt(Article.BreadText, <span class="hl-old">400</span>)
+<span class="cm">@* PopularList og SectionCard: viser ingen brødtekst *@</span>
+
+<span class="cm">-- men alle 15 rækker fik hele teksten (ca. 2.000 tegn)</span>
+<span class="k">select</span> a.id, a.title, <span class="hl-old">a.breadtext</span>, ...</pre></div>
+    <div class="size">
+      <div class="rows"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="big">34,5 KB</div>
+      <div class="lbl">pr. svar · 15 artikler<br>kun 1 af 15 viser tekst</div>
+    </div>
+    <div class="co2">
+      <div class="k">Overført pr. forsidevisning (målt)</div>
+      <div class="v">34.543 bytes</div>
+      <div class="k">Estimeret CO₂e pr. forsidevisning</div>
+      <div><span class="pill">≈ 0,00083 g CO₂e</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="box panel">
+  <div class="ph"><h2>Efter</h2><span class="tag">Kun de tegn, der vises</span></div>
+  <div class="pb">
+    <div class="codewrap"><pre><span class="cm">// Komponenten ejer tallet, og siden sender det videre</span>
+<span class="k">public const int</span> <span class="hl-new">ExcerptLength = 400</span>;   <span class="cm">// HeroArticle</span>
+GetFrontPageAsync(..., <span class="hl-new">excerpt: 0, heroExcerpt: HeroArticle.ExcerptLength</span>);
+
+<span class="cm">-- Teksten skæres i databasen</span>
+<span class="k">case when</span> excerpt_length = 0 <span class="k">then</span> <span class="s">''</span>
+     <span class="k">else</span> <span class="hl-new">left(breadtext, excerpt_length + 1)</span> <span class="k">end</span></pre></div>
+    <div class="size">
+      <div class="rows few"><i></i></div>
+      <div class="big">4,2 KB</div>
+      <div class="lbl">pr. svar · samme 15 artikler<br>DB-vej: 37,7 → 25,9 ms</div>
+    </div>
+    <div class="co2">
+      <div class="k">Overført pr. forsidevisning (målt)</div>
+      <div class="v">4.164 bytes</div>
+      <div class="k">Estimeret CO₂e pr. forsidevisning</div>
+      <div><span class="pill">≈ 0,00010 g CO₂e</span></div>
+      <div class="badge">87,9 %<br>mindre</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="box card calc">
+    <h4>Beregning <small>(pr. forsidevisning)</small></h4>
+    <p>0,0000345 GB × 0,194 kWh/GB × 124 g/kWh<br><b>= 0,00083 g CO₂e (før)</b></p>
+    <p>0,0000042 GB × 0,194 kWh/GB × 124 g/kWh<br><b>= 0,00010 g CO₂e (efter)</b></p>
+    <p style="color:var(--muted);font-size:15px">Sammen med Defer Fetching: 2,31 MB → 4,2 KB<br>(−99,8 %), 55,6 → 0,10 kg CO₂e pr. mio.</p>
+  </div>
+  <div class="box card res">
+    <h4>Resultat</h4>
+    <ul>
+      <li><b>87,9 % færre bytes</b> (34,5 KB → 4,2 KB)</li>
+      <li>Ved cache-miss er databasevejen <b>31 % hurtigere</b> (37,7 → 25,9 ms), fordi teksten skæres i Postgres</li>
+      <li>Visningen er uændret: +1 tegn lader <code>Excerpt()</code> tilføje "…"</li>
+      <li>Hele teksten hentes først, når artiklen åbnes</li>
+    </ul>
+  </div>
+  <div class="box card notes">
+    <h4>Bemærkninger</h4>
+    <ul>
+      <li>Samme model som Defer Fetching: 0,194 kWh/GB, 124 g CO₂e/kWh. CO₂e er et <b>estimat</b>.</li>
+      <li>Ingen magic numbers: 400 og 110 er nu konstanter i <code>HeroArticle</code> og <code>ArticleCard</code></li>
+      <li>Redis gemmer også det mindre svar: ca. 4 KB pr. cachet forside i stedet for 35 KB</li>
+      <li><b>Trade-off:</b> <code>breadtext</code> kan nu være hel, et uddrag eller tom, afhængigt af forespørgslen. Et separat <code>excerpt</code>-felt ville være tydeligere.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

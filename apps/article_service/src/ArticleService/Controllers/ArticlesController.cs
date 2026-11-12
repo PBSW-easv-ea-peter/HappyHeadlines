@@ -43,22 +43,25 @@ public class ArticlesController : ControllerBase
         return Ok(await _readRepository.GetAllAsync(location));
     }
 
-    // Exactly what a front page shows, composed in one query and cached as a whole (GAF: Defer
-    // Fetching - fewer rows). The client passes its own layout: the reader front page asks for
-    // top = 1 hero + 5 popular and perSection = 3 cards.
+    // Exactly what a front page shows, composed in one query and cached as a whole. The client
+    // passes its own layout: the reader front page asks for top = 1 hero + 5 popular,
+    // perSection = 3 cards (GAF: Defer Fetching - fewer rows) and the number of body text
+    // characters it displays (GAF: fewer fields; leave excerpt out for the whole text).
     [HttpGet("{location}/frontpage")]
     public async Task<ActionResult<IEnumerable<Article>>> GetFrontPage(
         string location,
         [FromQuery] int top = 10,
         [FromQuery] int perSection = 0,
-        [FromQuery] string? section = null)
+        [FromQuery] string? section = null,
+        [FromQuery] int? excerpt = null,
+        [FromQuery] int? heroExcerpt = null)
     {
         if (!ValidLocations.Contains(location))
         {
             return BadRequest($"Unknown location '{location}'.");
         }
 
-        var query = new FrontPageQuery(top, perSection, section);
+        var query = new FrontPageQuery(top, perSection, section, excerpt, heroExcerpt);
         if (query.Validate() is { } error)
         {
             return BadRequest(error);

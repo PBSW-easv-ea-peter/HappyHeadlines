@@ -91,8 +91,9 @@ read_once() {
         location=${REGIONS[RANDOM % ${#REGIONS[@]}]}
     fi
 
-    # Same request as the reader front page (FrontPage.razor.cs): hero + 5 popular, 3 per section.
-    request GET "$ARTICLE_URL/api/articles/$location/frontpage?top=6&perSection=3"
+    # Same request as the reader front page (FrontPage.razor.cs): hero + 5 popular, 3 per
+    # section, only the hero's 400-character excerpt.
+    request GET "$ARTICLE_URL/api/articles/$location/frontpage?top=6&perSection=3&excerpt=0&heroExcerpt=400"
     ok || { read_errors=$((read_errors + 1)); return; }
 
     local ids count id

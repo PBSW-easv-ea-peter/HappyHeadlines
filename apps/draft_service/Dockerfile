@@ -12,7 +12,7 @@ COPY ["draft_service/src/DraftService/", "draft_service/src/DraftService/"]
 RUN dotnet publish "draft_service/src/DraftService/DraftService.csproj" -c Release -o /app
 
 # Final stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS final
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "DraftService.dll"] 

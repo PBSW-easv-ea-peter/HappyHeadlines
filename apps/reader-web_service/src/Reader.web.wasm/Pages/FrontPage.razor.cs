@@ -27,7 +27,7 @@ public partial class FrontPage : ComponentBase
     // Newest first - doubles as the "popularity" order until ArticleService
     // has real view data.
     private List<ArticleDTO> _articles = [];
-    private string? _loadedRegion;
+    private string? _loadedKey;
     private bool _isLoading = true;
 
     private string RegionCode => ReaderRegions.Normalize(Region);
@@ -46,18 +46,23 @@ public partial class FrontPage : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        // Switching section only re-filters what is already loaded.
+        // Only what this page shows is fetched (GAF), so a new section is a new request:
+        // the hero and the popular list then come from that section.
         var region = RegionCode;
-        if (region == _loadedRegion)
+        var key = $"{region}/{ActiveSection}";
+        if (key == _loadedKey)
             return;
 
-        _loadedRegion = region;
+        _loadedKey = key;
         _isLoading = true;
 
-        var articles = await ArticleCatalog.GetRegionArticlesAsync(HttpClientFactory, Logger, region);
+        var articles = await ArticleCatalog.GetFrontPageAsync(HttpClientFactory, Logger, region,
+            top: 1 + PopularCount,
+            perSection: SectionCardCount,
+            section: ActiveSection);
 
-        // The reader may have switched edition again while this was loading.
-        if (region != _loadedRegion)
+        // The reader may have switched edition or section again while this was loading.
+        if (key != _loadedKey)
             return;
 
         _articles = articles.OrderByDescending(ArticleDisplay.PublishedAt).ToList();

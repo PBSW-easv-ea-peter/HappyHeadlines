@@ -48,7 +48,12 @@ public partial class ArticlePage : ComponentBase
 
         var articleTask = ArticleCatalog.GetArticleAsync(HttpClientFactory, Logger, region, Id);
         var commentsTask = CommentCatalog.GetApprovedAsync(HttpClientFactory, Logger, region, Id);
-        var regionTask = ArticleCatalog.GetRegionArticlesAsync(HttpClientFactory, Logger, region);
+        // "More news" picks the same section first, then the newest of the rest. +1 because
+        // this article itself may be among them (GAF: Defer Fetching).
+        var regionTask = ArticleCatalog.GetFrontPageAsync(HttpClientFactory, Logger, region,
+            top: MoreNewsCount + 1,
+            perSection: MoreNewsCount + 1,
+            section: null);
         await Task.WhenAll(articleTask, commentsTask, regionTask);
 
         // The reader may have navigated to another article while this was loading.

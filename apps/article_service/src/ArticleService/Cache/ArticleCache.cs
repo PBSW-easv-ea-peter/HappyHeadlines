@@ -51,6 +51,27 @@ public class ArticleCache : IArticleCache
         redis.call('DEL', KEYS[1])
         """;
 
+    // Composed front pages (GAF: Defer Fetching) are cached as a whole, for every region, as
+    // the exact response the client gets. Each region keeps a set of its front page keys so a
+    // publish or removal can delete them all without SCAN. The TTL bounds how stale a page can
+    // get if an invalidation is lost (e.g. Redis was briefly down).
+    private const string FrontPagePrefix = "frontpage:";
+    private static readonly TimeSpan FrontPageDuration = TimeSpan.FromMinutes(5);
+
+    private const string StoreFrontPageScript = """
+        redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
+        redis.call('SADD', KEYS[2], KEYS[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[2])
+        """;
+
+    private const string InvalidateFrontPagesScript = """
+        local keys = redis.call('SMEMBERS', KEYS[1])
+        for i = 1, #keys do
+            redis.call('DEL', keys[i])
+        end
+        redis.call('DEL', KEYS[1])
+        """;
+
     public ArticleCache(
         IConnectionMultiplexer redis,
         IArticleReadRepository readRepository,
@@ -113,6 +134,44 @@ public class ArticleCache : IArticleCache
         return null;
     }
 
+    public async Task<IList<Article>?> GetFrontPageAsync(string location, FrontPageQuery query)
+    {
+        RedisValue cached = await TryGetAsync(FrontPageKey(location, query));
+        return cached.HasValue ? JsonSerializer.Deserialize<List<Article>>(cached.ToString()) : null;
+    }
+
+    public async Task StoreFrontPageAsync(string location, FrontPageQuery query, IList<Article> articles)
+    {
+        try
+        {
+            await _redis.GetDatabase().ScriptEvaluateAsync(
+                StoreFrontPageScript,
+                [FrontPageKey(location, query), FrontPageSetKey(location)],
+                [JsonSerializer.Serialize(articles), (long)FrontPageDuration.TotalSeconds]);
+        }
+        catch (Exception ex) when (ex is RedisException or RedisTimeoutException)
+        {
+            // Not cached this time - the next request reads the database again.
+            _logger.LogWarning("Front page cache write failed ({Reason})", ex.GetType().Name);
+        }
+    }
+
+    // Called whenever an article in the region is published, edited or removed.
+    private async Task InvalidateFrontPagesAsync(string location)
+    {
+        try
+        {
+            await _redis.GetDatabase().ScriptEvaluateAsync(
+                InvalidateFrontPagesScript, [FrontPageSetKey(location)], []);
+        }
+        catch (Exception ex) when (ex is RedisException or RedisTimeoutException)
+        {
+            // The TTL removes the stale pages within FrontPageDuration.
+            _logger.LogWarning("Front page cache invalidation failed for {Location} ({Reason})",
+                location, ex.GetType().Name);
+        }
+    }
+
     // A failing cache must never fail the request: if Redis is down or slow, the read counts
     // as a miss and ArticlesController falls back to the database.
     private async Task<RedisValue> TryGetAsync(RedisKey key)
@@ -155,6 +214,7 @@ public class ArticleCache : IArticleCache
                     .. articles.SelectMany(article => new RedisValue[] { Score(article), article.Id.ToString() })
                 ];
                 await db.ScriptEvaluateAsync(ReplaceIndexScript, [IndexKey(location)], args);
+                await InvalidateFrontPagesAsync(location);
 
                 _logger.LogInformation("Refreshed cache for location: {Location}", location);
             }
@@ -183,6 +243,7 @@ public class ArticleCache : IArticleCache
                 UpsertScript,
                 [ArticleKey(location, id.ToString()), IndexKey(location)],
                 [JsonSerializer.Serialize(article), (long)CacheDuration.TotalSeconds, Score(article), id.ToString()]);
+            await InvalidateFrontPagesAsync(location);
             _logger.LogDebug("Refreshed single article cache for {Location}:{ArticleId}", location, id);
         }
         catch (Exception ex)
@@ -199,6 +260,7 @@ public class ArticleCache : IArticleCache
                 RemoveScript,
                 [ArticleKey(location, id.ToString()), IndexKey(location)],
                 [id.ToString()]);
+            await InvalidateFrontPagesAsync(location);
             _logger.LogDebug("Removed article {Location}:{ArticleId} from the cache", location, id);
         }
         catch (Exception ex)
@@ -217,4 +279,10 @@ public class ArticleCache : IArticleCache
     private static RedisKey IndexKey(string location) => $"{IndexKeyPrefix}{location}:index";
 
     private static RedisKey ArticleKey(string location, string id) => $"{ArticleKeyPrefix}{location}:{id}";
+
+    private static RedisKey FrontPageKey(string location, FrontPageQuery query) =>
+        $"{FrontPagePrefix}{location.ToUpperInvariant()}:{query.CacheKeyPart}";
+
+    private static RedisKey FrontPageSetKey(string location) =>
+        $"{FrontPagePrefix}{location.ToUpperInvariant()}:keys";
 }

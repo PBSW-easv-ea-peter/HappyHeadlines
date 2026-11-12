@@ -43,6 +43,38 @@ public class ArticlesController : ControllerBase
         return Ok(await _readRepository.GetAllAsync(location));
     }
 
+    // Exactly what a front page shows, composed in one query and cached as a whole (GAF: Defer
+    // Fetching - fewer rows). The client passes its own layout: the reader front page asks for
+    // top = 1 hero + 5 popular and perSection = 3 cards.
+    [HttpGet("{location}/frontpage")]
+    public async Task<ActionResult<IEnumerable<Article>>> GetFrontPage(
+        string location,
+        [FromQuery] int top = 10,
+        [FromQuery] int perSection = 0,
+        [FromQuery] string? section = null)
+    {
+        if (!ValidLocations.Contains(location))
+        {
+            return BadRequest($"Unknown location '{location}'.");
+        }
+
+        var query = new FrontPageQuery(top, perSection, section);
+        if (query.Validate() is { } error)
+        {
+            return BadRequest(error);
+        }
+
+        IList<Article>? cached = await _cache.GetFrontPageAsync(location, query);
+        if (cached is not null)
+        {
+            return Ok(cached);
+        }
+
+        IList<Article> articles = [.. await _readRepository.GetFrontPageAsync(location, query)];
+        await _cache.StoreFrontPageAsync(location, query, articles);
+        return Ok(articles);
+    }
+
     [HttpGet("{location}/{id:guid}")]
     public async Task<ActionResult<Article>> GetById(string location, Guid id)
     {

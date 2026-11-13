@@ -12,7 +12,7 @@ COPY ["profanity_service/src/ProfanityService/", "profanity_service/src/Profanit
 RUN dotnet publish "profanity_service/src/ProfanityService/ProfanityService.csproj" -c Release -o /app
 
 # Final stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS final
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "ProfanityService.dll"]

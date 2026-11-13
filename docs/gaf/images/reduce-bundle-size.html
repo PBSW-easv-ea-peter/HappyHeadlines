@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Reduce Bundle Size</title>
+<style>
+  :root{
+    --ink:#14212b; --muted:#4a5a66; --line:#1d2b36;
+    --green-bg:#dff3e3; --green-hd:#bfe8c8; --green-ac:#2f9e55;
+    --blue-bg:#e6f1fb; --blue-hd:#b9dcf6; --blue-ac:#2b7fc4;
+    --yellow-bg:#fdf6dc; --purple-bg:#efe9fa; --lime-bg:#eef8d9;
+    --code-bg:#1e252d; --code-fg:#e6edf3; --kw:#79b8ff; --str:#f0a96b; --num:#7d8590;
+    --old:#f2b632; --new:#46c46a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1536px;height:1024px;background:#fff;color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}
+  body{padding:10px;display:flex;flex-direction:column;gap:9px}
+  .box{border:2.5px solid var(--line);border-radius:16px;overflow:hidden}
+  /* header */
+  .head{background:var(--green-hd);display:flex;align-items:center;height:86px;padding:0 28px}
+  .brand{display:flex;align-items:center;gap:14px;padding-right:26px;border-right:3px solid var(--line);height:62px}
+  .brand b{font-size:36px;line-height:1;display:block}
+  .brand small{font-size:21px;font-weight:600}
+  .head h1{flex:1;text-align:center;font-size:56px;font-weight:800;letter-spacing:-.5px}
+  .tag{font-size:20px;font-weight:700;border:2px solid var(--line);border-radius:10px;padding:6px 14px;background:#fff}
+  /* measure row */
+  .measure{background:var(--green-bg);display:grid;grid-template-columns:170px 1fr 330px;gap:16px;align-items:center;padding:10px 20px;height:100px}
+  .measure h3{font-size:21px}
+  .cmd{display:flex;flex-direction:column;gap:5px}
+  .cmd div{display:flex;align-items:center;gap:10px;font-size:15px}
+  .cmd span.l{width:250px;white-space:nowrap;color:var(--muted);font-weight:600;flex:none}
+  code.c{font-family:Consolas,"Cascadia Mono",monospace;font-size:15px;background:#fff;border:2px solid var(--line);border-radius:8px;padding:3px 9px;white-space:nowrap}
+  /* panels */
+  .panel{display:flex;flex-direction:column}
+  .panel .ph{position:relative;height:62px;display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid var(--line)}
+  .panel .ph h2{font-size:46px;font-weight:800}
+  .panel .ph .tag{position:absolute;right:22px}
+  .before .ph{background:var(--blue-hd)} .after .ph{background:var(--blue-hd)}
+  .pb{display:grid;grid-template-columns:760px 1fr 450px;height:212px}
+  .codewrap{padding:14px 16px;display:flex;align-items:center}
+  pre{background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:14px 18px;font-family:Consolas,"Cascadia Mono",monospace;font-size:17px;line-height:1.6;width:100%}
+  pre .n{color:var(--num);display:inline-block;width:34px}
+  pre .k{color:var(--kw)} pre .s{color:var(--str)} pre .cm{color:#8b949e;font-style:italic}
+  pre .hl-old{border:2.5px solid var(--old);border-radius:6px;padding:0 4px}
+  pre .hl-new{border:2.5px solid var(--new);border-radius:6px;padding:0 4px;color:#b6f0c4}
+  .size{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-left:2px dashed #b9c6d0}
+  .size .big{font-size:50px;font-weight:800;line-height:1}
+  .size .lbl{font-size:17px;color:var(--muted)}
+  .co2{background:var(--lime-bg);border-left:2.5px solid var(--line);padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:8px;position:relative}
+  .co2 .k{font-size:17px;color:var(--muted);font-weight:600}
+  .co2 .v{font-size:30px;font-weight:800}
+  .co2 .v small{font-size:19px;font-weight:600;color:var(--muted)}
+  .pill{display:inline-block;border:3px solid var(--green-ac);border-radius:10px;padding:2px 14px;font-size:30px;font-weight:800;background:#f5fcef}
+  .badge{position:absolute;right:16px;bottom:18px;background:var(--green-ac);color:#fff;font-weight:800;font-size:24px;line-height:1.05;padding:10px 14px;border-radius:14px;transform:rotate(-7deg);text-align:center}
+  /* container icon */
+  .stack{display:grid;grid-template-columns:repeat(4,22px);gap:3px}
+  .stack i{height:16px;border-radius:2px;background:var(--blue-ac)}
+  .stack.small{grid-template-columns:repeat(3,22px)}
+  .stack.small i{background:var(--green-ac)}
+  /* bottom */
+  .bottom{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:9px;flex:1}
+  .card{padding:16px 22px}
+  .card h4{font-size:26px;font-weight:800;margin-bottom:10px}
+  .card h4 small{font-size:18px;font-weight:600;color:var(--muted)}
+  .calc{background:var(--yellow-bg)} .res{background:var(--blue-bg)} .notes{background:var(--purple-bg)}
+  .calc p{font-size:17px;line-height:1.45;margin-bottom:8px}
+  .res ul,.notes ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .res li{font-size:18px;line-height:1.3;padding-left:30px;position:relative}
+  .res li::before{content:"✔";position:absolute;left:0;color:var(--green-ac);font-weight:800;font-size:20px}
+  .notes li{font-size:15.5px;line-height:1.32;padding-left:16px;position:relative}
+  .notes li::before{content:"•";position:absolute;left:0;font-weight:800}
+</style>
+</head>
+<body>
+
+<div class="box head">
+  <div class="brand">
+    <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 54C8 30 24 10 56 8c0 30-18 46-46 46z" fill="#4cb36a" stroke="#14212b" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 52C24 38 34 28 48 18" fill="none" stroke="#14212b" stroke-width="3.5" stroke-linecap="round"/></svg>
+    <div><b>GAF</b><small>Sustainability</small></div>
+  </div>
+  <h1>Reduce Bundle Size</h1>
+  <span class="tag">article_service</span>
+</div>
+
+<div class="box measure">
+  <h3>Hvordan måler man det?</h3>
+  <div class="cmd">
+    <div><span class="l">Image-størrelse (lokalt)</span><code class="c">docker images happyheadlines/article_service:dev</code></div>
+    <div><span class="l">Pull-størrelse (komprimeret)</span><code class="c">docker save happyheadlines/article_service:dev | gzip | wc -c</code></div>
+  </div>
+  <div style="font-size:15.5px;line-height:1.4">→ Pull-størrelsen er bytes / 1.000.000 = MB.<br>Før og efter er bygget og målt på samme Docker-version.</div>
+</div>
+
+<div class="box panel before">
+  <div class="ph"><h2>Før</h2><span class="tag">Standard .NET runtime (Debian)</span></div>
+  <div class="pb">
+    <div class="codewrap"><pre><span class="n">16</span><span class="cm"># Final stage</span>
+<span class="n">17</span><span class="k">FROM</span> mcr.microsoft.com/dotnet/<span class="hl-old">aspnet:10.0</span> <span class="k">AS</span> final
+<span class="n">18</span><span class="k">WORKDIR</span> /app
+<span class="n">19</span><span class="k">COPY</span> --from=build /app .
+<span class="n">20</span><span class="k">ENTRYPOINT</span> [<span class="s">"dotnet"</span>, <span class="s">"ArticleService.dll"</span>]</pre></div>
+    <div class="size">
+      <div class="stack"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="big">353 MB</div>
+      <div class="lbl">Image-størrelse (lokalt)</div>
+    </div>
+    <div class="co2">
+      <div class="k">Pull-størrelse (komprimeret, målt)</div>
+      <div class="v">100,4 MB <small>(0,100 GB)</small></div>
+      <div class="k">Estimeret CO₂e pr. pull</div>
+      <div><span class="pill">≈ 1,42 g CO₂e</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="box panel after">
+  <div class="ph"><h2>Efter</h2><span class="tag">Mindre runtime (chiseled Ubuntu)</span></div>
+  <div class="pb">
+    <div class="codewrap"><pre><span class="n">16</span><span class="cm"># Final stage</span>
+<span class="n">17</span><span class="k">FROM</span> mcr.microsoft.com/dotnet/<span class="hl-new">aspnet:10.0-noble-chiseled</span> <span class="k">AS</span> final
+<span class="n">18</span><span class="k">WORKDIR</span> /app
+<span class="n">19</span><span class="k">COPY</span> --from=build /app .
+<span class="n">20</span><span class="k">ENTRYPOINT</span> [<span class="s">"dotnet"</span>, <span class="s">"ArticleService.dll"</span>]</pre></div>
+    <div class="size">
+      <div class="stack small"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="big">193 MB</div>
+      <div class="lbl">Image-størrelse (lokalt) · −45 %</div>
+    </div>
+    <div class="co2">
+      <div class="k">Pull-størrelse (komprimeret, målt)</div>
+      <div class="v">59,7 MB <small>(0,060 GB)</small></div>
+      <div class="k">Estimeret CO₂e pr. pull</div>
+      <div><span class="pill">≈ 0,84 g CO₂e</span></div>
+      <div class="badge">40,5 %<br>mindre</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="box card calc">
+    <h4>Beregning <small>(pr. pull)</small></h4>
+    <p>0,100 GB × 0,114 kWh/GB × 124 g/kWh<br><b>= 1,42 g CO₂e (før)</b></p>
+    <p>0,060 GB × 0,114 kWh/GB × 124 g/kWh<br><b>= 0,84 g CO₂e (efter)</b></p>
+    <p style="color:var(--muted);font-size:15.5px">Alle 6 .NET-services: 0,597 GB → 0,353 GB<br>= 8,4 → 5,0 g CO₂e pr. fuld deploy</p>
+  </div>
+  <div class="box card res">
+    <h4>Resultat</h4>
+    <ul>
+      <li><b>45 % mindre image</b> (353 → 193 MB)<br>og <b>40,5 % mindre pull</b> (100,4 → 59,7 MB)</li>
+      <li><b>≈ 0,57 g CO₂e sparet</b> pr. pull, ≈ 3,4 g pr. fuld deploy af alle 6 services</li>
+      <li>Samme workload i 15 min: <b>0 fejl</b>. CPU og RAM er uændret.</li>
+      <li>Ændringen er <b>én linje</b> pr. Dockerfile.</li>
+    </ul>
+  </div>
+  <div class="box card notes">
+    <h4>Bemærkninger</h4>
+    <ul>
+      <li>Sustainable Web Design Model v4: datacenter + netværk = 0,055 + 0,059 = 0,114 kWh/GB</li>
+      <li>Dansk elnet 2025: ca. 124 g CO₂e/kWh (Electricity Maps)</li>
+      <li>MB er målt. CO₂e er et <b>estimat</b>, og modellen overvurderer formentlig gevinsten ved færre bytes.</li>
+      <li>Besparelsen ganges op med antal noder, replikaer og deploys. GHCR gemmer også hver version.</li>
+      <li><b>Trade-off:</b> ingen shell i containeren (sværere at fejlsøge), kører som non-root, ingen ICU/tidszonedata.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

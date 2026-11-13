@@ -150,11 +150,9 @@ workspace "Happy Headlines" "Positive news platform" {
                 }
             }
 
-            // x-axis split (week 36), as deployed in Kubernetes (infrastructure/kubernetes/). Not a
-            // container of its own: nginx in front of the cluster spreads requests over the three nodes
-            // (NodePort 30000, loadbalancer/services-nginx.conf), and the article-service Service
-            // (kube-proxy) spreads them over the 3 ArticleService replicas.
-            articleServiceLB = container "ArticleService Load Balancer" "nginx outside the cluster balances over the three Kubernetes nodes (NodePort 30000, max_fails=3); the article-service Service (kube-proxy) then balances over the 3 ArticleService replicas. Not a separate application." "nginx + Kubernetes Service" "Implemented"
+            // The ArticleService load balancer (x-axis split, week 36) is not a container here: it runs
+            // no application code of its own, so it belongs to the deployment view. See the
+            // "Load Balancer" infrastructure node in the Production deployment environment below.
 
             // Services (not yet implemented)
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
@@ -188,7 +186,7 @@ workspace "Happy Headlines" "Positive news platform" {
         // Webapp -> PublisherService -> DraftService/ProfanityService/ArticleQueue relations)
         webapp -> publishDraftEndpoint "Publishes approved draft via POST /api/v1/publish-draft/{id}" "HTTP"
         // Article overview page in the editorial app (Pages/Articles) - same reads as the Website.
-        webapp -> articleServiceLB "Lists published articles per region" "HTTP"
+        webapp -> articlesController "Lists published articles per region" "HTTP"
         webapp -> commentService "Reads comments on published articles" "HTTP"
         publisherDraftClient -> draftsController "Gets draft, flags banned words (PUT api/drafts/{id}/flagged-words) and marks it published" "HTTP"
         publisherProfanityClient -> profanityService "Checks title and body before publishing via HTTP POST /api/profanity/check" "HTTP"
@@ -196,7 +194,6 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // ArticleService component-level relations (imply the ArticleService container-level
         // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
-        articleServiceLB -> articlesController "Routes requests to"
         articleReadRepository -> articleDb "Reads articles from"
         articleWriteRepository -> articleDb "Writes articles to"
         articleQueueConsumer -> articleQueue "Consumes published articles from" "AMQP"
@@ -209,9 +206,8 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // Reader - articles
         reader -> website "Reads articles"
-        // website -> articleService "Requests articles"
-        website -> articleServiceLB "Requests articles"
-        // articleServiceLB -> articleService is implied by articleServiceLB -> articlesController above
+        // Implies website -> articleService at container level
+        website -> articlesController "Requests articles" "HTTP"
 
         // Reader - comments
         reader -> website "Posts comments"
@@ -234,7 +230,7 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // Newsletter. Component-level relations imply the NewsletterService container-level ones.
         // Planned: the target design - today the components use in-memory fakes instead.
-        newsletterArticleClient -> articleServiceLB "Retrieves articles (planned - FakeArticleService today)" "HTTP" "Planned"
+        newsletterArticleClient -> articlesController "Retrieves articles (planned - FakeArticleService today)" "HTTP" "Planned"
         newsletterSubscriberClient -> subscriberService "Retrieves subscribers, only while UseSubscriberService is on (planned - InMemorySubscriberService today)" "HTTP" "Planned"
         newSubscriberConsumer -> subscriberQueue "Consumes new subscribers from" "AMQP"
         newsletterEmailService -> reader "Sends daily/weekly newsletter and welcome e-mail (planned - FakeEmailService logs them today)" "E-mail" "Planned"
@@ -264,12 +260,14 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // NB: this deployment environment shows the earlier Docker Swarm / compose set-up with all
         // 8 article shards. The Kubernetes mock deployment (infrastructure/kubernetes/) only runs
-        // the EU shard, and the load balancer there is nginx + a Kubernetes Service (see
-        // articleServiceLB above). Kept as it is on purpose - explain the difference in the video.
+        // the EU shard, and the load balancer there is nginx in front of the cluster (NodePort 30000,
+        // loadbalancer/services-nginx.conf) + the article-service Service (kube-proxy).
+        // Kept as it is on purpose - explain the difference in the video.
         deploymentEnvironment "Production" {
 
-            deploymentNode "Load Balancer" "Docker Swarm routing mesh" {
-                loadBalancer = containerInstance articleServiceLB
+            // Infrastructure, not a container: it runs no application code of its own.
+            deploymentNode "Docker Swarm" "Container orchestrator" {
+                loadBalancer = infrastructureNode "Load Balancer" "Spreads requests over the 3 ArticleService replicas (x-axis split, week 36)." "Docker Swarm routing mesh"
             }
 
             deploymentNode "Website" "Docker container" {
@@ -294,6 +292,10 @@ workspace "Happy Headlines" "Positive news platform" {
             deploymentNode "ArticleService Instance 3" "Docker container" {
                 articleServiceInstance3 = containerInstance articleService
             }
+
+            loadBalancer -> articleServiceInstance1 "Routes requests to" "HTTP"
+            loadBalancer -> articleServiceInstance2 "Routes requests to" "HTTP"
+            loadBalancer -> articleServiceInstance3 "Routes requests to" "HTTP"
 
             deploymentNode "Africa" "PostgreSQL 18" {
                 africaDb = containerInstance articleDb
@@ -332,9 +334,10 @@ workspace "Happy Headlines" "Positive news platform" {
         }
 
 
-        // C4 Level 2 - Container diagram
+        // C4 Level 2 - Container diagram. Observability is left out here; it has its own view below.
         container happyHeadlines "Containers" {
             include *
+            exclude otelCollector loki tempo grafana developer
             autolayout lr
         }
 

@@ -100,7 +100,7 @@ public class NewsletterExecutor
                 NewsletterIntervals.Weekly => 7,
                 _ => throw new InvalidOperationException($"Unknown interval: {_options.Interval}")
             };
-            DateTimeOffset lastNewsletter = now - new TimeSpan(offsetDays);
+            DateTimeOffset lastNewsletter = now - TimeSpan.FromDays(offsetDays);
             
             IReadOnlyCollection<Article> articles = await _articleService.GetArticlesSinceAsync(lastNewsletter);
             

@@ -24,5 +24,8 @@ public static class Cache
             ConnectionMultiplexer.Connect(redisOptions));
 
         builder.Services.AddScoped<IArticleCache, ArticleCache>();
+        
+        // Start background service to update the cache
+        builder.Services.AddHostedService<CacheRefreshService>();
     }
 }

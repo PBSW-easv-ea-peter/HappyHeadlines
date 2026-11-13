@@ -12,7 +12,7 @@ public static class ShardResilience
 {
     public static string PipelineKey(string location) => $"ArticleShard:{location.ToUpperInvariant()}";
 
-    public static WebApplicationBuilder AddShardResilience(this WebApplicationBuilder builder)
+    public static void AddShardResilience(this WebApplicationBuilder builder)
     {
         var locations = builder.Configuration.GetSection("ArticleShards").GetChildren().Select(s => s.Key);
 
@@ -30,8 +30,6 @@ public static class ShardResilience
                 Configure(pipeline, key, logger);
             });
         }
-
-        return builder;
     }
 
     // Internal so ArticleService.Tests can verify which failures open the circuit.

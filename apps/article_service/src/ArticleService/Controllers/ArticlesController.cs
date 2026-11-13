@@ -2,6 +2,9 @@ using ArticleService.Cache;
 using ArticleService.Models;
 using ArticleService.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArticleService.Controllers;
 
@@ -9,38 +12,55 @@ namespace ArticleService.Controllers;
 [Route("api/articles")]
 public class ArticlesController : ControllerBase
 {
-    private static readonly HashSet<string> ValidLocations =
-        new(StringComparer.OrdinalIgnoreCase) { "EU", "NA", "SA", "AU", "AS", "AN", "AF", "GO" };
-
     private readonly IArticleReadRepository _readRepository;
     private readonly IArticleWriteRepository _writeRepository;
     private readonly IArticleCache _cache;
+    private readonly IOptionsMonitor<LocationConfig> _locations;
+    private readonly ILogger<ArticlesController> _logger;
+
+    private Location? GetLocationFromCode(string locationCode)
+    {
+        locationCode = locationCode.ToUpper();
+        Location? location = _locations.CurrentValue.Locations.FirstOrDefault(l => l.Code == locationCode && l.Enabled);
+        
+        if (location == null)
+        {
+            _logger.LogWarning("Unknown location: {LocationCode}", locationCode);
+        }
+        
+        return location;
+    }
 
     public ArticlesController(
         IArticleReadRepository readRepository,
         IArticleWriteRepository writeRepository,
-        IArticleCache cache)
+        IArticleCache cache,
+        IOptionsMonitor<LocationConfig> locations,
+        ILogger<ArticlesController> logger)
     {
         _readRepository = readRepository;
         _writeRepository = writeRepository;
         _cache = cache;
+        _locations = locations;
+        _logger = logger;
     }
 
-    [HttpGet("{location}")]
-    public async Task<ActionResult<IEnumerable<Article>>> GetAll(string location)
+    [HttpGet("{locationCode}")]
+    public async Task<ActionResult<IEnumerable<Article>>> GetAll(string locationCode)
     {
-        if (!ValidLocations.Contains(location))
+        Location? location = GetLocationFromCode(locationCode);
+        if (location == null)
         {
-            return BadRequest($"Unknown location '{location}'.");
+            return BadRequest($"Unknown location '{locationCode}'.");
         }
-
-        IList<Article> cachedArticles = await _cache.GetArticlesAsync(location);
+        
+        IList<Article> cachedArticles = await _cache.GetArticlesAsync(location.Code);
         if (cachedArticles.Any())
         {
             return Ok(cachedArticles);
         }
 
-        return Ok(await _readRepository.GetAllAsync(location));
+        return Ok(await _readRepository.GetAllAsync(location.Code));
     }
 
     // Exactly what a front page shows, composed in one query and cached as a whole. The client
@@ -56,7 +76,8 @@ public class ArticlesController : ControllerBase
         [FromQuery] int? excerpt = null,
         [FromQuery] int? heroExcerpt = null)
     {
-        if (!ValidLocations.Contains(location))
+        Location? locationObj = GetLocationFromCode(location);
+        if (locationObj == null)
         {
             return BadRequest($"Unknown location '{location}'.");
         }
@@ -67,76 +88,80 @@ public class ArticlesController : ControllerBase
             return BadRequest(error);
         }
 
-        IList<Article>? cached = await _cache.GetFrontPageAsync(location, query);
+        IList<Article>? cached = await _cache.GetFrontPageAsync(locationObj.Code, query);
         if (cached is not null)
         {
             return Ok(cached);
         }
 
-        IList<Article> articles = [.. await _readRepository.GetFrontPageAsync(location, query)];
-        await _cache.StoreFrontPageAsync(location, query, articles);
+        IList<Article> articles = [.. await _readRepository.GetFrontPageAsync(locationObj.Code, query)];
+        await _cache.StoreFrontPageAsync(locationObj.Code, query, articles);
         return Ok(articles);
     }
 
     [HttpGet("{location}/{id:guid}")]
     public async Task<ActionResult<Article>> GetById(string location, Guid id)
     {
-        if (!ValidLocations.Contains(location))
+        Location? locationObj = GetLocationFromCode(location);
+        if (locationObj == null)
         {
             return BadRequest($"Unknown location '{location}'.");
         }
-
-        Article? cachedArticle = await _cache.GetArticleByIdAsync(location, id);
+        
+        Article? cachedArticle = await _cache.GetArticleByIdAsync(locationObj.Code, id);
         if (cachedArticle != null)
         {
             return Ok(cachedArticle);
         }
 
-        Article? article = await _readRepository.GetByIdAsync(location, id);
+        Article? article = await _readRepository.GetByIdAsync(locationObj.Code, id);
         return article is null ? NotFound() : Ok(article);
     }
 
-    [HttpPost("{location}")]
-    public async Task<ActionResult<Article>> Create(string location, UpsertArticleRequest request)
+    [HttpPost("{locationCode}")]
+    public async Task<ActionResult<Article>> Create(string locationCode, UpsertArticleRequest request)
     {
-        if (!ValidLocations.Contains(location))
+        Location? location = GetLocationFromCode(locationCode);
+        if (location == null)
         {
-            return BadRequest($"Unknown location '{location}'.");
+            return BadRequest($"Unknown location '{locationCode}'.");
         }
-
-        Article article = await _writeRepository.CreateAsync(location, request);
-        await _cache.RefreshArticleAsync(location, article.Id);
-        return CreatedAtAction(nameof(GetById), new { location, id = article.Id }, article);
+        
+        Article article = await _writeRepository.CreateAsync(location.Code, request);
+        await _cache.RefreshArticleAsync(location.Code, article.Id);
+        return CreatedAtAction(nameof(GetById), new { locationCode = location.Code, id = article.Id }, article);
     }
 
-    [HttpPut("{location}/{id:guid}")]
-    public async Task<IActionResult> Update(string location, Guid id, UpsertArticleRequest request)
+    [HttpPut("{locationCode}/{id:guid}")]
+    public async Task<IActionResult> Update(string locationCode, Guid id, UpsertArticleRequest request)
     {
-        if (!ValidLocations.Contains(location))
+        Location? location = GetLocationFromCode(locationCode);
+        if (location == null)
         {
-            return BadRequest($"Unknown location '{location}'.");
+            return BadRequest($"Unknown location '{locationCode}'.");
         }
-
-        bool updated = await _writeRepository.UpdateAsync(location, id, request);
+        
+        bool updated = await _writeRepository.UpdateAsync(location.Code, id, request);
         if (updated)
         {
-            await _cache.RefreshArticleAsync(location, id);
+            await _cache.RefreshArticleAsync(location.Code, id);
         }
         return updated ? NoContent() : NotFound();
     }
 
-    [HttpDelete("{location}/{id:guid}")]
-    public async Task<IActionResult> Delete(string location, Guid id)
+    [HttpDelete("{locationCode}/{id:guid}")]
+    public async Task<IActionResult> Delete(string locationCode, Guid id)
     {
-        if (!ValidLocations.Contains(location))
+        Location? location = GetLocationFromCode(locationCode);
+        if (location == null)
         {
-            return BadRequest($"Unknown location '{location}'.");
+            return BadRequest($"Unknown location '{locationCode}'.");
         }
-
-        bool deleted = await _writeRepository.DeleteAsync(location, id);
+        
+        bool deleted = await _writeRepository.DeleteAsync(location.Code, id);
         if (deleted)
         {
-            await _cache.RemoveArticleAsync(location, id);
+            await _cache.RemoveArticleAsync(location.Code, id);
         }
         return deleted ? NoContent() : NotFound();
     }

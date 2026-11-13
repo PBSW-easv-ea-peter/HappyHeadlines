@@ -7,9 +7,9 @@ using ArticleService.Sharding;
 using HappyHeadlines.Observability;
 using RabbitMQ.Client;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
+// Set password for Article Database
 if (builder.Environment.IsProduction())
 {
     if (string.IsNullOrWhiteSpace(
@@ -26,25 +26,32 @@ else
         "Postgres1234");
 }
 
-builder.AddObservability();
-
-builder.Services.AddControllers();
-
-builder.ConfigureOpenApi();
-builder.ConfigureCache();
-
+// Database access
+builder.ConfigureLocations();
 builder.Services.AddSingleton<IArticleShardResolver, ArticleShardResolver>();
 builder.Services.AddScoped<IArticleReadRepository, ArticleReadRepository>();
 builder.Services.AddScoped<IArticleWriteRepository, ArticleWriteRepository>();
+
+// Monitoring
+builder.AddObservability();
+
+// Networking
+builder.Services.AddControllers();
+
+// Cache
+builder.ConfigureCache();
+
 
 // Circuit breaker per shard, used by ArticleQueueConsumer.
 builder.AddShardResilience();
 
 if(builder.Environment.IsDevelopment())
 {
+    builder.ConfigureOpenApi();
     builder.Services.AddHostedService<ArticleSeeder>();
 }
 
+// Message broker
 var rabbitMq = builder.Configuration.GetSection("RabbitMQ");
 builder.Services.AddSingleton(new ConnectionFactory
 {
@@ -54,9 +61,8 @@ builder.Services.AddSingleton(new ConnectionFactory
 });
 
 builder.Services.AddHostedService<ArticleQueueConsumer>();
-builder.Services.AddHostedService<CacheRefreshService>();
 
-
+// CORS policies
 var webAppBaseUrl = builder.Configuration["JournalistWeb:BaseUrl"]
     ?? throw new InvalidOperationException("JournalistWeb:BaseUrl is not configured.");
 var readerWebBaseUrl = builder.Configuration["ReaderWeb:BaseUrl"]
@@ -67,7 +73,15 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy
-//            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+            .WithOrigins(webAppBaseUrl, readerWebBaseUrl)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
+    // For dev
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
             .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -76,9 +90,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.UseOpenApi();
+}
 
-app.UseCors("AllowWebApp");
+string policy = app.Environment.IsDevelopment()
+    ? "AllowAll"
+    : "AllowWebApp";
+app.UseCors(policy);
 
 app.MapControllers();
 

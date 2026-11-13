@@ -3,6 +3,8 @@ using ArticleService.Controllers;
 using ArticleService.Models;
 using ArticleService.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -13,6 +15,8 @@ public class ArticlesControllerFrontPageTests
 {
     private readonly Mock<IArticleReadRepository> _readRepository = new();
     private readonly Mock<IArticleCache> _cache = new();
+    private readonly Mock<ILogger<ArticlesController>> _logger = new();
+    private readonly Mock<IOptionsMonitor<LocationConfig>> _locations = new();
     private readonly ArticlesController _controller;
 
     public ArticlesControllerFrontPageTests()
@@ -20,7 +24,21 @@ public class ArticlesControllerFrontPageTests
         _readRepository.Setup(r => r.GetFrontPageAsync(It.IsAny<string>(), It.IsAny<FrontPageQuery>()))
             .ReturnsAsync([new Article { Title = "From database" }]);
 
-        _controller = new ArticlesController(_readRepository.Object, Mock.Of<IArticleWriteRepository>(), _cache.Object);
+        _locations.Setup(l => l.CurrentValue).Returns(new LocationConfig
+        {
+            Locations = [
+                new Location { Code = "EU", Description = "Europe", Enabled = true },
+                new Location { Code = "GO", Description = "Global", Enabled = true },
+                new Location { Code = "AN", Description = "Antarctica", Enabled = true }
+            ]
+        });
+
+        _controller = new ArticlesController(
+            _readRepository.Object, 
+            Mock.Of<IArticleWriteRepository>(), 
+            _cache.Object, 
+            _locations.Object,
+            _logger.Object);
     }
 
     private static IEnumerable<string> Titles(ActionResult<IEnumerable<Article>> result) =>

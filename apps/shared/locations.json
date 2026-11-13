@@ -1,0 +1,46 @@
+{
+  "ArticleLocations": {
+    "Locations": [
+      {
+        "Code": "EU",
+        "Description": "Europe",
+        "Enabled": true
+      },
+      {
+        "Code": "NA",
+        "Description": "North America",
+        "Enabled": true
+      },
+      {
+        "Code": "SA",
+        "Description": "South America",
+        "Enabled": true
+      },
+      {
+        "Code": "AU",
+        "Description": "Australia",
+        "Enabled": true
+      },
+      {
+        "Code": "AS",
+        "Description": "Asia",
+        "Enabled": true
+      },
+      {
+        "Code": "AN",
+        "Description": "Antarctica",
+        "Enabled": false
+      },
+      {
+        "Code": "AF",
+        "Description": "Africa",
+        "Enabled": true
+      },
+      {
+        "Code": "GO",
+        "Description": "Global",
+        "Enabled": true
+      }
+    ]
+  }
+}

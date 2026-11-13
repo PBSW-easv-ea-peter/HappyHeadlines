@@ -23,6 +23,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\HappyHeadlines.Observability\HappyHeadlines.Observability.csproj" />
     <ProjectReference Include="..\..\..\shared\src\Messaging\Messaging.csproj" />
+
+    <Content Include="..\..\..\shared\locations.json">
+      <Link>locations.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

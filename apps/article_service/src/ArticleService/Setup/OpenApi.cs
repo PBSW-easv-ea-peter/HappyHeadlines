@@ -2,14 +2,11 @@ namespace ArticleService.Setup;
 
 public static class OpenApi
 {
-    public static WebApplicationBuilder ConfigureOpenApi(
-        this WebApplicationBuilder builder)
+    public static void ConfigureOpenApi(this WebApplicationBuilder builder)
     {
         builder
             .AddSwagger()
             .AddOpenApi();
-
-        return builder;
     }
 
     private static WebApplicationBuilder AddSwagger(

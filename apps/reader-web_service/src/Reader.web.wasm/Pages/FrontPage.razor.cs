@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using ReaderPages.web.Models;
 using ReaderPages.web;
+using Reader.web.wasm.Components;
 
 namespace Reader.web.wasm.Pages;
 
@@ -56,10 +57,13 @@ public partial class FrontPage : ComponentBase
         _loadedKey = key;
         _isLoading = true;
 
+        // The hero shows an excerpt; the popular list and the section cards show no body text.
         var articles = await ArticleCatalog.GetFrontPageAsync(HttpClientFactory, Logger, region,
             top: 1 + PopularCount,
             perSection: SectionCardCount,
-            section: ActiveSection);
+            section: ActiveSection,
+            excerpt: 0,
+            heroExcerpt: HeroArticle.ExcerptLength);
 
         // The reader may have switched edition or section again while this was loading.
         if (key != _loadedKey)

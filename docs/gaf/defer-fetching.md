@@ -59,7 +59,7 @@ Da forsiden nu henter pr. sektion, er et skift af sektionsfilter et nyt (lille) 
 
 ## Caching
 
-Hele det sammensatte svar caches i Redis (`frontpage:{region}:{top}:{perSection}:{section}`, TTL 5 min) for **alle** regioner:
+Hele det sammensatte svar caches i Redis (`frontpage:{region}:{top}:{perSection}:{section}:{excerpt}:{heroExcerpt}`, TTL 5 min) for **alle** regioner:
 
 - **Cache-aside:** et miss læser Postgres og gemmer svaret.
 - **Invalidering:** når en artikel i regionen publiceres, redigeres eller fjernes (`RefreshArticleAsync`/`RemoveArticleAsync`), slettes regionens forsider. Hver region har et Redis-set med sine forside-nøgler, så det kan ske uden `SCAN`.

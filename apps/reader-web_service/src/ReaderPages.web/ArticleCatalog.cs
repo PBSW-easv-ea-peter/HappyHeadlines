@@ -40,15 +40,16 @@ public static class ArticleCatalog
         }
     }
 
-    // Only what a page shows (GAF: Defer Fetching): the newest `top`, the newest `perSection` in
-    // every section, and the newest `top` in `section` if given. The numbers come from the
-    // page's own layout.
+    // Only what a page shows (GAF): the newest `top`, the newest `perSection` in every section,
+    // and the newest `top` in `section` if given - with no more body text than `excerpt`
+    // characters (`heroExcerpt` for the newest one). The numbers come from the page's own layout.
     public static async Task<List<ArticleDTO>> GetFrontPageAsync(
         IHttpClientFactory httpClientFactory, ILogger logger, string region,
-        int top, int perSection, string? section)
+        int top, int perSection, string? section, int excerpt, int heroExcerpt)
     {
         var regionCode = region.ToUpper();
         var url = $"/api/articles/{regionCode}/frontpage?top={top}&perSection={perSection}"
+            + $"&excerpt={excerpt}&heroExcerpt={heroExcerpt}"
             + (section is null ? "" : $"&section={Uri.EscapeDataString(section)}");
 
         try

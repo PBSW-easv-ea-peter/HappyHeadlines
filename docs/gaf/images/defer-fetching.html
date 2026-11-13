@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Defer Fetching</title>
+<link rel="stylesheet" href="poster.css">
+<style>pre{font-size:14.2px}</style>
+</head>
+<body>
+
+<div class="box head">
+  <div class="brand">
+    <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 54C8 30 24 10 56 8c0 30-18 46-46 46z" fill="#4cb36a" stroke="#14212b" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 52C24 38 34 28 48 18" fill="none" stroke="#14212b" stroke-width="3.5" stroke-linecap="round"/></svg>
+    <div><b>GAF</b><small>Sustainability</small></div>
+  </div>
+  <h1>Defer Fetching</h1>
+  <span class="tag">Færre rækker</span>
+</div>
+
+<div class="box measure">
+  <h3>Hvordan måler man det?</h3>
+  <div class="cmd">
+    <div><span class="l">Før (hele shardet)</span><code class="c">curl -s -o /dev/null -w "%{size_download} %{time_total}" localhost:8080/api/articles/EU</code></div>
+    <div><span class="l">Efter (forsiden)</span><code class="c">curl ... "localhost:8080/api/articles/EU/frontpage?top=6&amp;perSection=3"</code></div>
+  </div>
+  <div style="font-size:15.5px;line-height:1.4">→ Samme data: <b>1.008 artikler</b> i EU-shardet (1.000 seedet, ca. 2.000 tegn hver). Gennemsnit af 50 kald.</div>
+</div>
+
+<div class="box panel">
+  <div class="ph"><h2>Før</h2><span class="tag">Hele shardet ved hvert kald</span></div>
+  <div class="pb">
+    <div class="codewrap"><pre><span class="cm">// FrontPage.razor.cs: alle artikler i regionen</span>
+<span class="k">var</span> articles = <span class="k">await</span> ArticleCatalog
+    .<span class="hl-old">GetRegionArticlesAsync</span>(HttpClientFactory, Logger, region);
+
+<span class="cm">-- ArticleReadRepository.GetAllAsync</span>
+<span class="k">select</span> ... <span class="k">from</span> articles a <span class="k">inner join</span> sections s ...
+<span class="cm">-- </span><span class="hl-old">ingen order by, ingen limit</span></pre></div>
+    <div class="size">
+      <div class="rows"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="big">2,31 MB</div>
+      <div class="lbl">pr. svar · 1.008 artikler<br>siden viser højst 21</div>
+    </div>
+    <div class="co2">
+      <div class="k">Overført pr. forsidevisning (målt)</div>
+      <div class="v">2.312.484 bytes</div>
+      <div class="k">Estimeret CO₂e pr. forsidevisning</div>
+      <div><span class="pill">≈ 0,056 g CO₂e</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="box panel">
+  <div class="ph"><h2>Efter</h2><span class="tag">Kun det, siden viser</span></div>
+  <div class="pb">
+    <div class="codewrap"><pre><span class="cm">// Tallene kommer fra sidens eget layout - ingen magic numbers</span>
+<span class="k">var</span> articles = <span class="k">await</span> ArticleCatalog.<span class="hl-new">GetFrontPageAsync</span>(..., region,
+    <span class="hl-new">top: 1 + PopularCount, perSection: SectionCardCount</span>, ...);
+
+<span class="cm">-- ArticleReadRepository.GetFrontPageAsync</span>
+row_number() <span class="k">over</span> (<span class="k">partition by</span> a.section_id <span class="k">order by</span> ...) <span class="k">as</span> rn_section
+<span class="k">where</span> <span class="hl-new">rn_all &lt;= @Top <span class="k">or</span> rn_section &lt;= @PerSection</span></pre></div>
+    <div class="size">
+      <div class="rows few"><i></i></div>
+      <div class="big">34,5 KB</div>
+      <div class="lbl">pr. svar · 15 artikler<br>38,6 → 11,5 ms (cache)</div>
+    </div>
+    <div class="co2">
+      <div class="k">Overført pr. forsidevisning (målt)</div>
+      <div class="v">34.543 bytes</div>
+      <div class="k">Estimeret CO₂e pr. forsidevisning</div>
+      <div><span class="pill">≈ 0,00083 g CO₂e</span></div>
+      <div class="badge">98,5 %<br>mindre</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="box card calc">
+    <h4>Beregning <small>(pr. forsidevisning)</small></h4>
+    <p>0,002312 GB × 0,194 kWh/GB × 124 g/kWh<br><b>= 0,056 g CO₂e (før)</b></p>
+    <p>0,0000345 GB × 0,194 kWh/GB × 124 g/kWh<br><b>= 0,00083 g CO₂e (efter)</b></p>
+    <p style="color:var(--muted);font-size:15px">Pr. 1 million forsidevisninger:<br>≈ 55,6 kg → 0,83 kg CO₂e</p>
+  </div>
+  <div class="box card res">
+    <h4>Resultat</h4>
+    <ul>
+      <li><b>98,5 % færre bytes</b> (2,31 MB → 34,5 KB)</li>
+      <li>1.008 → <b>15 artikler</b>: 3 pr. sektion, og de 6 nyeste er blandt dem</li>
+      <li>Svaret <b>caches i Redis</b> for alle regioner og slettes ved publicering</li>
+      <li>Ét kald, ingen buffer: sektionskortene kan ikke stå tomme</li>
+    </ul>
+  </div>
+  <div class="box card notes">
+    <h4>Bemærkninger</h4>
+    <ul>
+      <li>SWD v4, alle tre led (browseren henter selv): 0,194 kWh/GB. Dansk elnet 2025: ca. 124 g/kWh</li>
+      <li>Bytes og ms er målt. CO₂e er et <b>estimat</b>.</li>
+      <li>Gevinsten <b>vokser med datamængden</b>. Med 15 artikler i shardet er den nul.</li>
+      <li><b>Trade-off:</b> API'et kender "top N + N pr. sektion". Uden index på <code>publish_date</code> sorterer Postgres stadig hele shardet ved cache-miss (37,7 ms).</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

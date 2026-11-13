@@ -40,6 +40,29 @@ public static class ArticleCatalog
         }
     }
 
+    // Only what a page shows (GAF: Defer Fetching): the newest `top`, the newest `perSection` in
+    // every section, and the newest `top` in `section` if given. The numbers come from the
+    // page's own layout.
+    public static async Task<List<ArticleDTO>> GetFrontPageAsync(
+        IHttpClientFactory httpClientFactory, ILogger logger, string region,
+        int top, int perSection, string? section)
+    {
+        var regionCode = region.ToUpper();
+        var url = $"/api/articles/{regionCode}/frontpage?top={top}&perSection={perSection}"
+            + (section is null ? "" : $"&section={Uri.EscapeDataString(section)}");
+
+        try
+        {
+            var client = httpClientFactory.CreateClient("ArticleService");
+            return await client.GetFromJsonAsync<List<ArticleDTO>>(url) ?? [];
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to load the front page for region {Region}", regionCode);
+            return [];
+        }
+    }
+
     // Ids are only unique within a shard, so the region is part of the key.
     // Returns null both for a 404 and for a failed call - callers show "not found".
     public static async Task<ArticleDTO?> GetArticleAsync(IHttpClientFactory httpClientFactory, ILogger logger, string region, Guid id)

@@ -91,7 +91,8 @@ read_once() {
         location=${REGIONS[RANDOM % ${#REGIONS[@]}]}
     fi
 
-    request GET "$ARTICLE_URL/api/articles/$location"
+    # Same request as the reader front page (FrontPage.razor.cs): hero + 5 popular, 3 per section.
+    request GET "$ARTICLE_URL/api/articles/$location/frontpage?top=6&perSection=3"
     ok || { read_errors=$((read_errors + 1)); return; }
 
     local ids count id

@@ -14,6 +14,9 @@ spec:
       labels:
         app: article-service
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+
       containers:
         - name: article-service
           image: ghcr.io/pbsw-easv-ea-peter/happyheadlines/article_service:latest
@@ -33,12 +36,19 @@ spec:
               mountPath: /app/appsettings.Production.json
               subPath: appsettings.Production.json
               readOnly: true
-      imagePullSecrets:
-        - name: regcred
+            - name: locations-config
+              mountPath: /app/locations.json
+              subPath: locations.json
+
       volumes:
         - name: config
           configMap:
             name: article-service-config
+        - name: locations-config
+          configMap:
+            name: locations-prod
+
+
 ---
 apiVersion: v1
 kind: Service

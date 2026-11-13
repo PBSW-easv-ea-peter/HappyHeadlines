@@ -45,7 +45,7 @@ public class ArticleCacheTests
     private IEnumerable<(string Script, RedisKey[] Keys, RedisValue[] Values)> IndexScriptCalls() =>
         ScriptCalls().Where(c => !c.Keys.Any(k => k.ToString().StartsWith("frontpage:")));
 
-    private static readonly FrontPageQuery ReaderFrontPage = new(Top: 6, PerSection: 3, Section: null);
+    private static readonly FrontPageQuery ReaderFrontPage = new(Top: 6, PerSection: 3, Section: null, Excerpt: 0, HeroExcerpt: 400);
 
     private static Article Published(Guid id, string title, int daysAgo = 1) =>
         new() { Id = id, Title = title, PublishDate = DateTimeOffset.UtcNow.AddDays(-daysAgo) };
@@ -190,7 +190,7 @@ public class ArticleCacheTests
     public async Task GetFrontPageAsync_Cached_ReturnsTheStoredResponse()
     {
         Guid id = Guid.NewGuid();
-        _db.Setup(d => d.StringGetAsync((RedisKey)"frontpage:EU:6:3:*", It.IsAny<CommandFlags>()))
+        _db.Setup(d => d.StringGetAsync((RedisKey)"frontpage:EU:6:3:*:0:400", It.IsAny<CommandFlags>()))
             .ReturnsAsync(JsonSerializer.Serialize(new[] { Published(id, "Cached front page") }));
 
         var articles = await _cache.GetFrontPageAsync("eu", ReaderFrontPage);
@@ -221,9 +221,17 @@ public class ArticleCacheTests
         await _cache.StoreFrontPageAsync("EU", ReaderFrontPage, [Published(Guid.NewGuid(), "Stored")]);
 
         var store = Assert.Single(ScriptCalls());
-        Assert.Equal(new RedisKey[] { "frontpage:EU:6:3:*", "frontpage:EU:keys" }, store.Keys);
+        Assert.Equal(new RedisKey[] { "frontpage:EU:6:3:*:0:400", "frontpage:EU:keys" }, store.Keys);
         Assert.Contains("Stored", store.Values[0].ToString());
         Assert.Equal(300, (long)store.Values[1]);
+    }
+
+    [Fact]
+    public async Task FrontPageCacheKey_SeparatesFullTextFromExcerpts()
+    {
+        await _cache.StoreFrontPageAsync("EU", ReaderFrontPage with { Excerpt = null, HeroExcerpt = null }, []);
+
+        Assert.Equal("frontpage:EU:6:3:*:full:-", Assert.Single(ScriptCalls()).Keys[0].ToString());
     }
 
     [Fact]

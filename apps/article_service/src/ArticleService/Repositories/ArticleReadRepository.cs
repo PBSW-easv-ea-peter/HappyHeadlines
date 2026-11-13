@@ -42,7 +42,9 @@ public class ArticleReadRepository : IArticleReadRepository
 
     // Exactly what a front page shows, in one query: the newest Top, the newest PerSection in
     // every section, and the newest Top in Section (if given) - only those rows leave the
-    // database. Ordered like the client orders (PublishDate, falling back to CreatedDate).
+    // database. With an excerpt length the body text is cut in the database too; +1 character
+    // lets the client see that the text goes on, so its own Excerpt() still adds the ellipsis.
+    // Ordered like the client orders (PublishDate, falling back to CreatedDate).
     public async Task<IEnumerable<Article>> GetFrontPageAsync(string location, FrontPageQuery query)
     {
         await using var connection = new NpgsqlConnection(
@@ -63,7 +65,14 @@ public class ArticleReadRepository : IArticleReadRepository
                 inner join sections s on s.id = a.section_id
             ),
             picked as (
-                select *
+                select
+                    *,
+                    case when (case when cast(@Section as text) is null then rn_all = 1
+                                    else lower(section_name) = lower(cast(@Section as text)) and rn_section = 1
+                               end)
+                         then coalesce(cast(@HeroExcerpt as int), cast(@Excerpt as int))
+                         else cast(@Excerpt as int)
+                    end as excerpt_length
                 from ranked
                 where rn_all <= @Top
                    or rn_section <= @PerSection
@@ -73,7 +82,10 @@ public class ArticleReadRepository : IArticleReadRepository
                 id,
                 byline as Byline,
                 title,
-                breadtext as Breadtext,
+                case when excerpt_length is null then breadtext
+                     when excerpt_length = 0 then ''
+                     else left(breadtext, excerpt_length + 1)
+                end as Breadtext,
                 created_date as CreatedDate,
                 publish_date as PublishDate,
                 location,
@@ -87,6 +99,8 @@ public class ArticleReadRepository : IArticleReadRepository
             query.Top,
             query.PerSection,
             query.Section,
+            query.Excerpt,
+            query.HeroExcerpt,
         });
     }
 

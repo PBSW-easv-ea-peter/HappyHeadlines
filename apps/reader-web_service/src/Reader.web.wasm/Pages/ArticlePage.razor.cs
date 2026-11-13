@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using ReaderPages.web;
 using ReaderPages.web.Models;
+using Reader.web.wasm.Components;
 
 namespace Reader.web.wasm.Pages;
 
@@ -49,11 +50,13 @@ public partial class ArticlePage : ComponentBase
         var articleTask = ArticleCatalog.GetArticleAsync(HttpClientFactory, Logger, region, Id);
         var commentsTask = CommentCatalog.GetApprovedAsync(HttpClientFactory, Logger, region, Id);
         // "More news" picks the same section first, then the newest of the rest. +1 because
-        // this article itself may be among them (GAF: Defer Fetching).
+        // this article itself may be among them. Cards show a short excerpt (GAF).
         var regionTask = ArticleCatalog.GetFrontPageAsync(HttpClientFactory, Logger, region,
             top: MoreNewsCount + 1,
             perSection: MoreNewsCount + 1,
-            section: null);
+            section: null,
+            excerpt: ArticleCard.ExcerptLength,
+            heroExcerpt: ArticleCard.ExcerptLength);
         await Task.WhenAll(articleTask, commentsTask, regionTask);
 
         // The reader may have navigated to another article while this was loading.

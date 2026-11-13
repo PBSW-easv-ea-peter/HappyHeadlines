@@ -29,9 +29,9 @@ public class ArticlesControllerFrontPageTests
     [Fact]
     public async Task PassesTheClientsLayoutToTheQuery()
     {
-        await _controller.GetFrontPage("EU", top: 6, perSection: 3, section: "Health");
+        await _controller.GetFrontPage("EU", top: 6, perSection: 3, section: "Health", excerpt: 0, heroExcerpt: 400);
 
-        _readRepository.Verify(r => r.GetFrontPageAsync("EU", new FrontPageQuery(6, 3, "Health")));
+        _readRepository.Verify(r => r.GetFrontPageAsync("EU", new FrontPageQuery(6, 3, "Health", 0, 400)));
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class ArticlesControllerFrontPageTests
         var result = await _controller.GetFrontPage("EU", top: 6, perSection: 3);
 
         Assert.Equal(["From database"], Titles(result));
-        _cache.Verify(c => c.StoreFrontPageAsync("EU", new FrontPageQuery(6, 3, null),
+        _cache.Verify(c => c.StoreFrontPageAsync("EU", new FrontPageQuery(6, 3, null, null, null),
             It.Is<IList<Article>>(a => a.Single().Title == "From database")));
     }
 
@@ -67,13 +67,15 @@ public class ArticlesControllerFrontPageTests
     }
 
     [Theory]
-    [InlineData(0, 3)]
-    [InlineData(51, 3)]
-    [InlineData(6, -1)]
-    [InlineData(6, 21)]
-    public async Task InvalidLayout_IsABadRequest(int top, int perSection)
+    [InlineData(0, 3, null, null)]
+    [InlineData(51, 3, null, null)]
+    [InlineData(6, -1, null, null)]
+    [InlineData(6, 21, null, null)]
+    [InlineData(6, 3, -1, null)]
+    [InlineData(6, 3, null, 1001)]
+    public async Task InvalidLayout_IsABadRequest(int top, int perSection, int? excerpt, int? heroExcerpt)
     {
-        var result = await _controller.GetFrontPage("EU", top, perSection);
+        var result = await _controller.GetFrontPage("EU", top, perSection, null, excerpt, heroExcerpt);
 
         Assert.IsType<BadRequestObjectResult>(result.Result);
     }

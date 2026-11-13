@@ -14,7 +14,7 @@ COPY ["publish_service/src/PublishService/", "publish_service/src/PublishService
 RUN dotnet publish "publish_service/src/PublishService/PublishService.csproj" -c Release -o /app
 
 # Final stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS final
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "PublishService.dll"]

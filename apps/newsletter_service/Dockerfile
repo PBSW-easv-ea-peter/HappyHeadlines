@@ -12,7 +12,7 @@ COPY ["newsletter_service/src/NewsletterService/", "src/NewsletterService/"]
 RUN dotnet publish "src/NewsletterService/NewsletterService.csproj" -c Release -o /app
 
 # Final stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS final
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "NewsletterService.dll"]

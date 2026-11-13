@@ -41,6 +41,12 @@ public class ArticleCacheTests
             .Where(i => i.Method.Name == nameof(IDatabase.ScriptEvaluateAsync) && i.Arguments[0] is string)
             .Select(i => ((string)i.Arguments[0], (RedisKey[])i.Arguments[1], (RedisValue[])i.Arguments[2]));
 
+    // The article/index scripts, without the front page invalidation that follows every change.
+    private IEnumerable<(string Script, RedisKey[] Keys, RedisValue[] Values)> IndexScriptCalls() =>
+        ScriptCalls().Where(c => !c.Keys.Any(k => k.ToString().StartsWith("frontpage:")));
+
+    private static readonly FrontPageQuery ReaderFrontPage = new(Top: 6, PerSection: 3, Section: null, Excerpt: 0, HeroExcerpt: 400);
+
     private static Article Published(Guid id, string title, int daysAgo = 1) =>
         new() { Id = id, Title = title, PublishDate = DateTimeOffset.UtcNow.AddDays(-daysAgo) };
 
@@ -97,6 +103,7 @@ public class ArticleCacheTests
         Assert.Equal(["Newest", "Older"], articles.Select(a => a.Title));
     }
 
+
     [Fact]
     public async Task GetArticlesAsync_ArticleKeyMissing_FetchesThatArticleFromTheDatabase()
     {
@@ -132,7 +139,7 @@ public class ArticleCacheTests
             i.Method.Name == nameof(IDatabase.StringSetAsync) && (RedisKey)i.Arguments[0] == $"article:GO:{recent.Id}");
         Assert.Contains("Recent story", ((RedisValue)articleWrite.Arguments[1]).ToString());
 
-        var index = Assert.Single(ScriptCalls());
+        var index = Assert.Single(IndexScriptCalls());
         Assert.Equal("articles:GO:index", Assert.Single(index.Keys));
         // TTL, then the score/id pair of each article.
         Assert.Equal(recent.PublishDate!.Value.ToUnixTimeMilliseconds(), (long)index.Values[1]);
@@ -147,7 +154,7 @@ public class ArticleCacheTests
 
         await _cache.RefreshArticleAsync("GO", edited.Id);
 
-        var upsert = Assert.Single(ScriptCalls());
+        var upsert = Assert.Single(IndexScriptCalls());
         Assert.Contains("SET", upsert.Script);
         Assert.Equal(new RedisKey[] { $"article:GO:{edited.Id}", "articles:GO:index" }, upsert.Keys);
         Assert.Contains("Fixed typo", upsert.Values[0].ToString());
@@ -171,9 +178,79 @@ public class ArticleCacheTests
 
         await _cache.RefreshArticleAsync("GO", id);
 
-        var remove = Assert.Single(ScriptCalls());
+        var remove = Assert.Single(IndexScriptCalls());
         Assert.Contains("ZREM", remove.Script);
         Assert.Equal(new RedisKey[] { $"article:GO:{id}", "articles:GO:index" }, remove.Keys);
         Assert.Equal(id.ToString(), Assert.Single(remove.Values).ToString());
+    }
+
+    // --- Composed front pages (GAF) ---
+
+    [Fact]
+    public async Task GetFrontPageAsync_Cached_ReturnsTheStoredResponse()
+    {
+        Guid id = Guid.NewGuid();
+        _db.Setup(d => d.StringGetAsync((RedisKey)"frontpage:EU:6:3:*:0:400", It.IsAny<CommandFlags>()))
+            .ReturnsAsync(JsonSerializer.Serialize(new[] { Published(id, "Cached front page") }));
+
+        var articles = await _cache.GetFrontPageAsync("eu", ReaderFrontPage);
+
+        Assert.Equal(["Cached front page"], articles!.Select(a => a.Title));
+    }
+
+    [Fact]
+    public async Task GetFrontPageAsync_NotCached_IsAMiss()
+    {
+        _db.Setup(d => d.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>())).ReturnsAsync(RedisValue.Null);
+
+        Assert.Null(await _cache.GetFrontPageAsync("EU", ReaderFrontPage));
+    }
+
+    [Theory]
+    [MemberData(nameof(RedisFailures))]
+    public async Task GetFrontPageAsync_RedisUnavailable_IsAMiss(Exception failure)
+    {
+        RedisThrows(failure);
+
+        Assert.Null(await _cache.GetFrontPageAsync("EU", ReaderFrontPage));
+    }
+
+    [Fact]
+    public async Task StoreFrontPageAsync_StoresTheResponseAndRemembersTheKeyForTheRegion()
+    {
+        await _cache.StoreFrontPageAsync("EU", ReaderFrontPage, [Published(Guid.NewGuid(), "Stored")]);
+
+        var store = Assert.Single(ScriptCalls());
+        Assert.Equal(new RedisKey[] { "frontpage:EU:6:3:*:0:400", "frontpage:EU:keys" }, store.Keys);
+        Assert.Contains("Stored", store.Values[0].ToString());
+        Assert.Equal(300, (long)store.Values[1]);
+    }
+
+    [Fact]
+    public async Task FrontPageCacheKey_SeparatesFullTextFromExcerpts()
+    {
+        await _cache.StoreFrontPageAsync("EU", ReaderFrontPage with { Excerpt = null, HeroExcerpt = null }, []);
+
+        Assert.Equal("frontpage:EU:6:3:*:full:-", Assert.Single(ScriptCalls()).Keys[0].ToString());
+    }
+
+    [Fact]
+    public async Task RefreshArticleAsync_PublishedArticle_InvalidatesTheRegionsFrontPages()
+    {
+        var published = Published(Guid.NewGuid(), "Just published");
+        _readRepository.Setup(r => r.GetByIdAsync("EU", published.Id)).ReturnsAsync(published);
+
+        await _cache.RefreshArticleAsync("EU", published.Id);
+
+        var invalidate = Assert.Single(ScriptCalls(), c => c.Script.Contains("SMEMBERS"));
+        Assert.Equal(new RedisKey[] { "frontpage:EU:keys" }, invalidate.Keys);
+    }
+
+    [Fact]
+    public async Task RemoveArticleAsync_InvalidatesTheRegionsFrontPages()
+    {
+        await _cache.RemoveArticleAsync("EU", Guid.NewGuid());
+
+        Assert.Single(ScriptCalls(), c => c.Script.Contains("SMEMBERS") && c.Keys.SequenceEqual(new RedisKey[] { "frontpage:EU:keys" }));
     }
 }

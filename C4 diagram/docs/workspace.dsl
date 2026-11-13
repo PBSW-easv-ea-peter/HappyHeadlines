@@ -12,11 +12,12 @@ workspace "Happy Headlines" "Positive news platform" {
         happyHeadlines = softwareSystem "Happy Headlines" "Positive news platform." {
 
             // Applications
-            // Webapp and Website are two Blazor WebAssembly apps (apps/happy-headlines-web_service:
-            // HappyHeadlines.web.wasm on 8000, HappyHeadlines.reader.wasm on 8001) sharing the page
-            // library HappyHeadlinesPages.web. They call the services directly from the browser.
-            webapp = container "Webapp" "Editorial application used by publishers (port 8000). Implemented: draft dashboard, create/edit, submit/approve/reject, publishing via PublisherService, article overview with comments." "Web Application (Blazor WebAssembly)" "Implemented"
-            website = container "Website" "Public website for readers (port 8001). Implemented: articles per region with comments. Missing: newsletter subscription." "Web Application (Blazor WebAssembly)" "Partial"
+            // Webapp and Website are two separate Blazor WebAssembly apps, each with its own page
+            // library: apps/journalist-web_service (Journalist.web.wasm + JournalistPages.web, port 8000)
+            // and apps/reader-web_service (Reader.web.wasm + ReaderPages.web, port 8001).
+            // They call the services directly from the browser.
+            webapp = container "Webapp" "Editorial application used by publishers (apps/journalist-web_service, port 8000). Implemented: draft dashboard, create/edit, submit/approve/reject, publishing via PublisherService, article overview with comments." "Web Application (Blazor WebAssembly)" "Implemented"
+            website = container "Website" "Public website for readers (apps/reader-web_service, port 8001). Implemented: articles per region with comments. Missing: newsletter subscription." "Web Application (Blazor WebAssembly)" "Partial"
 
             // Swimlanes (fault isolation): each implemented service is grouped with its own
             // database, so a failure in one lane cannot take down another lane's data.
@@ -38,7 +39,7 @@ workspace "Happy Headlines" "Positive news platform" {
             }
 
             group "Article" {
-                articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas via Docker Swarm, docker-compose.yaml)" "Service" "Implemented" {
+                articleService = container "ArticleService" "Provides published articles. (x-axis split: 3 load-balanced replicas, infrastructure/kubernetes/deployments/article-service.yaml)" "Service" "Implemented" {
                     articlesController = component "ArticlesController" "Exposes REST CRUD endpoints for articles, scoped by location." "ASP.NET Core Controller"
                     articleReadRepository = component "ArticleReadRepository" "Reads articles from the resolved shard." "Repository"
                     articleWriteRepository = component "ArticleWriteRepository" "Creates, updates and deletes articles in the resolved shard (REST stand-ins for Create/Update)." "Repository"
@@ -120,12 +121,41 @@ workspace "Happy Headlines" "Positive news platform" {
                 grafana = container "Grafana" "UI for searching logs and traces; links a log line to its trace." "Grafana" "Implemented"
             }
 
-            // x-axis split (week 36): not a container of its own, but part of the Swarm deployment.
-            articleServiceLB = container "ArticleService Load Balancer" "Docker Swarm's built-in routing mesh distributes requests across the ArticleService replicas. Not a separate container." "Docker Swarm routing mesh" "Implemented"
+            // NewsletterService (week 44). Its own swimlane, isolated from SubscriberService: the
+            // UseSubscriberService release toggle decides whether it calls SubscriberService at all.
+            // Articles, subscribers and e-mail are still in-memory fakes, so its calls to
+            // ArticleService and SubscriberService below are tagged Planned.
+            group "Newsletter" {
+                newsletterService = container "NewsletterService" "Sends daily and weekly newsletters and a welcome e-mail to new subscribers. Behind the release toggle UseSubscriberService (read on every run, so it can change without a redeploy). Articles, subscribers and e-mail are still in-memory fakes." "Service" "Partial" {
+                    newsletterBackgroundService = component "NewsletterBackgroundService" "Wakes up every full hour and runs the intervals that are due (daily, weekly - NewsletterIntervals in appsettings)." "Background Service"
+                    newsletterExecutor = component "NewsletterExecutor" "Runs one interval: if UseSubscriberService is on, gets subscribers and articles since the last newsletter and sends the newsletters. If it is off, logs that SubscriberService is turned off and sends nothing." "Component"
+                    featureToggles = component "FeatureToggles" "Binds the FeatureToggles configuration section to FeatureTogglesOptions. Read via IOptionsMonitor, so a changed value is used on the next run." "Options"
+                    newSubscriberConsumer = component "NewSubscriberConsumer" "Consumes NewSubscriberEvent from its own queue newsletter_service.new_subscribers." "Background Service"
+                    newSubscriberMessageHandler = component "NewSubscriberMessageHandler" "Sends a welcome e-mail to the new subscriber." "Component"
+                    emailFactory = component "EmailFactory" "Builds welcome, daily and weekly newsletter e-mails." "Component"
+                    newsletterEmailService = component "EmailService" "FakeEmailService: logs the e-mails and keeps them in an in-memory sink instead of sending them." "Component (fake)"
+                    newsletterSubscriberClient = component "SubscriberService client" "InMemorySubscriberService: hard-coded subscribers until SubscriberService exists." "Component (fake)"
+                    newsletterArticleClient = component "ArticleService client" "FakeArticleService: hard-coded articles until ArticleService is called over HTTP." "Component (fake)"
+                    newsletterObservability = component "Observability" "Shared library HappyHeadlines.Observability: AddObservability() configures OpenTelemetry logging and tracing." "Shared library"
+
+                    newsletterBackgroundService -> newsletterExecutor "Runs due intervals via"
+                    newsletterExecutor -> featureToggles "Reads UseSubscriberService from"
+                    newsletterExecutor -> newsletterSubscriberClient "Gets subscribers via (toggle on)"
+                    newsletterExecutor -> newsletterArticleClient "Gets articles since the last newsletter via (toggle on)"
+                    newsletterExecutor -> emailFactory "Builds newsletters via"
+                    newsletterExecutor -> newsletterEmailService "Sends newsletters via"
+                    newSubscriberConsumer -> newSubscriberMessageHandler "Hands each NewSubscriberEvent to"
+                    newSubscriberMessageHandler -> emailFactory "Builds the welcome e-mail via"
+                    newSubscriberMessageHandler -> newsletterEmailService "Sends the welcome e-mail via"
+                }
+            }
+
+            // The ArticleService load balancer (x-axis split, week 36) is not a container here: it runs
+            // no application code of its own, so it belongs to the deployment view. See the
+            // "Load Balancer" infrastructure node in the Production deployment environment below.
 
             // Services (not yet implemented)
             subscriberService = container "SubscriberService" "Manages newsletter subscriptions." "Service"
-            newsletterService = container "NewsletterService" "Sends newsletters." "Service"
 
             // Suggested - not part of the original design (see L4/README.md)
             userService = container "UserService" "Manages users: User, Journalist, Publisher." "Service" "Suggested"
@@ -137,7 +167,7 @@ workspace "Happy Headlines" "Positive news platform" {
             // Each consumer binds its own named queue to the exchange, so every consumer gets
             // every article. Replicas of one service share that service's queue (competing consumers).
             articleQueue = container "ArticleQueue" "Exchange published_articles (routing key article.published) for newly published articles. ArticleService consumes from its own queue article_service.published_articles." "RabbitMQ" "Queue,Implemented"
-            subscriberQueue = container "SubscriberQueue" "Queue for new newsletter subscriptions." "Queue" "Queue"
+            subscriberQueue = container "SubscriberQueue" "Exchange subscribers (SubscribersExchange, routing key for new subscribers) for NewSubscriberEvent. NewsletterService consumes from its own queue newsletter_service.new_subscribers. No producer yet - SubscriberService is not implemented." "RabbitMQ" "Queue,Partial"
         }
 
 
@@ -156,7 +186,7 @@ workspace "Happy Headlines" "Positive news platform" {
         // Webapp -> PublisherService -> DraftService/ProfanityService/ArticleQueue relations)
         webapp -> publishDraftEndpoint "Publishes approved draft via POST /api/v1/publish-draft/{id}" "HTTP"
         // Article overview page in the editorial app (Pages/Articles) - same reads as the Website.
-        webapp -> articleServiceLB "Lists published articles per region" "HTTP"
+        webapp -> articlesController "Lists published articles per region" "HTTP"
         webapp -> commentService "Reads comments on published articles" "HTTP"
         publisherDraftClient -> draftsController "Gets draft, flags banned words (PUT api/drafts/{id}/flagged-words) and marks it published" "HTTP"
         publisherProfanityClient -> profanityService "Checks title and body before publishing via HTTP POST /api/profanity/check" "HTTP"
@@ -164,7 +194,6 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // ArticleService component-level relations (imply the ArticleService container-level
         // relations to ArticleQueue/ArticleDatabase, so no separate container-level ones here)
-        articleServiceLB -> articlesController "Routes requests to"
         articleReadRepository -> articleDb "Reads articles from"
         articleWriteRepository -> articleDb "Writes articles to"
         articleQueueConsumer -> articleQueue "Consumes published articles from" "AMQP"
@@ -177,9 +206,8 @@ workspace "Happy Headlines" "Positive news platform" {
 
         // Reader - articles
         reader -> website "Reads articles"
-        // website -> articleService "Requests articles"
-        website -> articleServiceLB "Requests articles"
-        // articleServiceLB -> articleService is implied by articleServiceLB -> articlesController above
+        // Implies website -> articleService at container level
+        website -> articlesController "Requests articles" "HTTP"
 
         // Reader - comments
         reader -> website "Posts comments"
@@ -200,12 +228,12 @@ workspace "Happy Headlines" "Positive news platform" {
         subscriberService -> subscriberQueue "Queues new subscribers"
 
 
-        // Newsletter
-        // newsletterService -> articleService "Retrieves articles"
-        newsletterService -> articleServiceLB "Retrieves articles"
-        newsletterService -> subscriberService "Retrieves subscribers"
-        newsletterService -> subscriberQueue "Consumes new subscribers"
-        newsletterService -> reader "Sends daily newsletter"
+        // Newsletter. Component-level relations imply the NewsletterService container-level ones.
+        // Planned: the target design - today the components use in-memory fakes instead.
+        newsletterArticleClient -> articlesController "Retrieves articles (planned - FakeArticleService today)" "HTTP" "Planned"
+        newsletterSubscriberClient -> subscriberService "Retrieves subscribers, only while UseSubscriberService is on (planned - InMemorySubscriberService today)" "HTTP" "Planned"
+        newSubscriberConsumer -> subscriberQueue "Consumes new subscribers from" "AMQP"
+        newsletterEmailService -> reader "Sends daily/weekly newsletter and welcome e-mail (planned - FakeEmailService logs them today)" "E-mail" "Planned"
 
 
         // Suggested UserService
@@ -214,8 +242,11 @@ workspace "Happy Headlines" "Positive news platform" {
 
 
         // Observability (week 38). Component-level relations imply the container-level
-        // DraftService/CommentService/ProfanityService/ArticleService/PublisherService -> OTel Collector relations.
-        draftObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
+        // DraftService/CommentService/ProfanityService/ArticleService/PublisherService/NewsletterService -> OTel Collector relations.
+        // Deviation: AddObservability() is commented out in DraftService's Program.cs since #23 (k8s),
+        // so DraftService is missing from Loki and Tempo until it is enabled again.
+        draftObservability -> otelCollector "Exports logs and traces via (currently disabled, see Program.cs)" "OTLP/HTTP" "Deviation"
+        newsletterObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
         articleObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
         publisherObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
         commentObservability -> otelCollector "Exports logs and traces via" "OTLP/HTTP"
@@ -227,10 +258,16 @@ workspace "Happy Headlines" "Positive news platform" {
         developer -> grafana "Searches logs and follows traces in"
 
 
+        // NB: this deployment environment shows the earlier Docker Swarm / compose set-up with all
+        // 8 article shards. The Kubernetes mock deployment (infrastructure/kubernetes/) only runs
+        // the EU shard, and the load balancer there is nginx in front of the cluster (NodePort 30000,
+        // loadbalancer/services-nginx.conf) + the article-service Service (kube-proxy).
+        // Kept as it is on purpose - explain the difference in the video.
         deploymentEnvironment "Production" {
 
-            deploymentNode "Load Balancer" "Docker Swarm routing mesh" {
-                loadBalancer = containerInstance articleServiceLB
+            // Infrastructure, not a container: it runs no application code of its own.
+            deploymentNode "Docker Swarm" "Container orchestrator" {
+                loadBalancer = infrastructureNode "Load Balancer" "Spreads requests over the 3 ArticleService replicas (x-axis split, week 36)." "Docker Swarm routing mesh"
             }
 
             deploymentNode "Website" "Docker container" {
@@ -255,6 +292,10 @@ workspace "Happy Headlines" "Positive news platform" {
             deploymentNode "ArticleService Instance 3" "Docker container" {
                 articleServiceInstance3 = containerInstance articleService
             }
+
+            loadBalancer -> articleServiceInstance1 "Routes requests to" "HTTP"
+            loadBalancer -> articleServiceInstance2 "Routes requests to" "HTTP"
+            loadBalancer -> articleServiceInstance3 "Routes requests to" "HTTP"
 
             deploymentNode "Africa" "PostgreSQL 18" {
                 africaDb = containerInstance articleDb
@@ -293,15 +334,16 @@ workspace "Happy Headlines" "Positive news platform" {
         }
 
 
-        // C4 Level 2 - Container diagram
+        // C4 Level 2 - Container diagram. Observability is left out here; it has its own view below.
         container happyHeadlines "Containers" {
             include *
+            exclude otelCollector loki tempo grafana developer
             autolayout lr
         }
 
         // C4 Level 2 - Observability only (week 38), so it does not drown in "Containers"
         container happyHeadlines "Observability" {
-            include draftService commentService profanityService articleService publisherService otelCollector loki tempo grafana developer
+            include draftService commentService profanityService articleService publisherService newsletterService otelCollector loki tempo grafana developer
             autolayout lr
         }
 
@@ -327,6 +369,11 @@ workspace "Happy Headlines" "Positive news platform" {
         }
 
         component publisherService "PublisherServiceComponents" {
+            include *
+            autolayout lr
+        }
+
+        component newsletterService "NewsletterServiceComponents" {
             include *
             autolayout lr
         }
@@ -364,6 +411,10 @@ workspace "Happy Headlines" "Positive news platform" {
             }
             relationship "Deviation" {
                 color "#E8710A"
+                dashed true
+            }
+            relationship "Planned" {
+                color "#9E9E9E"
                 dashed true
             }
         }

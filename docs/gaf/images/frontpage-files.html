@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Ændrede filer</title>
+<style>
+  :root{
+    --ink:#14212b; --muted:#4a5a66; --line:#1d2b36;
+    --green-hd:#bfe8c8; --green-ac:#2f9e55; --red:#c0392b;
+    --blue-hd:#b9dcf6; --grey-bg:#f2f4f6; --purple-bg:#efe9fa; --yellow-bg:#fdf6dc;
+    --rows:#46c46a; --fields:#b77cf5; --cache:#f5a524;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1536px;height:1024px;background:#fff;color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}
+  body{padding:10px;display:flex;flex-direction:column;gap:8px}
+  .box{border:2.5px solid var(--line);border-radius:14px;overflow:hidden;flex:none}
+  .head{background:var(--green-hd);display:flex;align-items:center;height:70px;padding:0 22px;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px;padding-right:18px;border-right:3px solid var(--line);height:50px}
+  .brand b{font-size:28px;line-height:1;display:block}
+  .brand small{font-size:16px;font-weight:600}
+  .head h1{flex:1;font-size:32px;font-weight:800}
+  .head h1 span{font-weight:600;color:var(--muted);font-size:20px}
+  .legend{display:flex;gap:8px;font-size:14px;font-weight:700}
+  .legend span{border:2px solid var(--line);border-radius:8px;padding:4px 9px;background:#fff;display:flex;align-items:center;gap:6px}
+  .t{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:5px;color:#fff;font-size:12px;font-weight:800}
+  .tR{background:var(--rows)} .tF{background:var(--fields)} .tC{background:var(--cache)}
+
+  table{width:100%;border-collapse:collapse}
+  .files{flex:none}
+  th{background:var(--blue-hd);font-size:13px;text-transform:uppercase;letter-spacing:.3px;text-align:left;padding:7px 10px;border-bottom:2px solid var(--line)}
+  td{padding:5px 10px;font-size:14px;line-height:1.3;border-bottom:1px solid #d5dde3;vertical-align:middle}
+  tr.grp td{background:var(--grey-bg);font-weight:800;font-size:14.5px;padding:5px 10px;border-bottom:1.5px solid var(--line)}
+  tr.grp td small{font-weight:600;color:var(--muted);font-size:13px;margin-left:8px}
+  td.path{font-family:Consolas,"Cascadia Mono",monospace;font-size:13px;white-space:nowrap}
+  td.path .dir{color:var(--muted)}
+  td.path b{color:var(--ink)}
+  .new{display:inline-block;background:#1f7a3e;color:#fff;font-family:"Segoe UI",sans-serif;font-size:10.5px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:6px;vertical-align:1px}
+  td.num{font-family:Consolas,monospace;font-size:13.5px;white-space:nowrap;text-align:right;width:86px}
+  .plus{color:#1f7a3e;font-weight:700} .minus{color:var(--red);font-weight:700}
+  td.bar{width:120px}
+  .barw{height:10px;background:#e9eef2;border-radius:5px;overflow:hidden}
+  .barw i{display:block;height:100%;background:#4c9be0;border-radius:5px}
+  td.tags{white-space:nowrap;width:86px}
+  td.what code{font-family:Consolas,monospace;font-size:12.5px;background:rgba(0,0,0,.06);padding:0 3px;border-radius:3px}
+
+  .bottom{display:grid;grid-template-columns:1fr 1.1fr 1.2fr;gap:8px;flex:1;min-height:0}
+  .card{padding:10px 16px}
+  .card h4{font-size:19px;font-weight:800;margin-bottom:6px}
+  .c1{background:var(--yellow-bg)} .c2{background:#e6f1fb} .c3{background:var(--purple-bg)}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+  .card li{font-size:14px;line-height:1.32;padding-left:14px;position:relative}
+  .card li::before{content:"•";position:absolute;left:0;font-weight:800}
+  .card code{font-family:Consolas,monospace;font-size:12.5px;background:rgba(0,0,0,.06);padding:0 3px;border-radius:3px}
+  .sum{display:grid;grid-template-columns:auto auto auto;gap:3px 16px;font-size:14.5px;align-items:baseline}
+  .sum .h{font-size:12px;font-weight:800;text-transform:uppercase;color:var(--muted)}
+  .sum .r{text-align:right;font-family:Consolas,monospace}
+  .sum .tot{font-weight:800;border-top:1.5px solid var(--line);padding-top:3px}
+</style>
+</head>
+<body>
+
+<div class="box head">
+  <div class="brand">
+    <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 54C8 30 24 10 56 8c0 30-18 46-46 46z" fill="#4cb36a" stroke="#14212b" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 52C24 38 34 28 48 18" fill="none" stroke="#14212b" stroke-width="3.5" stroke-linecap="round"/></svg>
+    <div><b>GAF</b><small>Sustainability</small></div>
+  </div>
+  <h1>Ændrede filer <span>· forside-endpointet · 14 filer, +448 / −14</span></h1>
+  <div class="legend">
+    <span><i class="t tR">R</i>Defer Fetching</span>
+    <span><i class="t tF">F</i>Reduce Transmitted Data</span>
+    <span><i class="t tC">C</i>Caching</span>
+  </div>
+</div>
+
+<div class="box files">
+<table>
+  <tr><th>Fil</th><th style="text-align:right">Linjer</th><th></th><th>Tactic</th><th>Hvad er ændret</th></tr>
+
+  <tr class="grp"><td colspan="5">ArticleService <small>apps/article_service/src/ArticleService/ · 6 filer, +207</small></td></tr>
+  <tr><td class="path"><span class="dir">Models/</span><b>FrontPageQuery.cs</b><span class="new">NY</span></td><td class="num"><span class="plus">+35</span></td><td class="bar"><div class="barw"><i style="width:35%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i> <i class="t tC">C</i></td><td class="what">Forespørgslens parametre (<code>top</code>, <code>perSection</code>, <code>section</code>, <code>excerpt</code>, <code>heroExcerpt</code>), validering og cache-nøgle</td></tr>
+  <tr><td class="path"><span class="dir">Controllers/</span><b>ArticlesController.cs</b></td><td class="num"><span class="plus">+35</span></td><td class="bar"><div class="barw"><i style="width:35%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i> <i class="t tC">C</i></td><td class="what">Nyt <code>GET {location}/frontpage</code>: valider → cache → database → gem i cache. <code>GetAll</code> er uændret.</td></tr>
+  <tr><td class="path"><span class="dir">Repositories/</span><b>ArticleReadRepository.cs</b></td><td class="num"><span class="plus">+64</span></td><td class="bar"><div class="barw"><i style="width:63%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i></td><td class="what"><code>GetFrontPageAsync</code>: én SQL med <code>row_number()</code> pr. sektion og <code>left(breadtext, n + 1)</code></td></tr>
+  <tr><td class="path"><span class="dir">Repositories/</span><b>IArticleReadRepository.cs</b></td><td class="num"><span class="plus">+1</span></td><td class="bar"><div class="barw"><i style="width:2%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i></td><td class="what"><code>GetFrontPageAsync</code> i interfacet</td></tr>
+  <tr><td class="path"><span class="dir">Cache/</span><b>ArticleCache.cs</b></td><td class="num"><span class="plus">+68</span></td><td class="bar"><div class="barw"><i style="width:67%"></i></div></td><td class="tags"><i class="t tC">C</i></td><td class="what"><code>Get/StoreFrontPageAsync</code>, Lua-scripts (<code>SET</code>+<code>SADD</code>, <code>SMEMBERS</code>+<code>DEL</code>), invalidering ved publicering, redigering og fjernelse</td></tr>
+  <tr><td class="path"><span class="dir">Cache/</span><b>IArticleCache.cs</b></td><td class="num"><span class="plus">+4</span></td><td class="bar"><div class="barw"><i style="width:4%"></i></div></td><td class="tags"><i class="t tC">C</i></td><td class="what"><code>Get/StoreFrontPageAsync</code> i interfacet</td></tr>
+
+  <tr class="grp"><td colspan="5">Reader-web <small>apps/reader-web_service/src/ · 5 filer, +57 / −10</small></td></tr>
+  <tr><td class="path"><span class="dir">ReaderPages.web/</span><b>ArticleCatalog.cs</b></td><td class="num"><span class="plus">+24</span></td><td class="bar"><div class="barw"><i style="width:24%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i></td><td class="what"><code>GetFrontPageAsync</code>: bygger URL'en ud fra sidens egne tal</td></tr>
+  <tr><td class="path"><span class="dir">Reader.web.wasm/Pages/</span><b>FrontPage.razor.cs</b></td><td class="num"><span class="plus">+16</span> <span class="minus">−7</span></td><td class="bar"><div class="barw"><i style="width:16%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i></td><td class="what">Kalder forsiden med <code>1 + PopularCount</code>, <code>SectionCardCount</code>, <code>excerpt: 0</code> og <code>HeroArticle.ExcerptLength</code>. Nyt kald ved sektionsskift.</td></tr>
+  <tr><td class="path"><span class="dir">Reader.web.wasm/Pages/</span><b>ArticlePage.razor.cs</b></td><td class="num"><span class="plus">+9</span> <span class="minus">−1</span></td><td class="bar"><div class="barw"><i style="width:9%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i></td><td class="what">"More news": <code>MoreNewsCount + 1</code> nyeste og pr. sektion, <code>ArticleCard.ExcerptLength</code> tegn</td></tr>
+  <tr><td class="path"><span class="dir">Reader.web.wasm/Components/</span><b>HeroArticle.razor</b></td><td class="num"><span class="plus">+4</span> <span class="minus">−1</span></td><td class="bar"><div class="barw"><i style="width:4%"></i></div></td><td class="tags"><i class="t tF">F</i></td><td class="what"><code>400</code> → <code>public const int ExcerptLength = 400</code></td></tr>
+  <tr><td class="path"><span class="dir">Reader.web.wasm/Components/</span><b>ArticleCard.razor</b></td><td class="num"><span class="plus">+4</span> <span class="minus">−1</span></td><td class="bar"><div class="barw"><i style="width:4%"></i></div></td><td class="tags"><i class="t tF">F</i></td><td class="what"><code>110</code> → <code>public const int ExcerptLength = 110</code></td></tr>
+
+  <tr class="grp"><td colspan="5">Tests <small>apps/article_service/tests/ArticleService.Tests/ · 2 filer, +181 / −3 · 22 nye testcases</small></td></tr>
+  <tr><td class="path"><span class="dir">Controllers/</span><b>ArticlesControllerFrontPageTests.cs</b><span class="new">NY</span></td><td class="num"><span class="plus">+101</span></td><td class="bar"><div class="barw"><i style="width:100%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i> <i class="t tC">C</i></td><td class="what">14 testcases: layout sendes videre, cache-hit rører ikke DB, miss gemmer, tom forside er et hit, ugyldige værdier og sektioner giver 400</td></tr>
+  <tr><td class="path"><span class="dir">Cache/</span><b>ArticleCacheTests.cs</b></td><td class="num"><span class="plus">+80</span> <span class="minus">−3</span></td><td class="bar"><div class="barw"><i style="width:79%"></i></div></td><td class="tags"><i class="t tC">C</i></td><td class="what">8 testcases: nøgleformat, Redis nede = miss, publicering og fjernelse invaliderer. 3 eksisterende tests ser bort fra invaliderings-kaldet.</td></tr>
+
+  <tr class="grp"><td colspan="5">Workload <small>monitoring/scripts/ · 1 fil, +3 / −1</small></td></tr>
+  <tr><td class="path"><b>simulate-flow.sh</b></td><td class="num"><span class="plus">+3</span> <span class="minus">−1</span></td><td class="bar"><div class="barw"><i style="width:3%"></i></div></td><td class="tags"><i class="t tR">R</i> <i class="t tF">F</i></td><td class="what">Simulatoren sender samme kald som forsiden: <code>frontpage?top=6&amp;perSection=3&amp;excerpt=0&amp;heroExcerpt=400</code></td></tr>
+</table>
+</div>
+
+<div class="bottom">
+  <div class="box card c1">
+    <h4>I alt</h4>
+    <div class="sum">
+      <span class="h"></span><span class="h r">Filer</span><span class="h r">Linjer</span>
+      <span>ArticleService</span><span class="r">6</span><span class="r">+207</span>
+      <span>Reader-web</span><span class="r">5</span><span class="r">+57 / −10</span>
+      <span>Tests</span><span class="r">2</span><span class="r">+181 / −3</span>
+      <span>Simulator</span><span class="r">1</span><span class="r">+3 / −1</span>
+      <span class="tot">I alt</span><span class="r tot">14</span><span class="r tot">+448 / −14</span>
+    </div>
+  </div>
+  <div class="box card c2">
+    <h4>Ikke ændret</h4>
+    <ul>
+      <li><b>Databasen:</b> ingen migration, ingen nye kolonner eller index</li>
+      <li><code>GET /api/articles/{location}</code> og <code>GET …/{id}</code> virker som før</li>
+      <li>Den eksisterende artikel-cache (<code>articles:{region}:index</code>)</li>
+      <li>Journalist-web, drafts-siden og de øvrige services</li>
+    </ul>
+  </div>
+  <div class="box card c3">
+    <h4>Effekt <small style="font-size:14px;color:var(--muted);font-weight:600">(EU, 1.008 artikler)</small></h4>
+    <ul>
+      <li><i class="t tR">R</i> 2.312.484 → 34.543 bytes (−98,5 %)</li>
+      <li><i class="t tF">F</i> 34.543 → 4.164 bytes (−87,9 %)</li>
+      <li><i class="t tC">C</i> samme svar: 25,9 ms fra databasen → 11,0 ms fra Redis</li>
+      <li>Samlet: −99,8 %. 49 tests grønne, 15 min simulator med 0 fejl.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

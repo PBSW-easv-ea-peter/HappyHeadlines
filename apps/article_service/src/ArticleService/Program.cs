@@ -95,8 +95,8 @@ if (app.Environment.IsDevelopment())
     app.UseOpenApi();
 }
 
-string policy = app.Environment.IsDevelopment() 
-    ? "AllowAll" 
+string policy = app.Environment.IsDevelopment()
+    ? "AllowAll"
     : "AllowWebApp";
 app.UseCors(policy);
 

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Forside-endpointet i detaljer</title>
+<style>
+  :root{
+    --ink:#14212b; --muted:#4a5a66; --line:#1d2b36;
+    --green-hd:#bfe8c8; --green-ac:#2f9e55;
+    --blue-bg:#e6f1fb; --blue-hd:#b9dcf6;
+    --yellow-bg:#fdf6dc; --purple-bg:#efe9fa; --lime-bg:#eef8d9; --grey-bg:#f2f4f6;
+    --code-bg:#1e252d; --code-fg:#e6edf3; --kw:#79b8ff; --str:#f0a96b;
+    --rows:#46c46a; --fields:#c58cff; --cache:#ffb44d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1536px;height:1024px;background:#fff;color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}
+  body{padding:10px;display:flex;flex-direction:column;gap:8px}
+  .box{border:2.5px solid var(--line);border-radius:14px;overflow:hidden;flex:none}
+  .head{background:var(--green-hd);display:flex;align-items:center;height:70px;padding:0 22px;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px;padding-right:18px;border-right:3px solid var(--line);height:50px}
+  .brand b{font-size:28px;line-height:1;display:block}
+  .brand small{font-size:16px;font-weight:600}
+  .head h1{flex:1;font-size:34px;font-weight:800;letter-spacing:-.3px}
+  .head h1 span{font-weight:600;color:var(--muted);font-size:22px}
+  .legend{display:flex;gap:8px;font-size:14px;font-weight:700}
+  .legend span{border:2px solid var(--line);border-radius:8px;padding:4px 9px;background:#fff;display:flex;align-items:center;gap:6px}
+  .dot{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .d-rows{background:var(--rows)} .d-fields{background:var(--fields)} .d-cache{background:var(--cache)}
+
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);flex:none}
+  .hop{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;height:44px;background:var(--blue-hd);border:2.5px solid var(--line);font-weight:800;font-size:18px}
+  .hop:first-child{border-radius:12px 0 0 12px} .hop:last-child{border-radius:0 12px 12px 0}
+  .hop+.hop{border-left:none}
+  .hop .no{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:15px}
+  .hop small{font-weight:600;color:var(--muted);font-size:13px}
+  .hop:not(:last-child)::after{content:"";position:absolute;right:-15px;top:50%;transform:translateY(-50%);border:13px solid transparent;border-left:14px solid var(--line);z-index:2}
+  .hop:not(:last-child)::before{content:"";position:absolute;right:-11px;top:50%;transform:translateY(-50%);border:10px solid transparent;border-left:11px solid var(--blue-hd);z-index:3}
+
+  .layers{display:grid;grid-template-columns:1fr 1fr 1fr 1.08fr;gap:8px;flex:none;height:604px}
+  .layer{display:flex;flex-direction:column;background:#fff}
+  .file{background:var(--grey-bg);border-bottom:2px solid var(--line);padding:6px 10px;font-family:Consolas,monospace;font-size:12px;line-height:1.3;color:var(--muted);word-break:break-all}
+  .file b{font-family:"Segoe UI",sans-serif;color:var(--ink);font-size:14.5px;display:block;word-break:normal}
+  .blk{padding:6px 9px 0}
+  .lbl{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin:2px 0 3px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+  pre{background:var(--code-bg);color:var(--code-fg);border-radius:7px;padding:6px 8px;font-family:Consolas,"Cascadia Mono",monospace;font-size:11.7px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+  pre .k{color:var(--kw)} pre .s{color:var(--str)} pre .cm{color:#8b949e;font-style:italic}
+  pre .r{box-shadow:inset 3px 0 0 var(--rows);background:rgba(70,196,106,.16);padding-left:4px}
+  pre .f{box-shadow:inset 3px 0 0 var(--fields);background:rgba(197,140,255,.18);padding-left:4px}
+  pre .c{box-shadow:inset 3px 0 0 var(--cache);background:rgba(255,180,77,.16);padding-left:4px}
+  pre .o{text-decoration:line-through;text-decoration-color:#ff8f8f;color:#b9c2cb}
+  .spacer{flex:1}
+  .gain{margin:7px 9px 9px;background:var(--lime-bg);border:2px solid var(--green-ac);border-radius:8px;padding:6px 9px;font-size:13.5px;line-height:1.33}
+
+  .bottom{display:grid;grid-template-columns:1.05fr 1fr 1.15fr;gap:8px;flex:1;min-height:0}
+  .card{padding:9px 16px}
+  .card h4{font-size:19px;font-weight:800;margin-bottom:5px}
+  .card h4 small{font-size:14px;font-weight:600;color:var(--muted)}
+  .t1{background:var(--yellow-bg)} .t2{background:var(--blue-bg)} .t3{background:var(--purple-bg)}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:3px}
+  .card li{font-size:13.8px;line-height:1.3;padding-left:14px;position:relative}
+  .card li::before{content:"•";position:absolute;left:0;font-weight:800}
+  code{font-family:Consolas,monospace;font-size:12.5px;background:rgba(0,0,0,.06);padding:0 3px;border-radius:3px}
+  table{border-collapse:collapse;font-size:13.8px;width:100%}
+  td,th{padding:2px 6px;text-align:right;white-space:nowrap}
+  th{font-size:11.5px;text-transform:uppercase;color:var(--muted)}
+  td:first-child,th:first-child{text-align:left;padding-left:0}
+  td.g{color:#1f7a3e;font-weight:800}
+</style>
+</head>
+<body>
+
+<div class="box head">
+  <div class="brand">
+    <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 54C8 30 24 10 56 8c0 30-18 46-46 46z" fill="#4cb36a" stroke="#14212b" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 52C24 38 34 28 48 18" fill="none" stroke="#14212b" stroke-width="3.5" stroke-linecap="round"/></svg>
+    <div><b>GAF</b><small>Sustainability</small></div>
+  </div>
+  <h1>Forside-endpointet <span>· én forespørgsel, lag for lag · 14 filer</span></h1>
+  <div class="legend">
+    <span><i class="dot d-rows"></i>Defer Fetching (rækker)</span>
+    <span><i class="dot d-fields"></i>Reduce Transmitted Data (felter)</span>
+    <span><i class="dot d-cache"></i>Caching</span>
+  </div>
+</div>
+
+<div class="flow">
+  <div class="hop"><span class="no">1</span>Læserens browser <small>reader-web</small></div>
+  <div class="hop"><span class="no">2</span>API <small>ArticlesController</small></div>
+  <div class="hop"><span class="no">3</span>Cache <small>Redis, alle regioner</small></div>
+  <div class="hop"><span class="no">4</span>Database <small>Postgres-shard</small></div>
+</div>
+
+<div class="layers">
+  <!-- 1 -->
+  <div class="box layer">
+    <div class="file"><b>Siden siger selv, hvad den viser</b>Reader.web.wasm/Pages/FrontPage.razor.cs · ArticlePage.razor.cs · Components/HeroArticle.razor · ArticleCard.razor · ReaderPages.web/ArticleCatalog.cs</div>
+    <div class="blk">
+      <div class="lbl">Før</div>
+<pre><span class="o">GetRegionArticlesAsync(..., region)</span>  <span class="cm">// alt</span>
+<span class="cm">// sektionsfilter: filtrér det hentede</span>
+<span class="cm">// HeroArticle:</span> Excerpt(BreadText, <span class="o">400</span>)
+<span class="cm">// ArticleCard:</span>  Excerpt(BreadText, <span class="o">110</span>)</pre>
+      <div class="lbl">Efter</div>
+<pre><span class="cm">// FrontPage.razor.cs</span>
+GetFrontPageAsync(..., region,
+<span class="r">  top: 1 + PopularCount,</span>
+<span class="r">  perSection: SectionCardCount,</span>
+<span class="r">  section: ActiveSection,</span>
+<span class="f">  excerpt: 0,</span>
+<span class="f">  heroExcerpt: HeroArticle.ExcerptLength);</span>
+
+<span class="cm">// HeroArticle.razor (ArticleCard: 110)</span>
+<span class="f"><span class="k">public const int</span> ExcerptLength = 400;</span>
+
+<span class="cm">// ArticlePage: "More news"</span>
+<span class="r">top/perSection: MoreNewsCount + 1</span>
+<span class="f">excerpt: ArticleCard.ExcerptLength</span>
+
+<span class="cm">// nyt sektionsfilter = nyt (lille) kald</span>
+<span class="k">var</span> key = <span class="s">$"{region}/{ActiveSection}"</span>;</pre>
+    </div>
+    <div class="spacer"></div>
+    <div class="gain">Alle tal kommer fra sidens egne konstanter, så der er <b>ingen magic numbers</b>. Ændres layoutet, ændres forespørgslen med.</div>
+  </div>
+
+  <!-- 2 -->
+  <div class="box layer">
+    <div class="file"><b>Nyt endpoint + validering</b>ArticleService/Controllers/ArticlesController.cs · Models/FrontPageQuery.cs</div>
+    <div class="blk">
+      <div class="lbl">Nyt</div>
+<pre>[HttpGet(<span class="s">"{location}/frontpage"</span>)]
+GetFrontPage(<span class="k">string</span> location,
+<span class="r">  <span class="k">int</span> top = 10, <span class="k">int</span> perSection = 0,</span>
+<span class="r">  <span class="k">string</span>? section = <span class="k">null</span>,</span>
+<span class="f">  <span class="k">int</span>? excerpt = <span class="k">null</span>,     <span class="cm">// null = hel tekst</span></span>
+<span class="f">  <span class="k">int</span>? heroExcerpt = <span class="k">null</span>)</span>
+{
+  <span class="k">var</span> query = <span class="k">new</span> FrontPageQuery(...);
+  <span class="k">if</span> (query.Validate() <span class="k">is</span> {} error)
+    <span class="k">return</span> BadRequest(error);
+<span class="c">  cached = _cache.GetFrontPageAsync(...);</span>
+<span class="c">  <span class="k">if</span> (cached <span class="k">is not null</span>) <span class="k">return</span> Ok(cached);</span>
+  articles = _readRepository
+    .GetFrontPageAsync(location, query);
+<span class="c">  _cache.StoreFrontPageAsync(..., articles);</span>
+  <span class="k">return</span> Ok(articles);
+}</pre>
+      <div class="lbl">FrontPageQuery.Validate()</div>
+<pre>top 1–50 · perSection 0–20 · excerpt 0–1000
+section: kun bogstaver <span class="cm">// indgår i cache-nøglen</span></pre>
+    </div>
+    <div class="spacer"></div>
+    <div class="gain"><code>GetAll</code> er <b>uændret</b>: journalist-web og drafts-siden virker som før.</div>
+  </div>
+
+  <!-- 3 -->
+  <div class="box layer">
+    <div class="file"><b>Hele svaret caches, pr. region</b>ArticleService/Cache/ArticleCache.cs · IArticleCache.cs</div>
+    <div class="blk">
+      <div class="lbl">Nøgle (TTL 5 min)</div>
+<pre><span class="c">frontpage:EU:6:3:*:0:400</span>
+<span class="cm">        region:top:perSection:section:</span>
+<span class="cm">        excerpt:heroExcerpt</span></pre>
+      <div class="lbl">Gem (Lua, atomisk)</div>
+<pre><span class="c">SET  frontpage:EU:6:3:*:0:400  EX 300</span>
+<span class="c">SADD frontpage:EU:keys  &lt;nøglen&gt;</span></pre>
+      <div class="lbl">Invalidér ved publicering/fjernelse</div>
+<pre><span class="cm">// RefreshArticleAsync, RemoveArticleAsync,</span>
+<span class="cm">// RefreshCacheAsync</span>
+<span class="c">await InvalidateFrontPagesAsync(location);</span>
+
+<span class="c">for key in SMEMBERS frontpage:EU:keys</span>
+<span class="c">  DEL key</span>
+<span class="c">DEL frontpage:EU:keys</span>   <span class="cm">-- uden SCAN</span></pre>
+      <div class="lbl">Fejl</div>
+<pre>Redis nede → miss → Postgres
+invalidering tabt → TTL rydder op</pre>
+    </div>
+    <div class="spacer"></div>
+    <div class="gain">Den gamle forside-cache havde <b>intet indeks i dev</b> (GO-data er &gt; 14 dage gamle), så alle forsidekald gik til Postgres. Den gamle cache er urørt.</div>
+  </div>
+
+  <!-- 4 -->
+  <div class="box layer">
+    <div class="file"><b>Én SQL: kun de rækker og tegn, der vises</b>ArticleService/Repositories/ArticleReadRepository.cs · IArticleReadRepository.cs</div>
+    <div class="blk">
+      <div class="lbl">Før (GetAllAsync)</div>
+<pre><span class="k">select</span> a.id, a.title, <span class="o">a.breadtext</span>, ...
+<span class="k">from</span> articles a <span class="k">join</span> sections s ...
+<span class="cm">-- ingen order by, ingen limit</span></pre>
+      <div class="lbl">Efter (GetFrontPageAsync)</div>
+<pre><span class="k">with</span> ranked <span class="k">as</span> (<span class="k">select</span> ...,
+<span class="r">  row_number() <span class="k">over</span> (<span class="k">order by</span> shown_at <span class="k">desc</span>)</span>
+<span class="r">    <span class="k">as</span> rn_all,</span>
+<span class="r">  row_number() <span class="k">over</span> (<span class="k">partition by</span> section_id</span>
+<span class="r">    <span class="k">order by</span> shown_at <span class="k">desc</span>) <span class="k">as</span> rn_section</span>
+  <span class="k">from</span> articles a <span class="k">join</span> sections s ...),
+picked <span class="k">as</span> (<span class="k">select</span> *,
+<span class="f">  <span class="k">case when</span> &lt;hero&gt; <span class="k">then</span> coalesce(@HeroExcerpt,</span>
+<span class="f">    @Excerpt) <span class="k">else</span> @Excerpt <span class="k">end as</span> excerpt_length</span>
+  <span class="k">from</span> ranked
+<span class="r">  <span class="k">where</span> rn_all &lt;= @Top</span>
+<span class="r">     <span class="k">or</span> rn_section &lt;= @PerSection</span>
+<span class="r">     <span class="k">or</span> (section = @Section <span class="k">and</span> rn_section &lt;= @Top))</span>
+<span class="k">select</span> id, title, ...,
+<span class="f">  <span class="k">case when</span> excerpt_length <span class="k">is null then</span> breadtext</span>
+<span class="f">       <span class="k">when</span> excerpt_length = 0 <span class="k">then</span> <span class="s">''</span></span>
+<span class="f">       <span class="k">else</span> left(breadtext, excerpt_length + 1)</span>
+<span class="f">  <span class="k">end as</span> breadtext</span>
+<span class="k">from</span> picked <span class="k">order by</span> shown_at <span class="k">desc</span></pre>
+    </div>
+    <div class="spacer"></div>
+    <div class="gain"><code>+ 1</code> tegn: klientens <code>Excerpt()</code> kan se, at teksten fortsætter, og tilføjer "…" som før.</div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="box card t1">
+    <h4>Målt <small>(EU, 1.008 artikler, 50 kald)</small></h4>
+    <table>
+      <tr><th></th><th>Før</th><th>Rækker</th><th>+ Felter</th></tr>
+      <tr><td>Artikler</td><td>1.008</td><td>15</td><td class="g">15</td></tr>
+      <tr><td>Bytes pr. svar</td><td>2.312.484</td><td>34.543</td><td class="g">4.164</td></tr>
+      <tr><td>Reduktion</td><td></td><td>−98,5 %</td><td class="g">−99,8 %</td></tr>
+      <tr><td>ms, cache-hit</td><td>38,6</td><td>11,5</td><td class="g">11,0</td></tr>
+      <tr><td>ms, cache-miss (DB)</td><td>38,6</td><td>37,7</td><td class="g">25,9</td></tr>
+    </table>
+  </div>
+  <div class="box card t2">
+    <h4>Tests <small>(22 nye, alle 49 grønne)</small></h4>
+    <ul>
+      <li><code>ArticlesControllerFrontPageTests</code>: layout sendes videre, hit rører ikke DB, miss gemmer, tom forside er et hit, ugyldige værdier og sektioner giver 400</li>
+      <li><code>ArticleCacheTests</code>: nøgleformat, hel tekst ≠ uddrag i nøglen, Redis nede = miss, publicering og fjernelse invaliderer regionens forsider</li>
+      <li><code>simulate-flow.sh</code> sender samme kald som forsiden</li>
+    </ul>
+  </div>
+  <div class="box card t3">
+    <h4>Bevidst ikke ændret</h4>
+    <ul>
+      <li><b>Intet index på <code>publish_date</code>:</b> ved cache-miss nummererer Postgres hele shardet (derfor 37,7 ms). Næste skridt.</li>
+      <li><b>Journalist-web og drafts</b> bruger stadig <code>GetAll</code>.</li>
+      <li><b><code>breadtext</code> har tre betydninger</b> (hel, uddrag, tom). Et eget <code>excerpt</code>-felt ville være tydeligere.</li>
+      <li>Forsiden kan være op til 5 min gammel, hvis en invalidering går tabt.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

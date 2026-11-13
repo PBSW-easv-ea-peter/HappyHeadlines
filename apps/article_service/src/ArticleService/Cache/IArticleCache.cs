@@ -5,6 +5,10 @@ namespace ArticleService.Cache;
 public interface IArticleCache
 {
     Task<IList<Article>> GetArticlesAsync(string location);
+
+    // The composed front page, exactly as returned to the client. null is a miss.
+    Task<IList<Article>?> GetFrontPageAsync(string location, FrontPageQuery query);
+    Task StoreFrontPageAsync(string location, FrontPageQuery query, IList<Article> articles);
     Task<Article?> GetArticleByIdAsync(string location, Guid id);
     Task RefreshCacheAsync(params string[] locations);
 

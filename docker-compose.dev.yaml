@@ -241,6 +241,19 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      # appsettings.Development.json targets a locally run service (localhost:5432-5439).
+      # Inside a container localhost is the container itself, so point at the shard containers.
+      ArticleShards__EU: Host=articledb-eu;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__NA: Host=articledb-na;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__SA: Host=articledb-sa;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__AU: Host=articledb-au;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__AS: Host=articledb-as;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__AN: Host=articledb-an;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__AF: Host=articledb-af;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      ArticleShards__GO: Host=articledb-global;Port=5432;Database=articles;Username=postgres;Password=Postgres1234
+      # ArticleShardResolver replaces the password with this value. Program.cs sets it for
+      # Development too, but only after configuration has been read, so it arrives as null.
+      POSTGRES_DB_PWD: Postgres1234
     ports:
       - "8080:8080"
     depends_on:
@@ -327,6 +340,8 @@ services:
       ASPNETCORE_URLS: http://+:8082
       # appsettings.Development.json targets a locally run service - point it at the containers.
       ConnectionStrings__CommentDatabase: Host=commentdb;Port=5432;Database=comments;Username=postgres;Password=Postgres1234
+      # CommentRepository replaces the password with this value (the name is reused from ArticleService)
+      ARTICLE_DB_PWD: Postgres1234
       ProfanityService__BaseUrl: http://profanityservice:8081
       Cache__RedisConnection: comment-cache:6379
       OpenTelemetry__Endpoint: http://otel-collector:4318

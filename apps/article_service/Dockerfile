@@ -10,6 +10,8 @@ RUN dotnet restore "article_service/src/ArticleService/ArticleService.csproj"
 
 COPY ["shared/HappyHeadlines.Observability/", "shared/HappyHeadlines.Observability/"]
 COPY ["shared/src/Messaging/", "shared/src/Messaging/"]
+COPY ["shared/locations.json", "shared/locations.json"]
+
 COPY ["article_service/src/ArticleService/", "article_service/src/ArticleService/"]
 RUN dotnet publish "article_service/src/ArticleService/ArticleService.csproj" -c Release -o /app
 
